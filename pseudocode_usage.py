@@ -22,21 +22,17 @@ data = [{'V':1,'T':3,'J':0.2},\
 
 return data
 
-# somewhere we have to define the length of each fit dimension
-# maybe the lists in fit_param have a third entry for length?
 # also need to specify spacing (linear/log/etc.)
 
-fit_param = {'n':[1,2,10],'J0':[0.1,100,10]}
-
-# I'm wondering if this is even necessary - presumably any parameters
-# that are fixed could just be fixed within the user-defined model_func?
-# then if many fixed parameters needed to be read in from a file (such as
-# a PC1D config file) the user could just provide that...
+#fit_param = {'n':[1,2,10],'J0':[0.1,100,10]}
+from bayesim import param_list
+p = param_list()
+p.add_param(name='n',val_range=[1,2],length=10,spacing='linear')
+p.add_param(name='J0',val_range=[0.1,100],length=10,spacing='log',units='A/cm^2')
 
 ec = ['V','T']
 
-
-m = model(fit_param = fit_param,\
+m = model(fit_params = [n,J0],\
           ec = ec)
 
 m.attach_observations(mode = 'function',name = func_obs)
