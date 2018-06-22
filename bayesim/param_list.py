@@ -1,12 +1,14 @@
 class param_list(object):
     """
     Small class to facilitate listing parameters to be fit.
+
+    Perhaps eventually this should also store fixed params and then it could be a standardized input format to the model function? Except you'd have to write an intermediate parser for e.g. a PC1D input file which would just be written back out again, so it should be flexible to be able to just hold a filepath or something too.
     """
 
     def __init__(self):
-        self.params=[]
+        self.fit_params=[]
 
-    def add_param(self,**argv):
+    def add_fit_param(self,**argv):
         """
         Add a parameter to the list.
 
@@ -29,4 +31,4 @@ class param_list(object):
             elif argv['spacing'] == 'log':
                 min_width = (val_range[1]/val_range[0])**0.01
 
-        self.params.append(argv)
+        self.fit_params.append(argv)

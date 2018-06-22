@@ -27,8 +27,8 @@ return data
 #fit_param = {'n':[1,2,10],'J0':[0.1,100,10]}
 from bayesim import param_list
 p = param_list()
-p.add_param(name='n',val_range=[1,2],length=10,spacing='linear')
-p.add_param(name='J0',val_range=[0.1,100],length=10,spacing='log',units='A/cm^2')
+p.add_fit_param(name='n',val_range=[1,2],length=10,spacing='linear')
+p.add_fit_param(name='J0',val_range=[0.1,100],length=10,spacing='log',units='A/cm^2')
 
 ec = ['V','T']
 
