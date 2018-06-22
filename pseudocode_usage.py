@@ -32,7 +32,7 @@ p.add_fit_param(name='J0',val_range=[0.1,100],length=10,spacing='log',units='A/c
 
 ec = ['V','T']
 
-m = model(fit_params = [n,J0],\
+m = model(fit_params = p,\
           ec = ec)
 
 m.attach_observations(mode = 'function',name = func_obs)
