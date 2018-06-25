@@ -1,3 +1,0 @@
-import bayesim.pmf as pmf
-
-def __init__(self):
