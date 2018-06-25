@@ -39,16 +39,16 @@ class param_list(object):
 
         if 'min_width' not in argv.keys():
             if spacing == 'linear':
-                min_width = 0.01*(val_range[1]-val_range[0])
+                min_width = (1./(10*length))*(val_range[1]-val_range[0])
             elif spacing == 'log':
-                min_width = (val_range[1]/val_range[0])*0.01
+                min_width = (val_range[1]/val_range[0])**(1./(10*length))
             param_info['min_width'] = min_width
 
         # compute edges and values
         if spacing == 'linear':
             edges_vals = np.linspace(val_range[0],val_range[1],2*length+1)
         elif spacing == 'log':
-            edges_vals = np.geomspace(val_range[0],val_range[1],2*length+1)
+            edges_vals = np.logspace(np.log10(val_range[0]),np.log10(val_range[1]),2*length+1)
         edges = edges_vals[::2]
         vals = edges_vals[1:-1:2]
         param_info['edges'] = edges

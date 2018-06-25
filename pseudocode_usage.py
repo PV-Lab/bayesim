@@ -36,7 +36,7 @@ m = model(fit_params = p,\
           ec = ec)
 
 m.attach_observations(mode = 'function',name = func_obs)
-m.attach_model(mode = 'function',name = func_model)
+m.attach_model(mode = 'function',func_name = func_model)
 
 output =  m.run(plot=True)
 
