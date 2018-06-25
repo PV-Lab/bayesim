@@ -1,4 +1,5 @@
 from bayesim.model import *
+from bayesim import param
 import math
 
 
@@ -27,6 +28,12 @@ return data
 # also need to specify spacing (linear/log/etc.)
 
 fit_param = {'n':[1,2,10],'J0':[0.1,100,10]}
+#n = param(name='n',range=[1,2],spacing='linear',min_width=0.01)
+#J0 = param(name='J',...units='A/cm^2')
+
+p = param()
+p.add_parameter(me='n',range=[1,2],spacing='linear',min_width=0.01)
+p.add_parameter(ame='J',...units='A/cm^2')
 
 # I'm wondering if this is even necessary - presumably any parameters
 # that are fixed could just be fixed within the user-defined model_func?
@@ -36,7 +43,7 @@ fit_param = {'n':[1,2,10],'J0':[0.1,100,10]}
 ec = ['V','T']
 
 
-m = model(fit_param = fit_param,\
+m = model(fit_param = p,\
           ec = ec)
 
 m.attach_observations(mode = 'function',name = func_obs)
