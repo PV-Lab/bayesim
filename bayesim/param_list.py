@@ -24,15 +24,18 @@ class param_list(object):
         """
         # sanity checks
         assert 'name' in argv and 'val_range' in argv, "Parameter must at least have a name and a range!"
+        val_range = argv['val_range']
         assert len(val_range)==2 and val_range[1]>val_range[0], "val_range must be of length 2 with second entry larger than first!"
 
-        # set some defaults
+        # set some defaults - linear spacing, ten subdivisions, no units
         spacing = argv.setdefault('spacing','linear')
         length = argv.setdefault('length',10)
         units = argv.setdefault('units','unitless')
 
         # read in info
         param_info = dict(argv)
+        spacing = param_info['spacing']
+        length = param_info['length']
 
         if 'min_width' not in argv.keys():
             if spacing == 'linear':
@@ -43,16 +46,11 @@ class param_list(object):
         # compute edges and values
         if spacing == 'linear':
             edges_vals = np.linspace(val_range[0],val_range[1],2*length+1)
-        elif spacing=='log':
+        elif spacing == 'log':
             edges_vals = np.geomspace(val_range[0],val_range[1],2*length+1)
         edges = edges_vals[::2]
         vals = edges_vals[1:-1:2]
         param_info['edges'] = edges
         param_info['vals'] = vals
 
-        self.fit_params.append(argv)
-
-    def list_fit_param_vals()
-        param_vals = {}
-        for param in self.fit_params:
-            if param['spacing']=='linear':
+        self.fit_params.append(param_info)
