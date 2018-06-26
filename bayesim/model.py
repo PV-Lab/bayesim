@@ -6,6 +6,19 @@ import numpy as np
 
 class model(object):
     """
+    Updates from 180626 meeting:
+        top priorities: accepting files as input, saving state (everything else later)
+
+        make subdivide, visualize methods here
+        m= bayesim(load_state=True,filename='')
+        add option to run() for how often to save intermediate PMFs
+        maybe also a boolean for whether it's waiting for new model data
+        create new internal variable new_sims_list or something
+        also add a method to return new_sims_list either as df or write to file, etc.
+        fix inputs to different functions (messy)
+        make sure everything can accept files as inputs (important for argparse)
+        add save_state function that writes hdf5 with all current variables
+
     Todo:
         animating visualization during run
         figure out how best to feed back and run additional sims after
@@ -152,7 +165,7 @@ class model(object):
             err = max(0.2*abs(obs[1][self.output_var]),0.01)
             lkl = self.probs.likelihood(obs[1], obs[1][self.output_var], err, self.get_model_data)
             self.probs.multiply(lkl)
-            if np.sum(self.probs.most_probable(int(0.1*len(self.probs.points)))['prob'])>0.67:
+            if np.sum(self.probs.most_probable(int(0.05*len(self.probs.points)))['prob'])>0.8:
                 print('time to subdivide!')
                 break
 
