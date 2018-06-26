@@ -32,22 +32,22 @@ class Pmf(object):
         """
 
         # generate the list of box center coordinates
-        param_indices = [range(len(p['vals'])) for p in params.fit_params]
+        param_indices = [range(len(p['vals'])) for p in params]
         points = [p for p in product(*param_indices)]
-
         # iterate through to get values and add columns for param ranges
         for i in range(len(points)): # for every point (read: combination of value indices) in parameter space...
             row = []
-            for j in range(len(params.fit_params)): # for each parameter...
+            for j in range(len(params)): # for each parameter...
                 # get value
-                row.append(params.fit_params[j]['vals'][points[i][j]])
+                val_index = points[i][j]
+                row.append(params[j]['vals'][val_index])
                 # get min and max of bounding box
-                row.append([params.fit_params[j]['edges'][points[i][j]],params.fit_params[j]['edges'][points[i][j+1]]])
+                row.extend([params[j]['edges'][val_index],params[j]['edges'][val_index+1]])
             points[i] = row
 
         points = np.array(points)
-        param_names = [p['name'] for p in params.fit_params]
-        columns = [c for c in np.append([p for p in param_names],[np.append([p+'_min'],[p+'_max']) for p in param_names])]
+        param_names = [p['name'] for p in params]
+        columns = [c for l in [[n,n+'_min',n+'_max'] for n in param_names] for c in l] # there has to be a more readable way to do this
 
         df = pd.DataFrame(data=points, columns=columns)
         df['prob'] = [total_prob/len(df) for i in range(len(df))]
@@ -63,8 +63,8 @@ class Pmf(object):
 
         # for now just copy in the param_list wholesale
         # eventually should probably scrub and/or update vals...
-        self.params = params.fit_params
-        self.points = self.make_points_list(params)
+        self.params = params
+        self.points = self.make_points_list(self.params)
 
     def normalize(self):
         """Normalize overall PMF."""
@@ -97,25 +97,25 @@ class Pmf(object):
         """
         Find and return all boxes neighboring the box at index.
         """
-        all_vals = {param:self.all_current_values(param['name']) for param in self.params}
+        all_vals = {param['name']:self.all_current_values(param['name']) for param in self.params}
         this_point = self.points.iloc[index]
         indices_to_intersect=[]
         # get range of values of each param to consider "neighbors"
         for param in self.params:
-            this_param_val = this_point[param]
-            this_param_index = all_vals[param].index(this_param_val)
+            this_param_val = this_point[param['name']]
+            this_param_index = all_vals[param['name']].index(this_param_val)
 
             # handle the edge cases
             if not this_param_index == 0:
-                down_delta = all_vals[param][this_param_index]-all_vals[param][this_param_index-1]
+                down_delta = all_vals[param['name']][this_param_index]-all_vals[param['name']][this_param_index-1]
             else:
                 down_delta=0
-            if not this_param_index == len(all_vals[param])-1:
-                up_delta = all_vals[param][this_param_index+1]-all_vals[param][this_param_index]
+            if not this_param_index == len(all_vals[param['name']])-1:
+                up_delta = all_vals[param['name']][this_param_index+1]-all_vals[param['name']][this_param_index]
             else:
                 up_delta=0
-            gt = self.points[param]>=this_param_val-down_delta
-            lt = self.points[param]<=this_param_val+up_delta
+            gt = self.points[param['name']]>=this_param_val-down_delta
+            lt = self.points[param['name']]<=this_param_val+up_delta
             this_set = self.points[gt & lt]
             indices_to_intersect.append(set(this_set.index.values))
 
@@ -131,6 +131,9 @@ class Pmf(object):
         For now, just divides into two along each direction. Ideas for improvement:
         * divide proportional to probability mass in that box such that minimum prob is roughly equal to maximum prob of undivided boxes
         * user-specified divisions along dimensions (including NOT dividing in a given direction)
+
+        Todo:
+            need to return info for running next set of sims
         """
         num_divs = {p['name']:2 for p in self.params} #dummy for now
 
@@ -173,12 +176,12 @@ class Pmf(object):
             self.points = self.points.drop([box[0]])
 
             # create new DataFrame with subdivided boxes
-            pl = pl.param_list()
+            new_pl = pl.param_list()
             for p in self.params:
                 # copy same params except for ranges
-                pl.add_fit_param(name=p['name'],val_range=[box[1][p['name']+'_min'],box[1][p['name']+'_max']],length=num_divs_here[p['name']],min_width=p['min_width'],spacing=p['spacing'],units=p['units'])
+                new_pl.add_fit_param(name=p['name'],val_range=[box[1][p['name']+'_min'],box[1][p['name']+'_max']],length=num_divs_here[p['name']],min_width=p['min_width'],spacing=p['spacing'],units=p['units'])
             # make new df, spreading total prob from original box among new smaller ones
-            new_boxes = self.make_points_list(pl,total_prob=box[1]['prob'])
+            new_boxes = self.make_points_list(new_pl.fit_params,total_prob=box[1]['prob'])
 
             # concatenate new DataFrame to self.points
             self.points = pd.concat([self.points,new_boxes])
@@ -227,8 +230,8 @@ class Pmf(object):
         Obviously, model_func() needs to be a callable in the working namespace and has to accept conditions in the format that they're fed into this function.
 
         Args:
-            conditions: e.g. V, T, i
-            measurement: one output value e.g. J
+            ec: dict with keys of condition names and values
+            meas: one output value e.g. J
             error: error in measured value (stdev of a Gaussian)
             model_func: should accept one dict of params and one of conditions and output measurement
 
@@ -242,7 +245,8 @@ class Pmf(object):
 
         # here's the actual loop that computes the likelihoods
         for point in lkl.points.iterrows():
-            model_val = model_func(point[1], ec)
+            #print(ec, point[1])
+            model_val = model_func(ec, dict(point[1]))
             new_probs[point[0]] = norm.pdf(meas, loc=model_val, scale=abs(err))
 
         # copy these values in
@@ -337,7 +341,7 @@ class Pmf(object):
         probs = np.zeros(len(bins)-1)
         if param['spacing']=='log':
             log_spaced=True
-        elif param['spacing']==False:
+        elif param['spacing']=='linear':
             log_spaced=False
 
         for i in range(len(probs)):
