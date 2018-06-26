@@ -11,6 +11,7 @@ class model(object):
 
         make subdivide, visualize methods here
         m= bayesim(load_state=True,filename='')
+        create mocked data (diode) for model and obs in hdf5 format (so GR can use it for the command line version)
         add option to run() for how often to save intermediate PMFs
         maybe also a boolean for whether it's waiting for new model data
         create new internal variable new_sims_list or something
