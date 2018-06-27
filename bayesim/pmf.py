@@ -13,6 +13,9 @@ class Pmf(object):
     Class that stores a PMF capable of nested sampling / "adaptive mesh refinement".
 
     Stores probabilities in a DataFrame which associates regions of parameter space with probability values.
+
+    Todo:
+        make a save_state function for this
     """
 
     def make_points_list(self, params, total_prob=1.0):
