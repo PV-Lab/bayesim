@@ -66,7 +66,7 @@ class Pmf(object):
 
         # for now just copy in the param_list wholesale
         # eventually should probably scrub and/or update vals...
-        self.params = params
+        self.params = params.fit_params # last dot might be wrong
         self.points = self.make_points_list(self.params)
 
     def normalize(self):
