@@ -52,21 +52,21 @@ class model(object):
         self.probs = pmf.Pmf(self.fit_params)
 
 
-    def attach_observations(self,argv):
+    def attach_observations(self,**argv):
         """
         Attach measured dataset.
         """
         mode = argv.setdefault('mode','file')
 
         if mode == 'file':
-          self.obs_data = dd.io.load(argv['fpath'])['data']
+          self.obs_data = dd.io.load(argv['fpath'])
         else:
           self.obs_data = eval(argv['name']+'()')
 
 
-    def attach_model(self,argv):
+    def attach_model(self,**argv):
         """
-        Attach the model for the data, either by feeding in a file of precomputed data or a function that does the computing.argv
+        Attach the model for the data, either by feeding in a file of precomputed data or a function that does the computing.
 
         Args:
             mode (`str`): either 'file' or 'function' - should only use the latter if using an analytical model
@@ -75,6 +75,7 @@ class model(object):
 
         Todo:
             Figure out best way to check for correct formatting in an input file
+            Will this function also be used to attach new simulated data or should that be separate?
         """
 
         mode = argv.setdefault('mode','file')
