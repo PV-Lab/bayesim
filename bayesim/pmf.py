@@ -159,6 +159,7 @@ class Pmf(object):
         num_nbs = len(to_subdivide)-num_high_prob_boxes
 
         # create new boxes (and delete old ones)
+        new_boxes = []
         for box in to_subdivide.iterrows():
             # check if minimum width is already satisfied
             num_divs_here = num_divs
@@ -181,10 +182,12 @@ class Pmf(object):
                 # copy same params except for ranges
                 new_pl.add_fit_param(name=p['name'],val_range=[box[1][p['name']+'_min'],box[1][p['name']+'_max']],length=num_divs_here[p['name']],min_width=p['min_width'],spacing=p['spacing'],units=p['units'])
             # make new df, spreading total prob from original box among new smaller ones
-            new_boxes = self.make_points_list(new_pl.fit_params,total_prob=box[1]['prob'])
+            new_boxes.append(self.make_points_list(new_pl.fit_params,total_prob=box[1]['prob']))
 
-            # concatenate new DataFrame to self.points
-            self.points = pd.concat([self.points,new_boxes])
+        new_boxes = pd.concat(new_boxes)
+
+        # concatenate new DataFrame to self.points
+        self.points = pd.concat([self.points,new_boxes])
 
         # reindex DataFrame
         self.points = self.points.reset_index(drop=True)
@@ -193,6 +196,9 @@ class Pmf(object):
         self.normalize()
 
         print(str(num_high_prob_boxes) + ' box(es) with probability > ' + str(threshold_prob) + ' and ' + str(num_nbs) + ' neighboring boxes subdivided!')
+
+        # is returning this the best approach, or should it be written to file or something?
+        return new_boxes
 
     def multiply(self, other_pmf):
         """

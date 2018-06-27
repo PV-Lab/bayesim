@@ -12,6 +12,7 @@ class model(object):
             subdivision
         allow for multiple types of model output
         figure out data formatting for model and observations
+        put some of the pmf functions here to call directly (visualize, subdivide, etc.)
     """
 
     def __init__(self,params,ec,output_var):
@@ -22,9 +23,6 @@ class model(object):
             fit_params (:obj:`param_list`): param_list object containing parameters to be fit and associated metadata
             ec (:obj:`list` of :obj:`str`): names of experimental conditions
             output_var (`str`): name of experimental output measurements
-
-        Todo:
-            eventually, allow multiple types of output
         """
         # should we do sanity checks here or at runtime?
         # (i.e. checking that model_func doesn't require any inputs other than
