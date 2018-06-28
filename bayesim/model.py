@@ -1,4 +1,5 @@
 from bayesim.pmf import Pmf
+import bayesim.param_list as pl
 import pandas as pd
 import deepdish as dd
 from copy import deepcopy
@@ -38,6 +39,7 @@ class model(object):
         Args:
             fit_params (:obj:`param_list`): param_list object containing parameters to be fit and associated metadata
             ec (:obj:`list` of :obj:`str`): names of experimental conditions
+            ec_tol_digits(`int`): number of digits to round off values of EC's (default 5)
             output_var (`str`): name of experimental output measurements
             load_state (`bool`): flag for whether to load state from a file - if True, other inputs (apart from state_file) are ignored
             state_file (`str`): path to file saved by save_state() fcn
@@ -47,6 +49,7 @@ class model(object):
         """
 
         state_file = argv.setdefault('state_file','bayesim_state.h5')
+        ec_tol_digits = argv.setdefault('ec_tol_digits',5)
 
         if argv['load_state']:
             state = dd.io.load(argv['state_file'])
@@ -56,6 +59,7 @@ class model(object):
             self.param_names = [p['name'] for p in self.fit_params]
             self.ec = state['ec']
             self.output_var = state['output_var']
+            self.ec_tol_digits = state['ec_tol_digits']
 
             # probabilities
             self.probs = Pmf(self.fit_params)
@@ -72,6 +76,7 @@ class model(object):
         else:
             # read in inputs
             self.output_var = argv['output_var']
+            self.ec_tol_digits = ec_tol_digits
 
             if 'params' in argv.keys():
                 self.probs = []
@@ -136,7 +141,7 @@ class model(object):
         if mode == 'file':
             self.obs_data = dd.io.load(argv['fpath'])
             # get EC names if necessary
-            cols = self.obs_data.columns
+            cols = list(self.obs_data.columns)
             if output_col not in cols:
                 raise NameError('Your output variable name, %s, is not the name of a column in your input data!', %(output_col))
                 break
@@ -167,27 +172,91 @@ class model(object):
             mode (`str`): either 'file' or 'function' - should only use the latter if using an analytical model
             func_name (callable): if mode='function', provide function here
             fpath (`str`): if mode='file', provide path to file
-
+            output_column (`str`): optional, header of column containing output data (required if different from self.output_var)
         Todo:
             Figure out best way to check for correct formatting in an input file
             Will this function also be used to attach new simulated data or should that be separate?
         """
 
         mode = argv.setdefault('mode','file')
+        output_col = argv.setdefault('output_column',self.output_var)
 
         if mode == 'file':
             # import and sort data on parameter values
             self.model_data = dd.io.load(argv['fpath']).sort_values(self.param_names)
-            # do some checks on formatting (and that all the observed conditions and param vals are present)... (still need to add this)
+
+            # now a bunch of data integrity checks
+            cols = list(self.model_data.columns)
+            # first, check that the output is there
+            if output_col not in cols:
+                raise NameError('Your output variable name, %s, is not the name of a column in your model data!', %(output_col))
+                break
+            else:
+                cols.remove(output_col)
+                # next, that all the experimental conditions are there
+                for c in self.ec:
+                    if c not in cols:
+                        raise NameError('Experimental condition %s is not the name of a column in your model data!' %(c))
+                        break
+                    else:
+                        cols.remove(c)
+                # if param_names has been populated, check if they match
+                if not self.param_names == []:
+                    if set(self.param_names)==set(cols):
+                        pass # all good
+                    elif set(self.param_names) <= set(cols):
+                        print('Ignoring extra columns in model data file: %s',%(str(list(set(cols)-set(self.param_names)))))
+                    elif set(cols) <= set(self.param_names):
+                        print('These experimental conditions were missing from your model data file: %s\nProceeding assuming that %s is the full set of experimental conditions...'%(str(list(set(self.param_names)-set(cols))), str(cols)))
+                        self.param_names = cols
+
+            # next get list of parameter space points
+            param_points_grps = self.model_data.groupby(self.param_names)
+            param_points = pd.DataFrame.from_records(data=param_points_grps.groups.keys(),columns=param_names).sort_values(self.param_names).reset_index(drop=True)
+
+            # if PMF has been populated, check that points match
+            if not self.probs == [] and not all(param_points==probs.points[self.param_names]):
+                print('Your previously populated PMF does not have the same set of parameter space points as your model data. Proceeding using the points from the model data.')
+                self.probs = []
+
+            ## check that all EC's are present at all model points
+            # first get list of EC points from observed data (round off and sort values before comparison)
+            ec_pts = pd.DataFrame.from_records(data=self.obs_data.groupby(self.ec).groups.keys(),columns=self.ec).round(self.ec_tol_digits).sort_values(ec).reset_index(drop=True)
+            # then check at each model point that they match
+            for name,group in param_points_grps:
+                if not all(ec_pts==group.round(self.ec_tol_digits).sort_values(ec).reset_index(drop=True)):
+                    raise ValueError('The experimental conditions do not match to %d digits between the observed and modeled data at the modeled parameter space point %s!',%(self.ec_tol_digits,name))
+                    break
+
+            # Generate self.probs if necessary
+            if self.probs == []:
+                # check that points are on a grid (the quick but slightly less certain way)
+                param_lengths = [len(set(param_points[name])) for name in self.param_names]
+                if not np.product(param_lengths)==len(param_points):
+                    raise ValueError('Your modeled parameter space does not appear to be on a grid; the current version of bayesim can only handle initially gridded spaces (unless using a previously saved subdivided state).')
+                    break
+                else:
+                    param_vals = {name:list(set(param_points[name])) for name in self.param_names}
+                    # try to guess spacing - this may need twiddling
+                    param_spacing = {}
+                    for name in self.param_names:
+                        vals = param_vals[name]
+                        diffs = [vals[i+1]-vals[i] for i in range(len(vals)-1)]
+                        ratios = [vals[i+1]/vals[i] for i in range(len(vals)-1)]
+                        if np.std(diffs)/np.mean(diffs) < np.std(ratios)/np.mean(ratios):
+                            param_spacing[name] = 'linear'
+                        else:
+                            param_spacing[name] = 'log'
+
+                    params = pl.param_list()
+                    for name,vals in param_vals:
+                        params.add_fit_param(name=name,vals=vals)
 
 
-            # also get list of prob points from here if not populated already
-            # (if populated and different, warn on overwrite)
+            # generate self.params if necessary
 
             # compute self.start_indices and self.end_indices...
-
-
-            # (without the checks above this takes a lot on trust right now)
+            # (rewrite using groupby and compare speeds)
             ind = 0
             for pt in self.probs.points.iterrows():
                 param_vals = {p:pt[1][p] for p in self.param_names}
@@ -323,6 +392,7 @@ class model(object):
         # parameters
         state['fit_params'] = self.fit_params
         state['ec'] = self.ec
+        state['ec_tol_digits'] = self.ec_tol_digits
         state['output_var'] = self.output_var
 
         # PMF

@@ -16,26 +16,56 @@ class param_list(object):
 
         Args:
             name (str): name of parameter (required)
-            val_range (:obj:`list` of :obj:`float`): [min, max] (required)
+            val_range (:obj:`list` of :obj:`float`): [min, max] (either this or vals is required)
+            vals (:obj:`list` of :obj:`float`): full list of vals for this param
             length (int): initial length of this parameter (defaults to 10)
-            min_width(`float`): minimum box width for this parameter - subtractive if linear spacing and divisive if logarithmic (defaults to 0.01 of total range)
+            min_width(`float`): minimum box width for this parameter - subtractive if linear spacing and divisive if logarithmic (defaults to 0.01 of total range, required if providing val_range)
             spacing (str): 'linear' or 'log' (defaults to linear)
             units (str): units for this parameter, if any (defaults to 'unitless')
         """
-        # sanity checks
-        assert 'name' in argv and 'val_range' in argv, "Parameter must at least have a name and a range!"
-        val_range = argv['val_range']
-        assert len(val_range)==2 and val_range[1]>val_range[0], "val_range must be of length 2 with second entry larger than first!"
-
         # set some defaults - linear spacing, ten subdivisions, no units
         spacing = argv.setdefault('spacing','linear')
         length = argv.setdefault('length',10)
         units = argv.setdefault('units','unitless')
 
+        # sanity check
+        assert 'name' in argv and ('val_range' in argv or 'vals' in argv), "Parameter must at least have a name and a range!"
+
         # read in info
         param_info = dict(argv)
         spacing = param_info['spacing']
         length = param_info['length']
+
+        # compute edges and values
+        if 'val_range' in argv:
+            val_range = argv['val_range']
+            assert len(val_range)==2 and val_range[1]>val_range[0], "val_range must be of length 2 with second entry larger than first!"
+            if spacing == 'linear':
+                edges_vals = np.linspace(val_range[0],val_range[1],2*length+1)
+            elif spacing == 'log':
+                edges_vals = np.logspace(np.log10(val_range[0]),np.log10(val_range[1]),2*length+1)
+            edges = edges_vals[::2]
+            vals = edges_vals[1:-1:2]
+        elif 'vals' in argv:
+            vals = argv['vals']
+            assert(len(vals)>=2), "vals should have at least two values"
+            vals = sorted(vals)
+            edges = np.zeros(len(vals))
+            for i in range(len(vals)):
+                if spacing=='linear':
+                    edges[i] = vals[i]-0.5*(vals[i+1]-vals[i])
+                elif spacing=='log':
+                    edges[i] = vals[i]/((vals[i+1]/vals[i])**0.5)
+            # last edge
+            if spacing=='linear':
+                edges[len(vals)] = vals[-1]+0.5*(vals[-1]-vals[-2])
+            elif spacing=='log':
+                edges[len(vals)] = vals[-1]*((vals[-1]/vals[-2])**0.5)
+            val_range = [min(edges),max(edges)]
+
+        param_info['val_range'] = val_range
+        param_info['edges'] = edges
+        param_info['vals'] = vals
 
         if 'min_width' not in argv.keys():
             if spacing == 'linear':
@@ -43,15 +73,5 @@ class param_list(object):
             elif spacing == 'log':
                 min_width = (val_range[1]/val_range[0])**(1./(10*length))
             param_info['min_width'] = min_width
-
-        # compute edges and values
-        if spacing == 'linear':
-            edges_vals = np.linspace(val_range[0],val_range[1],2*length+1)
-        elif spacing == 'log':
-            edges_vals = np.logspace(np.log10(val_range[0]),np.log10(val_range[1]),2*length+1)
-        edges = edges_vals[::2]
-        vals = edges_vals[1:-1:2]
-        param_info['edges'] = edges
-        param_info['vals'] = vals
 
         self.fit_params.append(param_info)

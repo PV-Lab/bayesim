@@ -16,6 +16,7 @@ class Pmf(object):
 
     Todo:
         make a save_state function for this
+        (long-term) allow for non-gridded parameter space (Voronoi? Or MCMC with no subdivision)
     """
 
     def make_points_list(self, params, total_prob=1.0):
@@ -58,16 +59,22 @@ class Pmf(object):
         return df
 
 
-    def __init__(self, params):
+    def __init__(self, **argv):
         """
+        Provide one argument or the other.
+
         Args:
             params (:obj:`param_list`): param_list object containing parameters to be fit and associated metadata
+            param_points (`DataFrame`): DataFrame containing all parameter points to start with
         """
 
-        # for now just copy in the param_list wholesale
-        # eventually should probably scrub and/or update vals...
-        self.params = params.fit_params # last dot might be wrong
-        self.points = self.make_points_list(self.params)
+        if 'params' in argv.keys():
+            # for now just copy in the param_list wholesale
+            # eventually should probably scrub and/or update vals...
+            self.params = params.fit_params # last dot might be wrong
+            self.points = self.make_points_list(self.params)
+        elif 'param_points' in argv.keys():
+
 
     def normalize(self):
         """Normalize overall PMF."""
