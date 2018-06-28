@@ -48,7 +48,7 @@ con = p.get_new_section_id('Model')
 p.s('Figure 1: flowchart')
 
 con = p.get_new_section_id('Software Architecture')
-
+p.s('Figure 2: structure of code')
 
 con = p.get_new_section_id('Example with diode')
 con = p.get_new_section_id('Example with real data')
