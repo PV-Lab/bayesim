@@ -32,19 +32,20 @@ p.add_alias(r'''\mathbf{\hat{s}}''','s')
 
 p.set_title('Byesim: a tool for fast device characterization with Bayesian inference')
 
-p.add_abstract_sentence(r'''Achieving low thermal conductivity and good electrical properties is a crucial condition for thermal energy harvesting materials. Nanostructuring offers a very powerful tool to address both requirements: in nanostructured materials, boundaries preferentially scatter phonons compared to electrons. The search for low-thermal conductivity nanostructures is typically limited to materials with simple crystal structures, such as silicon, because of the complexity arising from modeling branch- and wave vector-dependent nanoscale heat transport. Using the phonon mean-free-path (MFP) dependent Boltzmann transport equation, a model that overcomes this limitation, we compute thermal transport in 75 nanoporous Half Heusler compounds for different pore sizes. We demonstrate that the optimization of thermal transport in nanostructures should take into account both bulk thermal properties and geometry-dependent phonon suppression, two aspects that are typically engineered separately. In fact, our work predicts that, given a set of bulk materials and a system geometry, the ordering of the bulk thermal conductivity does not necessarily align with that of the nanostructure. We show that what dictates thermal transport is the interplay between the bulk MFP distribution and the material's characteristic length. Finally, we derive a thermal transport model than enables fast systems screening within large bulk material repositories and a given geometry. Our study motivates the need for a holistic approach in engineering thermal transport and provides a method for high-throughput materials discovery.''')
+p.add_abstract_sentence(r'''abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract ''')
 
 con = p.get_new_section_id('Introduction')
 
-p.s('Example of referencens as seen in ' + p.cite('fugallo2014thermal') + r''' and this refers to fig ''' + p.ref(fig_1 + 'a') + r'''referes the Eq. ''' + p.ref(nn1),br=1)
+p.s('introduction')
+#p.s('Example of referencens as seen in ' + p.cite('fugallo2014thermal') + r''' and this refers to fig ''' + p.ref(fig_1 + 'a') + r'''referes the Eq. ''' + p.ref(nn1),br=1)
 
-p.add_equation(r'''E=mc^2 ''',label=nn1)
+#p.add_equation(r'''E=mc^2 ''',label=nn1)
 
-p.add_figure(filename='figure_1',caption='',label=fig_1,center_page = True)
+#p.add_figure(filename='figure_1',caption='',label=fig_1,center_page = True)
 
 
 con = p.get_new_section_id('Model')
-
+p.s('Figure 1: flowchart')
 
 con = p.get_new_section_id('Software Architecture')
 
@@ -63,6 +64,3 @@ p.s(r'''Research supported as part of the Solid-State Solar-Thermal Energy Conve
 
 p.tex()
 p.make('Manuscript',show=True )
-
-
-
