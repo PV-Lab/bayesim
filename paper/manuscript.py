@@ -36,7 +36,7 @@ p.add_abstract_sentence(r'''abstract abstract abstract abstract abstract abstrac
 
 con = p.get_new_section_id('Introduction')
 
-p.s('introduction')
+p.s('introduction introduction introduction introduction introduction introduction introduction introduction introduction introduction introduction introduction introduction introduction introduction introduction introduction introduction introduction introduction introduction introduction introduction introduction introduction introduction introduction introduction introduction introduction introduction introduction introduction ')
 #p.s('Example of referencens as seen in ' + p.cite('fugallo2014thermal') + r''' and this refers to fig ''' + p.ref(fig_1 + 'a') + r'''referes the Eq. ''' + p.ref(nn1),br=1)
 
 #p.add_equation(r'''E=mc^2 ''',label=nn1)
@@ -45,14 +45,16 @@ p.s('introduction')
 
 
 con = p.get_new_section_id('Model')
-p.s('Figure 1: flowchart')
+p.s('Figure 1: high-level flowchart')
 
 con = p.get_new_section_id('Software Architecture')
-p.s('Figure 2: structure of code')
+p.s('Figure 2: detailed workflow (including iteration to update posterior)')
 
-con = p.get_new_section_id('Example with diode')
+con = p.get_new_section_id('Example with diode - validation')
+p.s('Figure 3: diode fit stuff')
+
 con = p.get_new_section_id('Example with real data')
-
+p.s('Figure 4: fitting real data (maybe resistive diode?)')
 
 con = p.get_new_section_id('Discussion')
 p.s('discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion ')
