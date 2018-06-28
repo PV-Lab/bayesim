@@ -1,11 +1,12 @@
-bayesim -attach_observation='obs_data.h5' -output_data='J' -attach_model='model_data.h5' -subdivide=True -step_side = 10 -output_file='results'
-
-it will save a file h5 with probabilities and new simulations to run
 
 
+bayesim -output_variable=J
+bayesim -attach_observation=obs_data.h5
+bayesim -attach_model=model_data.h5
+bayesim -run -save_step=10
+bayesim -subdive -th_pv=0.8 -th_p=0.3
+bayesim -plot_probability -only_final
 
 
-
-bayesim -plot probilities
 
 
