@@ -55,11 +55,14 @@ con = p.get_new_section_id('Example with real data')
 
 
 con = p.get_new_section_id('Discussion')
+p.s('discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion discussion ')
+
 con = p.get_new_section_id('Conslusions')
+p.s('conclusions conclusions conclusions conclusions conclusions conclusions conclusions conclusions conclusions conclusions conclusions conclusions conclusions conclusions conclusions conclusions conclusions conclusions conclusions conclusions conclusions conclusions conclusions conclusions conclusions conclusions conclusions conclusions ')
 
 
 con = p.get_new_section_id('Acknowledgements')
-p.s(r'''Research supported as part of the Solid-State Solar-Thermal Energy Conversion Center (S3TEC), an Energy Frontier Research Center funded by the US Department of Energy (DOE), Office of Science, Basic Energy Sciences (BES), under Award DESC0001.''')
+p.s(r'''acknowledgements acknowledgements acknowledgements acknowledgements acknowledgements acknowledgements acknowledgements acknowledgements acknowledgements acknowledgements acknowledgements acknowledgements acknowledgements acknowledgements acknowledgements acknowledgements ''')
 
 
 p.tex()
