@@ -1,8 +1,9 @@
 %File Generated with PyPaper
-\documentclass[aps,prl,reprint,amsmath,amssymb,superscriptaddress,notitlepage,groupedaddress,twocolumn]{revtex4-1}
+\documentclass[aps,prl,reprint,amsmath,amssymb,superscriptaddress,notitlepage,groupedaddress]{revtex4-1}
 \usepackage{graphicx}
 \usepackage{dcolumn}
 \usepackage{stackengine}
+\usepackage[section]{placeins}
 \usepackage[dvipsnames*,svgnames]{xcolor}
 \usepackage{verbatim}
 \usepackage[position=bottom,caption=false,captionskip=3pt,font=normalsize,subrefformat=simple,labelformat=simple]{subfig}
@@ -34,29 +35,55 @@ urlcolor={blue!80!black}}
 \email{buonassi@mit.edu}
 \affiliation{Department of Mechanical Engineering, Massachusetts Institute of Technology, 77 Massachusetts Avenue, Cambridge, MA 02139, USA}
 \begin{abstract}
-Achieving low thermal conductivity and good electrical properties is a crucial condition for thermal energy harvesting materials. Nanostructuring offers a very powerful tool to address both requirements: in nanostructured materials, boundaries preferentially scatter phonons compared to electrons. The search for low-thermal conductivity nanostructures is typically limited to materials with simple crystal structures, such as silicon, because of the complexity arising from modeling branch- and wave vector-dependent nanoscale heat transport. Using the phonon mean-free-path (MFP) dependent Boltzmann transport equation, a model that overcomes this limitation, we compute thermal transport in 75 nanoporous Half Heusler compounds for different pore sizes. We demonstrate that the optimization of thermal transport in nanostructures should take into account both bulk thermal properties and geometry-dependent phonon suppression, two aspects that are typically engineered separately. In fact, our work predicts that, given a set of bulk materials and a system geometry, the ordering of the bulk thermal conductivity does not necessarily align with that of the nanostructure. We show that what dictates thermal transport is the interplay between the bulk MFP distribution and the material's characteristic length. Finally, we derive a thermal transport model than enables fast systems screening within large bulk material repositories and a given geometry. Our study motivates the need for a holistic approach in engineering thermal transport and provides a method for high-throughput materials discovery.\end{abstract}
+abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract \end{abstract}
 \maketitle
 
-\section*{Acknowledgements}
-Research supported as part of the Solid-State Solar-Thermal Energy Conversion Center (S3TEC), an Energy Frontier Research Center funded by the US Department of Energy (DOE), Office of Science, Basic Energy Sciences (BES), under Award DESC0001.\par 
-\begin{equation}
-\begin{split}\label{Eq:1001}
-E=mc^2 
-\end{split}
-\end{equation}
-
+\fakesection{fake}
+ 
 \section*{Introduction}
-Example of referencens as seen in ~\cite{fugallo2014thermal} and this refers to fig ~\subref*{Fig:10a}referes the Eq. ~(\autoref{Eq:1001}) 
-\begin{figure*}[!ht]
+ 
+\section*{Model}
+ 
+\section*{Software Architecture}
+ Figure 1: detailed workflow (including iteration to update posterior)  
+\begin{figure}[!ht]
 
 \subfloat[\label{Fig:10a}]
-{\includegraphics[width=0.48\textwidth]{./figure_1a.png}}
+{\includegraphics[width=0.48\columnwidth]{./figure_1a.png}}
 \hfill
 \subfloat[\label{Fig:10b}]
-{\includegraphics[width=0.48\textwidth]{./figure_1b.png}}
-\caption{}
-\end{figure*}
- %merlin.mbs apsrev4-1.bst 2010-07-25 4.21a (PWD, AO, DPC) hacked
+{\includegraphics[width=0.48\columnwidth]{./figure_1b.png}}
+\caption{(a) Scheme (b) Probability}
+\end{figure}
+ \begin{figure}
+{\includegraphics[width=0.7\columnwidth]{./figure_2.png}}
+\caption{Bayesian workflow}
+\end{figure}
+\section*{Example with diode - validation}
+ Figure 2: diode fit stuff  \begin{figure}
+{\includegraphics[width=0.7\columnwidth]{./figure_3.png}}
+\caption{Ideal diode}
+\end{figure}
+\section*{Example with real data}
+ Figure 4: fitting real data (maybe resistive diode?)  
+\begin{figure}[!ht]
+
+\subfloat[\label{Fig:40a}]
+{\includegraphics[width=0.48\columnwidth]{./figure_4a.png}}
+\hfill
+\subfloat[\label{Fig:40b}]
+{\includegraphics[width=0.48\columnwidth]{./figure_4b.png}}
+\caption{Real data}
+\end{figure}
+
+\section*{Discussion}
+ 
+\section*{Conclusions}
+ 
+\section*{Acknowledgements}
+ 
+\section*{Appendix}
+ include minimal code to run diode example %merlin.mbs apsrev4-1.bst 2010-07-25 4.21a (PWD, AO, DPC) hacked
 %Control: key (0)
 %Control: author (8) initials jnrlst
 %Control: editor formatted (1) identically to author
@@ -64,7 +91,7 @@ Example of referencens as seen in ~\cite{fugallo2014thermal} and this refers to 
 %Control: page (0) single
 %Control: year (1) truncated
 %Control: production of eprint (0) enabled
-\begin{thebibliography}{1}%
+\begin{thebibliography}{0}%
 \makeatletter
 \providecommand \@ifxundefined [1]{%
  \@ifx{#1\undefined}
@@ -108,19 +135,5 @@ Example of referencens as seen in ~\cite{fugallo2014thermal} and this refers to 
 \providecommand \BibitemShut  [1]{\csname bibitem#1\endcsname}%
 \let\auto@bib@innerbib\@empty
 %</preamble>
-\bibitem [{\citenamefont {Fugallo}\ \emph {et~al.}(2014)\citenamefont
-  {Fugallo}, \citenamefont {Cepellotti}, \citenamefont {Paulatto},
-  \citenamefont {Lazzeri}, \citenamefont {Marzari},\ and\ \citenamefont
-  {Mauri}}]{fugallo2014thermal}%
-  \BibitemOpen
-  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {G.}~\bibnamefont
-  {Fugallo}}, \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {Cepellotti}},
-  \bibinfo {author} {\bibfnamefont {L.}~\bibnamefont {Paulatto}}, \bibinfo
-  {author} {\bibfnamefont {M.}~\bibnamefont {Lazzeri}}, \bibinfo {author}
-  {\bibfnamefont {N.}~\bibnamefont {Marzari}}, \ and\ \bibinfo {author}
-  {\bibfnamefont {F.}~\bibnamefont {Mauri}},\ }\href@noop {} {\bibfield
-  {journal} {\bibinfo  {journal} {Nano letters}\ }\textbf {\bibinfo {volume}
-  {14}},\ \bibinfo {pages} {6109} (\bibinfo {year} {2014})}\BibitemShut
-  {NoStop}%
 \end{thebibliography}%
 \end{document}
