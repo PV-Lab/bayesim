@@ -8,19 +8,10 @@ import numpy as np
 class model(object):
     """
     Updates from 180626 meeting:
-        top priorities: accepting files as input, saving state (everything else later)
-
         make subdivide, visualize methods here
-        m= bayesim(load_state=True,filename='')
-        create mocked data (diode) for model and obs in hdf5 format (so GR can use it for the command line version)
-        add option to run() for how often to save intermediate PMFs
-        maybe also a boolean for whether it's waiting for new model data
         create new internal variable new_sims_list or something
         also add a method to return new_sims_list either as df or write to file, etc.
         fix inputs to different functions (messy)
-        make sure everything can accept files as inputs (important for argparse)
-        add save_state function that writes hdf5 with all current variables
-        maybe make entire state into a dict?
 
     Todo:
         animating visualization during run
@@ -215,10 +206,10 @@ class model(object):
             gb (:obj:`groupby`): Pandas groupby object of model data grouped by parameter points
         """
         grps = argv['gb']
-        ec_pts = pd.DataFrame.from_records(data=self.obs_data.groupby(self.ec).groups.keys(),columns=self.ec).round(self.ec_tol_digits).sort_values(ec).reset_index(drop=True)
+        ec_pts = pd.DataFrame.from_records(data=self.obs_data.groupby(self.ec).groups.keys(),columns=self.ec).round(self.ec_tol_digits).sort_values(self.ec).reset_index(drop=True)
         # then check at each model point that they match
         for name,group in grps:
-            if not all(ec_pts==group.round(self.ec_tol_digits).sort_values(ec).reset_index(drop=True)):
+            if not all(ec_pts==group[self.ec].round(self.ec_tol_digits).sort_values(self.ec).reset_index(drop=True)):
                 raise ValueError('The experimental conditions do not match to %d digits between the observed and modeled data at the modeled parameter space point %s!'%(self.ec_tol_digits,name))
                 return
 
@@ -234,6 +225,7 @@ class model(object):
         Todo:
             Should adding additional model data be a separate function?
             some way to elegantly use the function when adding new model data?
+            pmf should maybe store start/end indices, either way split out computing them rather than copying code!
         """
 
         #mode = argv.setdefault('mode','file')
@@ -249,7 +241,7 @@ class model(object):
 
             # next get list of parameter space points
             param_points_grps = self.model_data.groupby(self.param_names)
-            param_points = pd.DataFrame.from_records(data=param_points_grps.groups.keys(),columns=param_names).sort_values(self.param_names).reset_index(drop=True)
+            param_points = pd.DataFrame.from_records(data=param_points_grps.groups.keys(),columns=self.param_names).sort_values(self.param_names).reset_index(drop=True)
 
             # if PMF has been populated, check that points match
             if not self.probs == [] and not all(param_points==probs.points[self.param_names]):
@@ -311,10 +303,10 @@ class model(object):
 
             # next get list of parameter space points
             new_points_grps = self.model_data.groupby(self.param_names)
-            new_points = pd.DataFrame.from_records(data=param_points_grps.groups.keys(),columns=param_names).sort_values(self.param_names).reset_index(drop=True)
+            new_points = pd.DataFrame.from_records(data=new_points_grps.groups.keys(),columns=self.param_names).sort_values(self.param_names).reset_index(drop=True)
 
             # check that the points are the right ones
-            if not new_points == self.probs.points[self.param_names].tail(len(new_points)).sort_values(self.param_names).reset_index(drop=True):
+            if not all(new_points == self.probs.points[self.param_names].tail(len(new_points)).sort_values(self.param_names).reset_index(drop=True)):
                 # probably shouldn't rely on ordering but rather explicitly save new_pts somewhere or something like that
                 raise ValueError('The parameter points in your newly added data do not match the newly added points in the PMF!')
                 return
@@ -323,8 +315,26 @@ class model(object):
             self.check_ecs(gb=new_points_grps)
 
             # append the model data
+            self.model_data = pd.concat([self.model_data,new_data])
 
             # calculate the new start and end indices
+            # compute self.start_indices and self.end_indices...
+            # (rewrite using groupby and compare speeds)
+            # also this code is copied from above right now, should split out
+            # also also relying on ordering again...
+            ind = 0
+            for pt in self.probs.points.tail(len(new_points)).iterrows():
+                param_vals = {p:pt[1][p] for p in self.param_names}
+                query_str = ''
+                for n in param_vals.keys():
+                    query_str = query_str + 'abs(%f-%s)/%s<1e-6 & '%(param_vals[n],n,n)
+                query_str = query_str[:-3]
+
+                subset = self.model_data.tail(len(new_data)).query(query_str)
+                start_ind = subset.index[0]
+                end_ind = subset.index[-1]+1
+                self.start_indices.append(start_ind)
+                self.end_indices.append(end_ind)
 
         elif mode=='function':
             # is there a way to save this (that could be saved to HDF5 too) so that subdivide can automatically call it?
@@ -411,6 +421,8 @@ class model(object):
         th_pm = argv.setdefault('th_pm',0.8)
         th_pv = argv.setdefault('th_pv',0.05)
         # need to test whether I need to specifically parse into the namespace if they're different from defaults
+
+        # check if needs new model data or already has run
 
         # randomize observation order first
         self.obs_data = self.obs_data.sample(frac=1)
