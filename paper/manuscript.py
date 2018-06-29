@@ -70,6 +70,8 @@ p.figure(filename='figure_3',caption='Ideal diode',center_page = False,label = f
 
 p.subsection('Example with Real Data')
 p.s(r'''\begin{itemize}\item more practical example - probably fitting resistive diode to the same SnS data we used in the Joule paper \item figure 4 showing PMF (animation in ESI) and comparison of JV curves \end{itemize}''')
+
+p.note('example fgryer2qt rt r')
 p.figure(filename='figure_4',caption='Real data',center_page = False,label=fig_4)
 
 p.subsection('Maybe an example with a numerical model like PC1D')
