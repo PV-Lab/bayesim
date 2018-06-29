@@ -34,7 +34,7 @@ p.set_title('Bayesim: a tool for fast device characterization with Bayesian infe
 
 p.add_abstract_sentence(r'''Target journal: Computer Physics Communications''')
 
-p.new_section('Introduction')
+p.section('Introduction')
 
 p.s('motivation (within PV and beyond) citing examples of our application of this idea so far (Joule paper and PVSC proceeding)')
 #p.s('Example of referencens as seen in ' + p.cite('fugallo2014thermal') + r''' and this refers to fig ''' + p.ref(fig_1 + 'a') + r'''referes the Eq. ''' + p.ref(nn1),br=1)
@@ -44,38 +44,46 @@ p.s('motivation (within PV and beyond) citing examples of our application of thi
 #p.add_figure(filename='figure_1',caption='',label=fig_1,center_page = True)
 
 
-p.new_section('Model')
-p.s(r'''\begin{itemize}\item background on Bayes theorem \item particulars about how it can be applied to fitting problems we're interested in \item advantages over traditional fitting approaches \item figure 1 \end{itemize}''')
+p.section('Model')
 
-p.add_figure(filename='figure_1',caption='(a) Scheme (b) Probability',center_page = False,label=fig_1)
+s1 =  'background on Bayes theorem'
+s2 =  r'''particulars about how it can be applied to fitting problems we're interested in'''
+s3 = 'advantages over traditional fitting approaches'
+s4 =  'figure 1'
+p.itemize([s1,s2,s3,s4])
 
-p.new_section('Software Architecture and Interface')
+
+
+
+p.figure(filename='figure_1',caption='(a) Scheme (b) Probability',center_page = False,label=fig_1)
+
+p.section('Software Architecture and Interface')
 p.s(r'''\begin{itemize}\item description of structure of new code and workflow for using it (both Python scripting and command-line) \item figure 2 \end{itemize}''')
 
-p.add_figure(filename='figure_2',caption='Bayesian workflow',center_page = False,label = fig_2)
+p.figure(filename='figure_2',caption='Bayesian workflow',center_page = False,label = fig_2)
 
-con = p.new_section('Application Examples')
+p.section('Application Examples')
+p.subsection('Ideal Diode Model')
 
-p.s(r'''\subsection{Ideal Diode Model}''')
 p.s(r'''\begin{itemize}\item validation example - ``observed'' data is just generated using the model and we show we can recover the correct input parameters \item figure 3 showing PMF (animation in ESI) \end{itemize}''')
-p.add_figure(filename='figure_3',caption='Ideal diode',center_page = False,label = fig_3)
+p.figure(filename='figure_3',caption='Ideal diode',center_page = False,label = fig_3)
 
-p.s(r'''\subsection{Example with Real Data}''')
+p.subsection('Example with Real Data')
 p.s(r'''\begin{itemize}\item more practical example - probably fitting resistive diode to the same SnS data we used in the Joule paper \item figure 4 showing PMF (animation in ESI) and comparison of JV curves \end{itemize}''')
-p.add_figure(filename='figure_4',caption='Real data',center_page = False,label=fig_4)
+p.figure(filename='figure_4',caption='Real data',center_page = False,label=fig_4)
 
-p.s(r'''\subsection{Maybe an example with a numerical model like PC1D}''')
+p.subsection('Maybe an example with a numerical model like PC1D')
+p.subsection('Maybe a non-PV example')
 
-p.s(r'''\subsection{Maybe a non-PV example}''')
 p.s('thermoelectrics? TIDLS?')
 
-p.new_section('Conclusions')
+p.section('Conclusions')
 
 
-p.new_section('Acknowledgements')
+p.section('Acknowledgements')
 
 
-p.new_section('Appendix')
+p.section('Appendix')
 p.s(r'''\begin{itemize}\item include minimal code to run ideal diode example \item link to Github repo (which has installation instructions and documentation as well as list of planned future features) \end{itemize}''')
 
 p.tex()
