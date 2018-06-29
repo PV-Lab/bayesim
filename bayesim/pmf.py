@@ -71,10 +71,11 @@ class Pmf(object):
         if 'params' in argv.keys():
             # for now just copy in the param_list wholesale
             # eventually should probably scrub and/or update vals...
-            self.params = params.fit_params # last dot might be wrong
+            self.params = argv['params'].fit_params # last dot might be wrong
             self.points = self.make_points_list(self.params)
         elif 'param_points' in argv.keys():
-
+            # need to implement
+            pass
 
     def normalize(self):
         """Normalize overall PMF."""
@@ -170,6 +171,7 @@ class Pmf(object):
 
         # create new boxes (and delete old ones)
         new_boxes = []
+        dropped_inds = []
         for box in to_subdivide.iterrows():
             # check if minimum width is already satisfied
             num_divs_here = num_divs
@@ -184,6 +186,7 @@ class Pmf(object):
                     print('Minimum width/factor of ' + str(p['min_width']) + ' already satisfied for ' + p['name'] + ' at point: \n' + str(box[1]))
 
             # first, remove this box from DataFrame
+            dropped_inds.append(box[0])
             self.points = self.points.drop([box[0]])
 
             # create new DataFrame with subdivided boxes
@@ -207,8 +210,7 @@ class Pmf(object):
 
         print(str(num_high_prob_boxes) + ' box(es) with probability > ' + str(threshold_prob) + ' and ' + str(num_nbs) + ' neighboring boxes subdivided!')
 
-        # is returning this the best approach, or should it be written to file or something?
-        return new_boxes
+        return new_boxes, dropped_inds
 
     def multiply(self, other_pmf):
         """
