@@ -26,7 +26,7 @@ citecolor={blue},
 urlcolor={blue!80!black}}
 \lstset{basicstyle=\small\ttfamily,columns=flexible,breaklines=true}\newcommand{\fakesection}[1]{\par\refstepcounter{section}\sectionmark{#1}\addcontentsline{toc}{section}{\protect\numberline{\thesection}#1}}\def\equationautorefname~#1\null{#1\null}
 \raggedbottom\usepackage[bottom]{footmisc} \makeatletter \def\p@section{} \def\p@subsubsection{} \makeatother\begin{document}
-\title{Byesim: a tool for fast device characterization with Bayesian inference}
+\title{Bayesim: a tool for fast device characterization with Bayesian inference}
 \author{Rachel Kurchin}
 \affiliation{Department of Mechanical Engineering, Massachusetts Institute of Technology, 77 Massachusetts Avenue, Cambridge, MA 02139, USA}
 \author{Giuseppe Romano}
@@ -35,17 +35,15 @@ urlcolor={blue!80!black}}
 \email{buonassi@mit.edu}
 \affiliation{Department of Mechanical Engineering, Massachusetts Institute of Technology, 77 Massachusetts Avenue, Cambridge, MA 02139, USA}
 \begin{abstract}
-abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract \end{abstract}
+Target journal: Computer Physics Communications\end{abstract}
 \maketitle
 
 \fakesection{fake}
  
 \section*{Introduction}
- 
+ motivation (within PV and beyond) citing examples of our application of this idea so far (Joule paper and PVSC proceeding) 
 \section*{Model}
- 
-\section*{Software Architecture}
- Figure 1: detailed workflow (including iteration to update posterior)  
+ \begin{itemize}\item background on Bayes theorem \item particulars about how it can be applied to fitting problems we're interested in \item advantages over traditional fitting approaches \item figure 1 \end{itemize}  
 \begin{figure}[!ht]
 
 \subfloat[\label{Fig:10a}]
@@ -55,17 +53,17 @@ abstract abstract abstract abstract abstract abstract abstract abstract abstract
 {\includegraphics[width=0.48\columnwidth]{./figure_1b.png}}
 \caption{(a) Scheme (b) Probability}
 \end{figure}
- \begin{figure}
+
+\section*{Software Architecture and Interface}
+ \begin{itemize}\item description of structure of new code and workflow for using it (both Python scripting and command-line) \item figure 2 \end{itemize}  \begin{figure}
 {\includegraphics[width=0.7\columnwidth]{./figure_2.png}}
 \caption{Bayesian workflow}
 \end{figure}
-\section*{Example with diode - validation}
- Figure 2: diode fit stuff  \begin{figure}
+\section*{Application Examples}
+ \subsection{Ideal Diode Model} \begin{itemize}\item validation example - ``observed'' data is just generated using the model and we show we can recover the correct input parameters \item figure 3 showing PMF (animation in ESI) \end{itemize}  \begin{figure}
 {\includegraphics[width=0.7\columnwidth]{./figure_3.png}}
 \caption{Ideal diode}
-\end{figure}
-\section*{Example with real data}
- Figure 4: fitting real data (maybe resistive diode?)  
+\end{figure}\subsection{Example with Real Data} \begin{itemize}\item more practical example - probably fitting resistive diode to the same SnS data we used in the Joule paper \item figure 4 showing PMF (animation in ESI) and comparison of JV curves \end{itemize}  
 \begin{figure}[!ht]
 
 \subfloat[\label{Fig:40a}]
@@ -75,15 +73,13 @@ abstract abstract abstract abstract abstract abstract abstract abstract abstract
 {\includegraphics[width=0.48\columnwidth]{./figure_4b.png}}
 \caption{Real data}
 \end{figure}
-
-\section*{Discussion}
- 
+\subsection{Maybe an example with a numerical model like PC1D} \subsection{Maybe a non-PV example} thermoelectrics? TIDLS? 
 \section*{Conclusions}
  
 \section*{Acknowledgements}
  
 \section*{Appendix}
- include minimal code to run diode example %merlin.mbs apsrev4-1.bst 2010-07-25 4.21a (PWD, AO, DPC) hacked
+ \begin{itemize}\item include minimal code to run ideal diode example \item link to Github repo (which has installation instructions and documentation as well as list of planned future features) \end{itemize} %merlin.mbs apsrev4-1.bst 2010-07-25 4.21a (PWD, AO, DPC) hacked
 %Control: key (0)
 %Control: author (8) initials jnrlst
 %Control: editor formatted (1) identically to author

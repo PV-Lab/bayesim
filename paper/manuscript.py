@@ -30,12 +30,13 @@ p.add_alias(r'''\alpha_{\mathrm{bulk}}''','abulk')
 p.add_alias(r'''\mathbf{\hat{s}}''','s')
 
 
-p.set_title('Byesim: a tool for fast device characterization with Bayesian inference')
+p.set_title('Bayesim: a tool for fast device characterization with Bayesian inference')
 
-p.add_abstract_sentence(r'''abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract ''')
+p.add_abstract_sentence(r'''Target journal: Computer Physics Communications''')
 
 p.new_section('Introduction')
 
+p.s('motivation (within PV and beyond) citing examples of our application of this idea so far (Joule paper and PVSC proceeding)')
 #p.s('Example of referencens as seen in ' + p.cite('fugallo2014thermal') + r''' and this refers to fig ''' + p.ref(fig_1 + 'a') + r'''referes the Eq. ''' + p.ref(nn1),br=1)
 
 #p.add_equation(r'''E=mc^2 ''',label=nn1)
@@ -44,23 +45,29 @@ p.new_section('Introduction')
 
 
 p.new_section('Model')
-#p.s('Figure 1: high-level flowchart')
-
-p.new_section('Software Architecture')
-p.s('Figure 1: detailed workflow (including iteration to update posterior)')
+p.s(r'''\begin{itemize}\item background on Bayes theorem \item particulars about how it can be applied to fitting problems we're interested in \item advantages over traditional fitting approaches \item figure 1 \end{itemize}''')
 
 p.add_figure(filename='figure_1',caption='(a) Scheme (b) Probability',center_page = False,label=fig_1)
+
+p.new_section('Software Architecture and Interface')
+p.s(r'''\begin{itemize}\item description of structure of new code and workflow for using it (both Python scripting and command-line) \item figure 2 \end{itemize}''')
+
 p.add_figure(filename='figure_2',caption='Bayesian workflow',center_page = False,label = fig_2)
 
-p.new_section('Example with diode - validation')
-p.s('Figure 2: diode fit stuff')
+con = p.new_section('Application Examples')
+
+p.s(r'''\subsection{Ideal Diode Model}''')
+p.s(r'''\begin{itemize}\item validation example - ``observed'' data is just generated using the model and we show we can recover the correct input parameters \item figure 3 showing PMF (animation in ESI) \end{itemize}''')
 p.add_figure(filename='figure_3',caption='Ideal diode',center_page = False,label = fig_3)
 
-p.new_section('Example with real data')
-p.s('Figure 4: fitting real data (maybe resistive diode?)')
+p.s(r'''\subsection{Example with Real Data}''')
+p.s(r'''\begin{itemize}\item more practical example - probably fitting resistive diode to the same SnS data we used in the Joule paper \item figure 4 showing PMF (animation in ESI) and comparison of JV curves \end{itemize}''')
 p.add_figure(filename='figure_4',caption='Real data',center_page = False,label=fig_4)
 
-con = p.new_section('Discussion')
+p.s(r'''\subsection{Maybe an example with a numerical model like PC1D}''')
+
+p.s(r'''\subsection{Maybe a non-PV example}''')
+p.s('thermoelectrics? TIDLS?')
 
 p.new_section('Conclusions')
 
@@ -69,7 +76,7 @@ p.new_section('Acknowledgements')
 
 
 p.new_section('Appendix')
-p.s('include minimal code to run diode example')
+p.s(r'''\begin{itemize}\item include minimal code to run ideal diode example \item link to Github repo (which has installation instructions and documentation as well as list of planned future features) \end{itemize}''')
 
 p.tex()
 p.make('Manuscript',show=True )
