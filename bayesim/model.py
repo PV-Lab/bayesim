@@ -50,7 +50,8 @@ class model(object):
             # variables
             self.fit_params = state['fit_params']
             self.param_names = [p['name'] for p in self.fit_params]
-            self.ec = state['ec']
+            self.ec_names = state['ec']
+            self.ec_pts = state['ec_pts']
             self.output_var = state['output_var']
             self.ec_tol_digits = state['ec_tol_digits']
 
@@ -80,12 +81,13 @@ class model(object):
                 self.fit_params = []
                 self.param_names = []
 
-            if 'ec' in argv.keys():
-                self.ec = argv['ec']
+            if 'ec_names' in argv.keys():
+                self.ec_names = argv['ec']
             else:
-                self.ec = []
+                self.ec_names = []
 
             # placeholders
+            self.ec_pts = []
             self.model_data = []
             self.needs_new_model_data = True
             self.obs_data = []
@@ -95,14 +97,14 @@ class model(object):
             self.num_sub = 0 # number of subdivisions done
 
 
-    def attach_ec(self,ec_list):
+    def attach_ec_names(self,ec_list):
         """
         Attach names of experimental conditions.
 
         Args:
             ec_list (:obj:`list` of :obj:`str`): names of experimental conditions
         """
-        self.ec = ec_list
+        self.ec_names = ec_list
 
     def attach_params(self,params):
         """
@@ -144,17 +146,18 @@ class model(object):
                 return
             else:
                 cols.remove(output_col)
-                if self.ec == []:
+                if self.ec_names == []:
                     print('Identified experimental conditions as %s. If this is wrong, rerun and explicitly specify them with attach_ec (make sure they match data file columns) or remove extra columns from data file.' %(str(cols)))
-                    self.ec = cols
+                    self.ec_names = cols
                 else:
-                    if set(cols) == set(self.ec):
+                    if set(cols) == set(self.ec_names):
                         pass # all good
-                    elif set(ec) <= set(cols):
+                    elif set(self.ec_names) <= set(cols):
                         print('Ignoring extra columns in data file: %s'%(str(list(set(cols)-set(ec)))))
-                    elif set(cols) <= set(ec):
+                    elif set(cols) <= set(self.ec_names):
                         print('These experimental conditions were missing from your data file: %s\nProceeding assuming that %s is the full set of experimental conditions...'%(str(list(set(ec)-set(cols))), str(cols)))
-                        self.ec = cols
+                        self.ec_names = cols
+            self.ec_pts =  pd.DataFrame.from_records(data=self.obs_data.groupby(self.ec_names).groups.keys(),columns=self.ec_names).round(self.ec_tol_digits).sort_values(self.ec_names).reset_index(drop=True)
 
         else:
             # this option hasn't been tested and is maybe unnecessary
@@ -179,7 +182,7 @@ class model(object):
         else:
             cols.remove(output_col)
             # next, that all the experimental conditions are there
-            for c in self.ec:
+            for c in self.ec_names:
                 if c not in cols:
                     raise NameError('Experimental condition %s is not the name of a column in your model data!' %(c))
                     return
@@ -206,10 +209,9 @@ class model(object):
             gb (:obj:`groupby`): Pandas groupby object of model data grouped by parameter points
         """
         grps = argv['gb']
-        ec_pts = pd.DataFrame.from_records(data=self.obs_data.groupby(self.ec).groups.keys(),columns=self.ec).round(self.ec_tol_digits).sort_values(self.ec).reset_index(drop=True)
         # then check at each model point that they match
         for name,group in grps:
-            if not all(ec_pts==group[['V','T']].round(self.ec_tol_digits).sort_values(self.ec).reset_index(drop=True)):
+            if not all(self.ec_pts==group[['V','T']].round(self.ec_tol_digits).sort_values(self.ec_names).reset_index(drop=True)):
                 raise ValueError('The experimental conditions do not match to %d digits between the observed and modeled data at the modeled parameter space point %s!'%(self.ec_tol_digits,name))
                 return
 
@@ -347,18 +349,18 @@ class model(object):
             model_func = argv['func_name']
             # iterate over parameter space and measured conditions to compute output at every point
             param_vecs = {p:[] for p in self.param_names}
-            ec_vecs = {c:[] for c in self.ec}
+            ec_vecs = {c:[] for c in self.ec_names}
             model_vals = []
             # self.start_indices and end_indices are indexed the same way as self.prob.points and will be a quick way to get to the model data for a given point in parameter space and then only search through the different experimental conditions
             for pt in self.probs.points.iterrows():
                 param_vals = {p:pt[1][p] for p in self.param_names}
                 self.start_indices.append(len(model_vals))
                 for d in self.obs_data.iterrows():
-                    ec_vals = {c:d[1][c] for c in self.ec}
+                    ec_vals = {c:d[1][c] for c in self.ec_names}
                     # add param and EC vals to the columns
                     for p in self.param_names:
                         param_vecs[p].append(param_vals[p])
-                    for c in self.ec:
+                    for c in self.ec_names:
                         ec_vecs[c].append(d[1][c])
                     # compute/look up the model data
                     # need to make sure that model_func takes in params and EC in appropriate format
@@ -404,7 +406,7 @@ class model(object):
 
         # now query for the EC's in question
         ec_query_str = ''
-        for c in self.ec:
+        for c in self.ec_names:
             ec_query_str = ec_query_str + 'abs(%f-%s)<1e-6 & '%(ec[c],c)
         ec_query_str = ec_query_str[:-3]
         pt = data_subset.query(ec_query_str)
@@ -416,7 +418,7 @@ class model(object):
     def run(self, **argv):
         """
         Do Bayes!
-        Will stop iterating through observations if/when 2/3 of probability mass is concentrated in <= 1/10 of boxes and decide it's time to subdivide. (completely arbitrary thresholding for now)
+        Will stop iterating through observations if/when >= th_pm of probability mass is concentrated in <= th_pv of boxes and decide it's time to subdivide. (completely arbitrary thresholding for now)
 
         Args:
             save_step (`int`): interval (number of data points) at which to save intermediate PMF's (defaults to 10, 0 to save only final, <0 to save none)
@@ -475,7 +477,29 @@ class model(object):
         print('New model points to simulate are saved in the file %s.'%filename)
 
     def calc_model_gradients(self):
-        
+        # construct mat at every EC point
+        for pt in self.ec_pts.iterrows():
+            # need to implement
+            pass
+
+        # given mat, this code computes largest differences along any direction
+        winner_dim = [len(mat.shape)]
+        winner_dim.extend(mat.shape)
+        winners = np.zeros(winner_dim)
+
+        for i in range(len(mat.shape)):
+            # build delta matrix
+            deltas = np.absolute(np.diff(mat,axis=i))
+            pad_widths = [(0,0) for j in range(len(mat.shape))]
+            pad_widths[i] = (1,1)
+            deltas = np.pad(deltas, pad_widths, mode='constant', constant_values=0)
+            # build "winner" matrix
+            winners[i]=np.maximum(deltas[[Ellipsis]+[slice(None,mat.shape[i],None)]+[slice(None)]*(len(mat.shape)-i-1)],deltas[[Ellipsis]+[slice(1,mat.shape[i]+1,None)]+[slice(None)]*(len(mat.shape)-i-1)])
+
+        grad = np.amax(winners,axis=0)
+
+        # save these values in model_data
+
 
     def save_state(self,filename='bayesim_state.h5'):
         """
@@ -490,7 +514,8 @@ class model(object):
 
         # parameters
         state['fit_params'] = self.fit_params
-        state['ec'] = self.ec
+        state['ec'] = self.ec_names
+        state['ec_pts'] = self.ec_pts
         state['ec_tol_digits'] = self.ec_tol_digits
         state['output_var'] = self.output_var
 
