@@ -209,7 +209,7 @@ class model(object):
         ec_pts = pd.DataFrame.from_records(data=self.obs_data.groupby(self.ec).groups.keys(),columns=self.ec).round(self.ec_tol_digits).sort_values(self.ec).reset_index(drop=True)
         # then check at each model point that they match
         for name,group in grps:
-            if not all(ec_pts==group[self.ec].round(self.ec_tol_digits).sort_values(self.ec).reset_index(drop=True)):
+            if not all(ec_pts==group[['V','T']].round(self.ec_tol_digits).sort_values(self.ec).reset_index(drop=True)):
                 raise ValueError('The experimental conditions do not match to %d digits between the observed and modeled data at the modeled parameter space point %s!'%(self.ec_tol_digits,name))
                 return
 
@@ -294,6 +294,7 @@ class model(object):
                 end_ind = subset.index[-1]+1
                 self.start_indices.append(start_ind)
                 self.end_indices.append(end_ind)
+
         elif mode=='add':
             # import and sort data
             new_data = dd.io.load(argv['fpath']).sort_values(self.param_names)
@@ -330,11 +331,16 @@ class model(object):
                     query_str = query_str + 'abs(%f-%s)/%s<1e-6 & '%(param_vals[n],n,n)
                 query_str = query_str[:-3]
 
-                subset = self.model_data.tail(len(new_data)).query(query_str)
+                #subset = self.model_data.tail(len(new_data)).query(query_str)
+                subset = self.model_data.query(query_str) # slower but won't miss anything
+                if len(subset)==0:
+                    print('Something went wrong calculating sim indices! Could not find any points in model data for params %s.'%query_str)
                 start_ind = subset.index[0]
                 end_ind = subset.index[-1]+1
                 self.start_indices.append(start_ind)
                 self.end_indices.append(end_ind)
+            self.needs_new_model_data = False
+
 
         elif mode=='function':
             # is there a way to save this (that could be saved to HDF5 too) so that subdivide can automatically call it?
@@ -420,6 +426,8 @@ class model(object):
         save_step = argv.setdefault('save_step',10)
         th_pm = argv.setdefault('th_pm',0.8)
         th_pv = argv.setdefault('th_pv',0.05)
+        th_pm = argv['th_pm']
+        th_pv = argv['th_pv']
         # need to test whether I need to specifically parse into the namespace if they're different from defaults
 
         # check if needs new model data or already has run
@@ -429,13 +437,15 @@ class model(object):
         count = 0
         for obs in self.obs_data.iterrows():
             # hacky error approximation for now
-            err = max(0.2*abs(obs[1][self.output_var]),0.01)
+            #print(0.2*abs(obs[1][self.output_var]),0.01)
+            err = max(0.2*abs(obs[1][self.output_var]),0.02)
+            print(count, obs[1][self.output_var], err)
             lkl = self.probs.likelihood(obs[1], obs[1][self.output_var], err, self.get_model_data)
             self.probs.multiply(lkl)
             if save_step >0 and count % save_step == 0:
                 dd.io.save('PMF_%d.h5'%(count),self.probs.points)
-            if np.sum(self.probs.most_probable(int(0.05*len(self.probs.points)))['prob'])>0.8:
-                print('time to subdivide!')
+            if np.sum(self.probs.most_probable(int(th_pv*len(self.probs.points)))['prob'])>th_pm:
+                print('Fed in %d points and now time to subdivide!'%count)
                 if save_step >=0:
                     dd.io.save('PMF_final.h5',self.probs.points)
                 self.is_run = True
@@ -463,6 +473,9 @@ class model(object):
         self.is_run = False
         dd.io.save(filename,new_boxes)
         print('New model points to simulate are saved in the file %s.'%filename)
+
+    def calc_model_gradients(self):
+        
 
     def save_state(self,filename='bayesim_state.h5'):
         """
