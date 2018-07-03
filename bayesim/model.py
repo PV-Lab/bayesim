@@ -62,6 +62,7 @@ class model(object):
 
             # model
             self.model_data = state['model_data']
+            self.model_data_ecgrps = state['model_data_ecgrps']
             self.needs_new_model_data = state['needs_new_model_data']
             self.obs_data = state['obs_data']
             self.start_indices = state['start_indices']
@@ -157,6 +158,15 @@ class model(object):
                     elif set(cols) <= set(self.ec_names):
                         print('These experimental conditions were missing from your data file: %s\nProceeding assuming that %s is the full set of experimental conditions...'%(str(list(set(ec)-set(cols))), str(cols)))
                         self.ec_names = cols
+
+            # round EC values
+            rd_dct = {n:self.ec_tol_digits for n in self.ec_names}
+            self.obs_data = self.obs_data.round(rd_dct)
+
+            # sort observed data
+            self.obs_data.sort_values(by=self.ec_names)
+
+            # populate list of EC points
             self.ec_pts =  pd.DataFrame.from_records(data=self.obs_data.groupby(self.ec_names).groups.keys(),columns=self.ec_names).round(self.ec_tol_digits).sort_values(self.ec_names).reset_index(drop=True)
 
         else:
@@ -226,8 +236,9 @@ class model(object):
             output_column (`str`): optional, header of column containing output data (required if different from self.output_var)
         Todo:
             Should adding additional model data be a separate function?
-            some way to elegantly use the function when adding new model data?
             pmf should maybe store start/end indices, either way split out computing them rather than copying code!
+            when adding new data, need to calculate new deltas somehow
+
         """
 
         #mode = argv.setdefault('mode','file')
@@ -236,7 +247,7 @@ class model(object):
 
         if mode == 'file':
             # import and sort data on parameter values
-            self.model_data = dd.io.load(argv['fpath']).sort_values(self.param_names)
+            self.model_data = dd.io.load(argv['fpath']).sort_values(self.param_names+self.ec_names)
 
             # Check that columns match EC's and parameter names
             self.check_data_columns(model_data=self.model_data,output_column=output_col)
@@ -309,7 +320,9 @@ class model(object):
             new_points = pd.DataFrame.from_records(data=new_points_grps.groups.keys(),columns=self.param_names).sort_values(self.param_names).reset_index(drop=True)
 
             # check that the points are the right ones
-            if not all(new_points == self.probs.points[self.param_names].tail(len(new_points)).sort_values(self.param_names).reset_index(drop=True)):
+            ind_arr = self.probs.points['new']==True
+            #if not all(new_points == self.probs.points[self.param_names].tail(len(new_points)).sort_values(self.param_names).reset_index(drop=True)):
+            if not all(new_points == self.probs.points[self.param_names][ind_arr].sort_values(self.param_names).reset_index(drop=True)):
                 # probably shouldn't rely on ordering but rather explicitly save new_pts somewhere or something like that
                 raise ValueError('The parameter points in your newly added data do not match the newly added points in the PMF!')
                 return
@@ -326,7 +339,8 @@ class model(object):
             # also this code is copied from above right now, should split out
             # also also relying on ordering again...
             ind = 0
-            for pt in self.probs.points.tail(len(new_points)).iterrows():
+            #for pt in self.probs.points.tail(len(new_points)).iterrows():
+            for pt in self.probs.points[ind_arr].iterrows():
                 param_vals = {p:pt[1][p] for p in self.param_names}
                 query_str = ''
                 for n in param_vals.keys():
@@ -343,6 +357,7 @@ class model(object):
                 self.end_indices.append(end_ind)
             self.needs_new_model_data = False
 
+            # calculate deltas?
 
         elif mode=='function':
             # is there a way to save this (that could be saved to HDF5 too) so that subdivide can automatically call it?
@@ -373,7 +388,14 @@ class model(object):
 
             self.model_data = pd.DataFrame.from_dict(vecs)
 
+        # round EC's and generate groups
+        rd_dct = {n:self.ec_tol_digits for n in self.ec_names}
+        self.model_data = self.model_data.round(rd_dct)
+        self.model_data_ecgrps = self.model_data.groupby(self.ec_names)
+
+        # update flag
         self.needs_new_model_data = False
+
 
     #def attach_probs(self, pmf):
         # to put in a PMF from before
@@ -430,24 +452,40 @@ class model(object):
         th_pv = argv.setdefault('th_pv',0.05)
         th_pm = argv['th_pm']
         th_pv = argv['th_pv']
-        # need to test whether I need to specifically parse into the namespace if they're different from defaults
 
         # check if needs new model data or already has run
+        if self.needs_new_model_data:
+            pass
+
+        if self.is_run:
+            pass
+
+        # FOR NOW set error = deltas
+        self.model_data['error'] = self.model_data['deltas']
 
         # randomize observation order first
         self.obs_data = self.obs_data.sample(frac=1)
         count = 0
         for obs in self.obs_data.iterrows():
+            ec = obs[1][self.ec_names]
+            ecpt = tuple([ec[n] for n in self.ec_names])
+            model_here = self.model_data.iloc[self.model_data_ecgrps.groups[ecpt]]
+
+            lkl = self.probs.likelihood(meas=obs[1][self.output_var], model_at_ec=model_here,output_col=self.output_var)
+
+
             # hacky error approximation for now
             #print(0.2*abs(obs[1][self.output_var]),0.01)
-            err = max(0.2*abs(obs[1][self.output_var]),0.02)
-            print(count, obs[1][self.output_var], err)
-            lkl = self.probs.likelihood(obs[1], obs[1][self.output_var], err, self.get_model_data)
+            #err = max(0.2*abs(obs[1][self.output_var]),0.02)
+            print(count, obs[1][self.output_var])
+            #lkl = self.probs.likelihood(obs[1], obs[1][self.output_var], err, self.get_model_data)
+
+
             self.probs.multiply(lkl)
             if save_step >0 and count % save_step == 0:
                 dd.io.save('PMF_%d.h5'%(count),self.probs.points)
             if np.sum(self.probs.most_probable(int(th_pv*len(self.probs.points)))['prob'])>th_pm:
-                print('Fed in %d points and now time to subdivide!'%count)
+                print('Fed in %d points and now time to subdivide!'%count+1)
                 if save_step >=0:
                     dd.io.save('PMF_final.h5',self.probs.points)
                 self.is_run = True
@@ -462,44 +500,74 @@ class model(object):
         Args:
             threshold_prob (`float`): minimum probability of box to subdivide (default 0.001)
 
+        Todo:
+            Clearing out old model data and handling deltas
         """
         threshold_prob = argv.setdefault('threshold_prob',0.001)
         self.num_sub = self.num_sub + 1
         filename = 'new_sim_points_%d.h5'%(self.num_sub)
-        new_boxes, dropped_inds = self.probs.subdivide(threshold_prob)
+        new_boxes, dropped_boxes = self.probs.subdivide(threshold_prob)
+        dropped_inds = list(dropped_boxes.index)
+
         # remove start and end indices for subdivided boxes
         for i in sorted(dropped_inds,reverse=True):
             del self.start_indices[i]
             del self.end_indices[i]
+
+        # do something with the deltas from the dropped new_boxes
+        # also clear out the model data
+        for box in dropped_boxes.iterrows():
+            # need to implement
+            pass
+
+        # update flags
         self.needs_new_model_data = True
         self.is_run = False
         dd.io.save(filename,new_boxes)
         print('New model points to simulate are saved in the file %s.'%filename)
 
     def calc_model_gradients(self):
-        # construct mat at every EC point
-        for pt in self.ec_pts.iterrows():
-            # need to implement
-            pass
+        """
+        Calculates largest difference in modeled output along any parameter direction for each experimental condition, to be used for error in calculating likelihoods. Currently only works if data is on a grid.
 
-        # given mat, this code computes largest differences along any direction
-        winner_dim = [len(mat.shape)]
-        winner_dim.extend(mat.shape)
-        winners = np.zeros(winner_dim)
+        (also assumes it's sorted by param names and then EC's)
+        """
+        param_lengths = [len(set(self.probs.points[p])) for p in self.param_names]
 
-        for i in range(len(mat.shape)):
-            # build delta matrix
-            deltas = np.absolute(np.diff(mat,axis=i))
-            pad_widths = [(0,0) for j in range(len(mat.shape))]
-            pad_widths[i] = (1,1)
-            deltas = np.pad(deltas, pad_widths, mode='constant', constant_values=0)
-            # build "winner" matrix
-            winners[i]=np.maximum(deltas[[Ellipsis]+[slice(None,mat.shape[i],None)]+[slice(None)]*(len(mat.shape)-i-1)],deltas[[Ellipsis]+[slice(1,mat.shape[i]+1,None)]+[slice(None)]*(len(mat.shape)-i-1)])
+        deltas = np.zeros(len(self.model_data))
+        # for every set of conditions...
+        for grp, vals in self.model_data_ecgrps:
+            #print(grp,vals.index)
+            # construct matrix of output_var({fit_params})
+            subset = list(self.model_data.iloc[vals.index][self.output_var])
+            # check if on a grid
+            if not len(subset)==np.product(param_lengths):
+                raise ValueError('Data is not on a grid!')
+            else:
+                mat = np.reshape(subset, param_lengths)
 
-        grad = np.amax(winners,axis=0)
+            # given matrix, compute largest differences along any direction
+            winner_dim = [len(mat.shape)]
+            winner_dim.extend(mat.shape)
+            winners = np.zeros(winner_dim)
 
-        # save these values in model_data
+            for i in range(len(mat.shape)):
+                # build delta matrix
+                deltas_here = np.absolute(np.diff(mat,axis=i))
+                pad_widths = [(0,0) for j in range(len(mat.shape))]
+                pad_widths[i] = (1,1)
+                deltas_here = np.pad(deltas_here, pad_widths, mode='constant', constant_values=0)
+                # build "winner" matrix
+                winners[i]=np.maximum(deltas_here[[Ellipsis]+[slice(None,mat.shape[i],None)]+[slice(None)]*(len(mat.shape)-i-1)],deltas_here[[Ellipsis]+[slice(1,mat.shape[i]+1,None)]+[slice(None)]*(len(mat.shape)-i-1)])
 
+            grad = np.amax(winners,axis=0)
+
+            # save these values to the appropriate indices in the vector - check that these are ordered correctly!!!
+            #print(grad.shape,deltas.shape,grad.flatten().shape)
+            deltas[vals.index] = grad.flatten()
+
+        # add the vector to self.model_data
+        self.model_data['deltas'] = deltas
 
     def save_state(self,filename='bayesim_state.h5'):
         """
@@ -525,6 +593,7 @@ class model(object):
 
         # model/data
         state['model_data'] = self.model_data
+        state['model_data_ecgrps'] = self.model_data_ecgrps
         state['needs_new_model_data'] = self.needs_new_model_data
         state['obs_data'] = self.obs_data
         state['start_indices'] = self.start_indices

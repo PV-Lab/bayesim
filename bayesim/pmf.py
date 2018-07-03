@@ -19,7 +19,7 @@ class Pmf(object):
         (long-term) allow for non-gridded parameter space (Voronoi? Or MCMC with no subdivision)
     """
 
-    def make_points_list(self, params, total_prob=1.0):
+    def make_points_list(self, params, total_prob=1.0, new=False):
         """
         Helper function for Pmf.__init__ as well as Pmf.subdivide.
         Given names and values for parameters, generate DataFrame listing
@@ -47,11 +47,15 @@ class Pmf(object):
                 row.append(params[j]['vals'][val_index])
                 # get min and max of bounding box
                 row.extend([params[j]['edges'][val_index],params[j]['edges'][val_index+1]])
+            if new:
+                row.extend([True])
+            else:
+                row.extend([False])
             points[i] = row
 
         points = np.array(points)
         param_names = [p['name'] for p in params]
-        columns = [c for l in [[n,n+'_min',n+'_max'] for n in param_names] for c in l] # there has to be a more readable way to do this
+        columns = [c for l in [[n,n+'_min',n+'_max'] for n in param_names] for c in l]+['new'] # there has to be a more readable way to do this
 
         df = pd.DataFrame(data=points, columns=columns)
         df['prob'] = [total_prob/len(df) for i in range(len(df))]
@@ -142,11 +146,12 @@ class Pmf(object):
         For now, just divides into two along each direction. Ideas for improvement:
         * divide proportional to probability mass in that box such that minimum prob is roughly equal to maximum prob of undivided boxes
         * user-specified divisions along dimensions (including NOT dividing in a given direction)
-
-        Todo:
-            need to return info for running next set of sims
         """
         num_divs = {p['name']:2 for p in self.params} #dummy for now
+
+        # set all 'new' flags to False
+        flags = [False] * len(self.points)
+        self.points['new'] = flags
 
         # pick out the boxes that will be subdivided
         to_subdivide = self.points[self.points['prob']>threshold_prob]
@@ -195,12 +200,15 @@ class Pmf(object):
                 # copy same params except for ranges
                 new_pl.add_fit_param(name=p['name'],val_range=[box[1][p['name']+'_min'],box[1][p['name']+'_max']],length=num_divs_here[p['name']],min_width=p['min_width'],spacing=p['spacing'],units=p['units'])
             # make new df, spreading total prob from original box among new smaller ones
-            new_boxes.append(self.make_points_list(new_pl.fit_params,total_prob=box[1]['prob']))
+            new_boxes.append(self.make_points_list(new_pl.fit_params,total_prob=box[1]['prob'],new=True))
 
         new_boxes = pd.concat(new_boxes)
 
         # concatenate new DataFrame to self.points
         self.points = pd.concat([self.points,new_boxes])
+
+        # sort values
+        self.points = self.points.sort_values([p['name'] for p in self.params])
 
         # reindex DataFrame
         self.points = self.points.reset_index(drop=True)
@@ -210,7 +218,7 @@ class Pmf(object):
 
         print(str(num_high_prob_boxes) + ' box(es) with probability > ' + str(threshold_prob) + ' and ' + str(num_nbs) + ' neighboring boxes subdivided!')
 
-        return new_boxes, dropped_inds
+        return new_boxes, to_subdivide
 
     def multiply(self, other_pmf):
         """
@@ -241,13 +249,17 @@ class Pmf(object):
             self.points['prob'] = new_probs
             self.normalize()
 
-    def likelihood(self, ec, meas, err, model_func):
+    def likelihood(self, **argv):
         """
         Compute likelihood over this Pmf's parameter space assuming model_func() represents the true physical behavior of the system.
 
         Obviously, model_func() needs to be a callable in the working namespace and has to accept conditions in the format that they're fed into this function.
 
         Args:
+            meas (`float`): one output value
+            model_at_ec (`DataFrame`): DataFrame containing model data at the experimental condition of the measurement and error values in a column called 'error' for every point in parameter space
+            output_col (`str`): name of column with output variable
+
             ec: dict with keys of condition names and values
             meas: one output value e.g. J
             error: error in measured value (stdev of a Gaussian)
@@ -255,16 +267,27 @@ class Pmf(object):
 
         Todo:
             alternative error models?
-            allow feeding in a list of observations (and parallelize)
+            allow feeding in a list of observations?
         """
 
+        # read in and process inputs
+        meas = argv['meas']
+        model_data = argv['model_at_ec']
+        model_data.sort_values([p['name'] for p in self.params])
+        model_data.reset_index(drop=True)
+        output_col = argv['output_col']
+
+        # set up likelihood DF
         lkl = deepcopy(self)
         new_probs = np.zeros([len(lkl.points),1])
 
         # here's the actual loop that computes the likelihoods
         for point in lkl.points.iterrows():
             #print(ec, point[1])
-            model_val = model_func(ec, dict(point[1]))
+            #model_val = model_func(ec, dict(point[1]))
+            model_pt = model_data.iloc[point[0]]
+            model_val = float(model_pt[output_col])
+            err = float(model_pt['error'])
             new_probs[point[0]] = norm.pdf(meas, loc=model_val, scale=abs(err))
 
         # copy these values in
