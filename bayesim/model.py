@@ -316,7 +316,7 @@ class model(object):
             self.check_data_columns(model_data=new_data,output_column=output_col)
 
             # next get list of parameter space points
-            new_points_grps = self.model_data.groupby(self.param_names)
+            new_points_grps = new_data.groupby(self.param_names)
             new_points = pd.DataFrame.from_records(data=new_points_grps.groups.keys(),columns=self.param_names).sort_values(self.param_names).reset_index(drop=True)
 
             # check that the points are the right ones
@@ -485,7 +485,7 @@ class model(object):
             if save_step >0 and count % save_step == 0:
                 dd.io.save('PMF_%d.h5'%(count),self.probs.points)
             if np.sum(self.probs.most_probable(int(th_pv*len(self.probs.points)))['prob'])>th_pm:
-                print('Fed in %d points and now time to subdivide!'%count+1)
+                print('Fed in %d points and now time to subdivide!'%(count+1))
                 if save_step >=0:
                     dd.io.save('PMF_final.h5',self.probs.points)
                 self.is_run = True
