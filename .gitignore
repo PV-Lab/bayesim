@@ -99,3 +99,8 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# other stuff
+examples/diode/PMF_*.h5
+examples/diode/new_sim_*.h5
+examples/diode/bayesim_state.h5
