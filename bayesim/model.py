@@ -519,12 +519,37 @@ class model(object):
         for box in dropped_boxes.iterrows():
             # need to implement
             pass
+            # maybe for now just call the delta half of the previous one?
 
         # update flags
         self.needs_new_model_data = True
         self.is_run = False
         dd.io.save(filename,new_boxes)
         print('New model points to simulate are saved in the file %s.'%filename)
+
+    def list_model_pts_to_run(self,fpath):
+        """
+        Generate full list of model points that need to be run (not just parameter points but also all experimental conditions). Saves to HDF5 at fpath.
+
+        Note that this could be very slow if used on the initial grid (i.e. for potentially millions of points) - it's better for after a subdivide call.
+
+        Todo:
+            potentially save to HDF5 instead?
+        """
+        # First, find all parameter points marked as 'new' and pick out just the columns with the values
+        param_pts = self.probs.points[self.probs.points['new']==True][self.param_names]
+
+        # Now at every point in that list, make a row for every EC point
+        param_inds = range(len(param_pts))
+        ec_inds = range(len(self.ec_pts))
+        columns = self.param_names + self.ec_names
+        pts = []
+        print('Making the list of points...')
+        for ppt in param_pts.iterrows():
+            for ecpt in self.ec_pts.iterrows():
+                pts.append(list(ppt[1])+list(ecpt[1]))
+        sim_pts = pd.DataFrame(data=pts,columns=columns)
+        dd.io.save(fpath,sim_pts)
 
     def calc_model_gradients(self):
         """
