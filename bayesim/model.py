@@ -221,7 +221,7 @@ class model(object):
         grps = argv['gb']
         # then check at each model point that they match
         for name,group in grps:
-            if not all(self.ec_pts==group[['V','T']].round(self.ec_tol_digits).sort_values(self.ec_names).reset_index(drop=True)):
+            if not all(self.ec_pts==group[self.ec_names].round(self.ec_tol_digits).sort_values(self.ec_names).reset_index(drop=True)):
                 raise ValueError('The experimental conditions do not match to %d digits between the observed and modeled data at the modeled parameter space point %s!'%(self.ec_tol_digits,name))
                 return
 
@@ -257,7 +257,7 @@ class model(object):
             param_points = pd.DataFrame.from_records(data=param_points_grps.groups.keys(),columns=self.param_names).sort_values(self.param_names).reset_index(drop=True)
 
             # if PMF has been populated, check that points match
-            if not self.probs == [] and not all(param_points==probs.points[self.param_names]):
+            if not self.probs == [] and not all(param_points==self.probs.points[self.param_names]):
                 print('Your previously populated PMF does not have the same set of parameter space points as your model data. Proceeding using the points from the model data.')
                 self.probs = []
 
@@ -544,7 +544,6 @@ class model(object):
         ec_inds = range(len(self.ec_pts))
         columns = self.param_names + self.ec_names
         pts = []
-        print('Making the list of points...')
         for ppt in param_pts.iterrows():
             for ecpt in self.ec_pts.iterrows():
                 pts.append(list(ppt[1])+list(ecpt[1]))
