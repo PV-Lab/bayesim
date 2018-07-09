@@ -19,7 +19,7 @@ class Pmf(object):
         (long-term) allow for non-gridded parameter space (Voronoi? Or MCMC with no subdivision)
     """
 
-    def make_points_list(self, params, total_prob=1.0, new=False):
+    def make_points_list(self, params, total_prob=1.0, new=True):
         """
         Helper function for Pmf.__init__ as well as Pmf.subdivide.
         Given names and values for parameters, generate DataFrame listing
