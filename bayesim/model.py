@@ -299,9 +299,10 @@ class model(object):
                 param_vals = {p:pt[1][p] for p in self.param_names}
                 query_str = ''
                 for n in param_vals.keys():
+                    # make this smarter by using param ranges and spacings
                     query_str = query_str + 'abs(%f-%s)/%s<1e-6 & '%(param_vals[n],n,n)
                 query_str = query_str[:-3]
-
+                print(query_str)
                 subset = self.model_data.query(query_str)
                 start_ind = subset.index[0]
                 end_ind = subset.index[-1]+1
