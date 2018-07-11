@@ -6,7 +6,7 @@ from itertools import product
 from copy import deepcopy
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import param_list as pl
+import bayesim.param_list as pl
 
 class Pmf(object):
     """

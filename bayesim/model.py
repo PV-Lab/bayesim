@@ -9,11 +9,9 @@ class model(object):
     """
     Updates from 180626 meeting:
         make subdivide, visualize methods here
-        create new internal variable new_sims_list or something
-        also add a method to return new_sims_list either as df or write to file, etc.
-        fix inputs to different functions (messy)
 
     Todo:
+        add write_query_str function to stop copying so much code for that...but test groupby speeds first
         animating visualization during run
         figure out how best to feed back and run additional sims after
             subdivision
@@ -167,7 +165,7 @@ class model(object):
             self.obs_data.sort_values(by=self.ec_names)
 
             # populate list of EC points
-            self.ec_pts =  pd.DataFrame.from_records(data=self.obs_data.groupby(self.ec_names).groups.keys(),columns=self.ec_names).round(self.ec_tol_digits).sort_values(self.ec_names).reset_index(drop=True)
+            self.ec_pts =  pd.DataFrame.from_records(data=[list(k) for k in self.obs_data.groupby(self.ec_names).groups.keys()],columns=self.ec_names).round(self.ec_tol_digits).sort_values(self.ec_names).reset_index(drop=True)
 
         else:
             # this option hasn't been tested and is maybe unnecessary
@@ -254,7 +252,7 @@ class model(object):
 
             # next get list of parameter space points
             param_points_grps = self.model_data.groupby(self.param_names)
-            param_points = pd.DataFrame.from_records(data=param_points_grps.groups.keys(),columns=self.param_names).sort_values(self.param_names).reset_index(drop=True)
+            param_points = pd.DataFrame.from_records(data=[list(k) for k in param_points_grps.groups.keys()],columns=self.param_names).sort_values(self.param_names).reset_index(drop=True)
 
             # if PMF has been populated, check that points match
             if not self.probs == [] and not all(param_points==self.probs.points[self.param_names]):
@@ -297,12 +295,20 @@ class model(object):
             ind = 0
             for pt in self.probs.points.iterrows():
                 param_vals = {p:pt[1][p] for p in self.param_names}
+                param_spacing = {fp['name']:fp['spacing'] for fp in self.fit_params}
+                param_width = {fp['name']:fp['min_width'] for fp in self.fit_params}
                 query_str = ''
                 for n in param_vals.keys():
-                    # make this smarter by using param ranges and spacings
-                    query_str = query_str + 'abs(%f-%s)/%s<1e-6 & '%(param_vals[n],n,n)
+                    # figure out how to be more consistent about this between linear/log
+                    # but this should work for now
+                    if param_spacing[n]=='log':
+                        tol = param_vals[n]**1.1 - param_vals[n]
+                        query_str = query_str + 'abs(%E-%s)<abs(%E) & '%(param_vals[n],n,tol)
+                    elif param_spacing[n]=='linear':
+                        tol = 0.1*param_width[n]
+                        query_str = query_str + 'abs(%f-%s)<abs(%f) & '%(param_vals[n],n,tol)
                 query_str = query_str[:-3]
-                print(query_str)
+                #print(query_str)
                 subset = self.model_data.query(query_str)
                 start_ind = subset.index[0]
                 end_ind = subset.index[-1]+1
