@@ -75,7 +75,7 @@ class Pmf(object):
         if 'params' in argv.keys():
             # for now just copy in the param_list wholesale
             # eventually should probably scrub and/or update vals...
-            self.params = argv['params'].fit_params # last dot might be wrong
+            self.params = argv['params']
             self.points = self.make_points_list(self.params)
         elif 'param_points' in argv.keys():
             # need to implement

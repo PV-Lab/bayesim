@@ -12,6 +12,7 @@ class model(object):
 
     Todo:
         add write_query_str function to stop copying so much code for that...but test groupby speeds first
+        play with hierarchical indexing to save space and/or address above point
         animating visualization during run
         figure out how best to feed back and run additional sims after
             subdivision
@@ -20,6 +21,7 @@ class model(object):
         put some of the pmf functions here to call directly (visualize, subdivide, etc.)
         add data plotting options
         possibly start and end indices should be stored directly in probs to avoid accidentally sorting or deleting from one and not the other
+        maybe include EC in param_list rather than separately?
     """
 
     def __init__(self,**argv):
@@ -54,7 +56,7 @@ class model(object):
             self.ec_tol_digits = state['ec_tol_digits']
 
             # probabilities
-            self.probs = Pmf(self.fit_params)
+            self.probs = Pmf(params=self.fit_params)
             self.probs.points = state['probs_points']
             self.num_sub = state['num_sub']
 
@@ -117,7 +119,7 @@ class model(object):
             # then we can make the PMF now
             self.fit_params = params.fit_params
             self.param_names = [p['name'] for p in self.fit_params]
-            self.probs = Pmf(params=params)
+            self.probs = Pmf(params=params.fit_params)
 
         else: # it's just a list of names
             self.param_names = params
@@ -324,7 +326,7 @@ class model(object):
 
             # next get list of parameter space points
             new_points_grps = new_data.groupby(self.param_names)
-            new_points = pd.DataFrame.from_records(data=new_points_grps.groups.keys(),columns=self.param_names).sort_values(self.param_names).reset_index(drop=True)
+            new_points = pd.DataFrame.from_records(data=[list(k) for k in new_points_grps.groups.keys()],columns=self.param_names).sort_values(self.param_names).reset_index(drop=True)
 
             # check that the points are the right ones
             ind_arr = self.probs.points['new']==True
@@ -340,28 +342,21 @@ class model(object):
             # append the model data
             self.model_data = pd.concat([self.model_data,new_data])
 
-            # calculate the new start and end indices
-            # compute self.start_indices and self.end_indices...
-            # (rewrite using groupby and compare speeds)
-            # also this code is copied from above right now, should split out
-            # also also relying on ordering again...
             ind = 0
-            #for pt in self.probs.points.tail(len(new_points)).iterrows():
-            for pt in self.probs.points[ind_arr].iterrows():
-                param_vals = {p:pt[1][p] for p in self.param_names}
-                query_str = ''
-                for n in param_vals.keys():
-                    query_str = query_str + 'abs(%f-%s)/%s<1e-6 & '%(param_vals[n],n,n)
-                query_str = query_str[:-3]
 
-                #subset = self.model_data.tail(len(new_data)).query(query_str)
-                subset = self.model_data.query(query_str) # slower but won't miss anything
-                if len(subset)==0:
+            model_data_grps = self.model_data.groupby(by=self.param_names)
+            self.start_indices = np.zeros(len(self.probs.points),dtype=int)
+            self.end_indices = np.zeros(len(self.probs.points),dtype=int)
+            #for pt in self.probs.points[ind_arr].iterrows():
+            for pt in self.probs.points.iterrows():
+                subset_inds = model_data_grps.groups[tuple(pt[1][self.param_names].tolist()]
+                if len(subset_inds)==0:
                     print('Something went wrong calculating sim indices! Could not find any points in model data for params %s.'%query_str)
-                start_ind = subset.index[0]
-                end_ind = subset.index[-1]+1
-                self.start_indices.append(start_ind)
-                self.end_indices.append(end_ind)
+                start_ind = int(min(subset_inds))
+                end_ind = int(max(subset_inds))
+                self.start_indices[pt[0]] = start_ind
+                self.end_indices[pt[0]] = end_ind
+
             self.needs_new_model_data = False
 
             # calculate deltas?
@@ -474,6 +469,7 @@ class model(object):
         self.obs_data = self.obs_data.sample(frac=1)
         count = 0
         for obs in self.obs_data.iterrows():
+            print(count,obs[1])
             ec = obs[1][self.ec_names]
             ecpt = tuple([ec[n] for n in self.ec_names])
             model_here = self.model_data.iloc[self.model_data_ecgrps.groups[ecpt]]
@@ -484,7 +480,7 @@ class model(object):
             # hacky error approximation for now
             #print(0.2*abs(obs[1][self.output_var]),0.01)
             #err = max(0.2*abs(obs[1][self.output_var]),0.02)
-            print(count, obs[1][self.output_var])
+            #print(count, obs[1][self.output_var])
             #lkl = self.probs.likelihood(obs[1], obs[1][self.output_var], err, self.get_model_data)
 
 
@@ -531,7 +527,8 @@ class model(object):
         # update flags
         self.needs_new_model_data = True
         self.is_run = False
-        dd.io.save(filename,new_boxes)
+        #dd.io.save(filename,new_boxes)
+        self.list_model_pts_to_run(fpath=filename)
         print('New model points to simulate are saved in the file %s.'%filename)
 
     def list_model_pts_to_run(self,fpath):

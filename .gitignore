@@ -104,3 +104,6 @@ ENV/
 examples/diode/PMF_*.h5
 examples/diode/new_sim_*.h5
 examples/diode/bayesim_state.h5
+examples/TE/new_sim_outputs_1.h5
+examples/TE/new_sim_points_1.h5
+examples/bayesim_states/*
