@@ -58,7 +58,7 @@ class model(object):
             # probabilities
             self.probs = Pmf(params=self.fit_params)
             self.probs.points = state['probs_points']
-            self.num_sub = state['num_sub']
+            self.probs.num_sub = state['num_sub']
 
             # model
             self.model_data = state['model_data']
@@ -636,7 +636,7 @@ class model(object):
 
         # PMF
         state['probs_points'] = self.probs.points
-        state['num_sub'] = self.num_sub
+        state['num_sub'] = self.probs.num_sub
 
         # model/data
         state['model_data'] = self.model_data

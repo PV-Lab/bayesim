@@ -20,7 +20,7 @@ class Pmf(object):
         make a way to visualize the grid
     """
 
-    def make_points_list(self, params, total_prob=1.0, new=True):
+    def make_points_list(self, params, total_prob=1.0, new=True, num_sub=0):
         """
         Helper function for Pmf.__init__ as well as Pmf.subdivide.
         Given names and values for parameters, generate DataFrame listing
@@ -60,6 +60,7 @@ class Pmf(object):
 
         df = pd.DataFrame(data=points, columns=columns)
         df['prob'] = [total_prob/len(df) for i in range(len(df))]
+        df['num_sub'] = [num_sub for i in range(len(df))]
 
         return df
 
@@ -76,11 +77,13 @@ class Pmf(object):
         if 'params' in argv.keys():
             # for now just copy in the param_list wholesale
             # eventually should probably scrub and/or update vals...
+            self.num_sub = 0
             self.params = argv['params']
             self.points = self.make_points_list(self.params)
         elif 'param_points' in argv.keys():
             # need to implement
             pass
+
 
     def normalize(self):
         """Normalize overall PMF."""
@@ -114,34 +117,95 @@ class Pmf(object):
         Find and return all boxes neighboring the box at index.
 
         Todo:
-            figure out what this should do if grid has been subdivided
+            keep in closest corners rather than only immediately adjacent boxes
         """
         all_vals = {param['name']:self.all_current_values(param['name']) for param in self.params}
+        param_spacing = {param['name']:param['spacing'] for param in self.params}
         this_point = self.points.iloc[index]
         indices_to_intersect=[]
         # get range of values of each param to consider "neighbors"
-        for param in self.params:
-            this_param_val = this_point[param['name']]
-            this_param_index = all_vals[param['name']].index(this_param_val)
+        for p in self.params:
+            param = p['name']
+            this_param_val = this_point[param]
+            this_param_index = all_vals[param].index(this_param_val)
 
             # handle the edge cases
             if not this_param_index == 0:
-                down_delta = (all_vals[param['name']][this_param_index]-all_vals[param['name']][this_param_index-1])*1.001
+                #down_delta = (all_vals[param['name']][this_param_index]-all_vals[param['name']][this_param_index-1])*1.001
+                if param_spacing[param]=='linear':
+                    down_delta = (this_point[param+'_max']-this_point[param+'_min'])*1.501
+                elif param_spacing[param]=='log':
+                    down_delta = this_point[param]-this_point[param+'_min']*(this_point[param+'_min']/(this_point[param+'_max']*1.001))
             else:
                 down_delta=0
-            if not this_param_index == len(all_vals[param['name']])-1:
-                up_delta = (all_vals[param['name']][this_param_index+1]-all_vals[param['name']][this_param_index])*1.001
+            if not this_param_index == len(all_vals[param])-1:
+                #up_delta = (all_vals[param['name']][this_param_index+1]-all_vals[param['name']][this_param_index])*1.001
+                if param_spacing[param]=='linear':
+                    up_delta = (this_point[param+'_max']-this_point[param+'_min'])*1.501
+                elif param_spacing[param]=='log':
+                    up_delta = this_point[param+'_max']*(this_point[param+'_max']*1.001/this_point[param+'_min'])-this_point[param]
             else:
                 up_delta=0
-            gt = self.points[param['name']]>=this_param_val-down_delta
-            lt = self.points[param['name']]<=this_param_val+up_delta
+            #print(param,up_delta,down_delta)
+            gt = self.points[param]>=this_param_val-down_delta
+            lt = self.points[param]<=this_param_val+up_delta
             this_set = self.points[gt & lt]
+            #print(this_set[[pm['name'] for pm in self.params]])
             indices_to_intersect.append(set(this_set.index.values))
 
         indices = list(set.intersection(*indices_to_intersect))
         indices.sort()
         neighbor_points = self.points.iloc[indices]
-        return neighbor_points
+        # check if we went too far out along any axis
+        inds_to_drop = []
+        all_out_query = ''
+        for p in self.params:
+            param = p['name']
+            other_params = [pm['name'] for pm in self.params if not pm['name']==param]
+            # clunky brute-force search but it should be a smallish list so hopefully it won't kill us
+            # first check that we're inside the box for all other params
+            in_box_query = ''
+            for q in other_params:
+                if param_spacing[q]=='linear':
+                    in_box_query = in_box_query + '%s<%f & %s>%f & '%(q,this_point[q+'_max'],q,this_point[q+'_min'])
+                elif param_spacing[q]=='log':
+                    in_box_query = in_box_query + '%s<%E & %s>%E & '%(q,this_point[q+'_max'],q,this_point[q+'_min'])
+            # then check each direction in this param
+            if param_spacing[param]=='linear':
+                gt_query = in_box_query + '%s>%f'%(param,this_point[param+'_max'])
+                lt_query = in_box_query + '%s<%f'%(param,this_point[param+'_min'])
+                all_out_query = all_out_query + '(%s>%f | %s<%f) & '%(param,this_point[param+'_max'],param,this_point[param+'_min'])
+            elif param_spacing[param]=='log':
+                gt_query = in_box_query + '%s>%E'%(param,this_point[param+'_max'])
+                lt_query = in_box_query + '%s<%E'%(param,this_point[param+'_min'])
+                all_out_query = all_out_query + '(%s>%E | %s<%E) & '%(param,this_point[param+'_max'],param,this_point[param+'_min'])
+            # pull points that are outside bounds of this param
+            gt_check = neighbor_points.query(gt_query)
+            lt_check = neighbor_points.query(lt_query)
+            # group them by coords in other params
+            gt_check_grps = gt_check.groupby(by=other_params)
+            lt_check_grps = lt_check.groupby(by=other_params)
+            # if any group has multiple indices, drop the ones corresponding to the "further out" values
+            for grp,inds in gt_check_grps:
+                if len(inds)>1:
+                    vals = gt_check.loc[inds.index][param]
+                    keep = vals.idxmin()
+                    drop = [i for i in inds.index if not i==keep]
+                    inds_to_drop.extend(drop)
+                    #print('dropping '+str(drop))
+            for grp,inds in lt_check_grps:
+                if len(inds)>1:
+                    vals = lt_check.loc[inds.index][param]
+                    keep = vals.idxmax()
+                    drop = [i for i in inds.index if not i==keep]
+                    inds_to_drop.extend(drop)
+                    #print('dropping '+str(drop))
+        # and finally, check for ones that aren't inside bounds at all
+        # for now, drop all of them - should keep closest corner really
+        all_out_query = all_out_query[:-3]
+        all_out_check = neighbor_points.query(all_out_query)
+        inds_to_drop.extend(all_out_check.index)
+        return neighbor_points.drop(labels=inds_to_drop)
 
     def subdivide(self, threshold_prob, include_neighbors=True):
         """
@@ -153,9 +217,10 @@ class Pmf(object):
         """
         num_divs = {p['name']:2 for p in self.params} #dummy for now
 
-        # set all 'new' flags to False
+        # set all 'new' flags to False and increment subdivide count
         flags = [False] * len(self.points)
         self.points['new'] = flags
+        self.num_sub = self.num_sub + 1
 
         # pick out the boxes that will be subdivided
         to_subdivide = self.points[self.points['prob']>threshold_prob]
@@ -204,7 +269,7 @@ class Pmf(object):
                 # copy same params except for ranges
                 new_pl.add_fit_param(name=p['name'],val_range=[box[1][p['name']+'_min'],box[1][p['name']+'_max']],length=num_divs_here[p['name']],min_width=p['min_width'],spacing=p['spacing'],units=p['units'])
             # make new df, spreading total prob from original box among new smaller ones
-            new_boxes.append(self.make_points_list(new_pl.fit_params,total_prob=box[1]['prob'],new=True))
+            new_boxes.append(self.make_points_list(new_pl.fit_params,total_prob=box[1]['prob'],new=True,num_sub=self.num_sub))
 
         new_boxes = pd.concat(new_boxes)
 
