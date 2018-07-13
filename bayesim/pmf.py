@@ -416,7 +416,7 @@ class Pmf(object):
 
         return bins, probs
 
-    def project_2D(self, x_param, y_param):
+    def project_2D(self, x_param, y_param, no_probs=False):
 
         """
         Project down to two dimensions over the two parameters. This one doesn't actually need to sum, it just draws a bunch of (potentially overlapping) rectangles with transparencies according to their probability densities (as a fraction of the normalized area). Used by the visualize() method.
@@ -440,13 +440,16 @@ class Pmf(object):
             x_width = row[1][x_name+'_max'] - x_min
             y_min = row[1][y_name+'_min']
             y_width = row[1][y_name+'_max'] - y_min
-            alpha = row[1]['prob']/max_prob
-            if alpha>1e-3: #this speeds it up a lot
-                patches.append(mpl.patches.Rectangle((x_min,y_min),x_width,y_width,alpha=alpha))
+            if no_probs:
+                patches.append(mpl.patches.Rectangle((x_min,y_min),x_width,y_width,fill=False,ec='k'))
+            else:
+                alpha = row[1]['prob']/max_prob
+                if alpha>1e-3: #this speeds it up a lot
+                    patches.append(mpl.patches.Rectangle((x_min,y_min),x_width,y_width,alpha=alpha))
 
         return patches
 
-    def visualize(self, frac_points=1.0):
+    def visualize(self, frac_points=1.0, just_grid=False):
         """
         Make histogram matrix to visualize the PMF.
 
@@ -506,7 +509,11 @@ class Pmf(object):
 
                 elif rownum > colnum: # below diagonal
                     #offdiag_start = timeit.default_timer()
-                    patches = self.project_2D(x_param, y_param)
+                    if just_grid:
+                        patches = self.project_2D(x_param, y_param, no_probs=True)
+                        axes[rownum][colnum].grid(False)
+                    else:
+                        patches = self.project_2D(x_param, y_param)
                     #checkpoint = round(timeit.default_timer()-offdiag_start,2)
                     #print('project_2D took ' + str(checkpoint) + ' seconds')
                     for patch in patches:
