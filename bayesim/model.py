@@ -349,7 +349,7 @@ class model(object):
             self.end_indices = np.zeros(len(self.probs.points),dtype=int)
             #for pt in self.probs.points[ind_arr].iterrows():
             for pt in self.probs.points.iterrows():
-                subset_inds = model_data_grps.groups[tuple(pt[1][self.param_names].tolist()]
+                subset_inds = model_data_grps.groups[tuple(pt[1][self.param_names].tolist())]
                 if len(subset_inds)==0:
                     print('Something went wrong calculating sim indices! Could not find any points in model data for params %s.'%query_str)
                 start_ind = int(min(subset_inds))
@@ -567,12 +567,19 @@ class model(object):
         for grp, vals in self.model_data_ecgrps:
             #print(grp,vals.index)
             # construct matrix of output_var({fit_params})
-            subset = list(self.model_data.iloc[vals.index][self.output_var])
+            subset = self.model_data.iloc[vals.index]
             # check if on a grid
             if not len(subset)==np.product(param_lengths):
                 raise ValueError('Data is not on a grid!')
+                # sketching out the correct way to do this
+                # get all_current_values for each param and build grid of that dimension
+                # nested loops over each set of values...
+                #     find point in param space that that value combination sits inside
+                #     put that value into grid - there will be neighbor duplicates for non-subdivided boxes
+                # then the rest of the analysis should just work, as long as we unroll the matrix carefully and only update the new boxes
+
             else:
-                mat = np.reshape(subset, param_lengths)
+                mat = np.reshape(list(subset[self.output_var]), param_lengths)
 
             # given matrix, compute largest differences along any direction
             winner_dim = [len(mat.shape)]
@@ -592,7 +599,19 @@ class model(object):
 
             # save these values to the appropriate indices in the vector - check that these are ordered correctly!!!
             #print(grad.shape,deltas.shape,grad.flatten().shape)
+
+            # add an if statement for gridded data
             deltas[vals.index] = grad.flatten()
+
+            # then an else for carefully unrolling grad matrix...
+            # basically need to reverse procedure from before:
+            # iterate over each point in subset, find indices of all_values matrix that are inside it
+            # check that all values inside those (if multiple) in matrix are equal
+            # if not, throw an error
+            # if so, take that value and put it in the list
+
+        # get subset of model data that corresponds to new param points!!
+        raise notImplementedError('Finish implementing this!')
 
         # add the vector to self.model_data
         self.model_data['deltas'] = deltas

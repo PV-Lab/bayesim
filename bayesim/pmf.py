@@ -17,6 +17,7 @@ class Pmf(object):
     Todo:
         make a save_state function for this
         (long-term) allow for non-gridded parameter space (Voronoi? Or MCMC with no subdivision)
+        make a way to visualize the grid
     """
 
     def make_points_list(self, params, total_prob=1.0, new=True):
@@ -111,6 +112,9 @@ class Pmf(object):
     def find_neighbor_boxes(self, index):
         """
         Find and return all boxes neighboring the box at index.
+
+        Todo:
+            figure out what this should do if grid has been subdivided
         """
         all_vals = {param['name']:self.all_current_values(param['name']) for param in self.params}
         this_point = self.points.iloc[index]
@@ -122,11 +126,11 @@ class Pmf(object):
 
             # handle the edge cases
             if not this_param_index == 0:
-                down_delta = all_vals[param['name']][this_param_index]-all_vals[param['name']][this_param_index-1]
+                down_delta = (all_vals[param['name']][this_param_index]-all_vals[param['name']][this_param_index-1])*1.001
             else:
                 down_delta=0
             if not this_param_index == len(all_vals[param['name']])-1:
-                up_delta = all_vals[param['name']][this_param_index+1]-all_vals[param['name']][this_param_index]
+                up_delta = (all_vals[param['name']][this_param_index+1]-all_vals[param['name']][this_param_index])*1.001
             else:
                 up_delta=0
             gt = self.points[param['name']]>=this_param_val-down_delta
