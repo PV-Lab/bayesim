@@ -65,8 +65,6 @@ class model(object):
             self.model_data_ecgrps = state['model_data_ecgrps']
             self.needs_new_model_data = state['needs_new_model_data']
             self.obs_data = state['obs_data']
-            #self.start_indices = state['start_indices']
-            #self.end_indices = state['end_indices']
             self.is_run = state['is_run']
 
 
@@ -92,8 +90,6 @@ class model(object):
             self.model_data = []
             self.needs_new_model_data = True
             self.obs_data = []
-            #self.start_indices = []
-            #self.end_indices = []
             self.is_run = False
             self.num_sub = 0 # number of subdivisions done
 
@@ -309,48 +305,6 @@ class model(object):
 
             # generate self.params if necessary? (might be done by here)
 
-            """
-            model_data_grps = self.model_data.groupby(by=self.param_names)
-            self.start_indices = np.zeros(len(self.probs.points),dtype=int)
-            self.end_indices = np.zeros(len(self.probs.points),dtype=int)
-            #for pt in self.probs.points[ind_arr].iterrows():
-            for pt in self.probs.points.iterrows():
-                subset_inds = model_data_grps.groups[tuple(pt[1][self.param_names].tolist())]
-                if len(subset_inds)==0:
-                    print('Something went wrong calculating sim indices! Could not find any points in model data for params %s.'%query_str)
-                start_ind = int(min(subset_inds))
-                end_ind = int(max(subset_inds))
-                self.start_indices[pt[0]] = start_ind
-                self.end_indices[pt[0]] = end_ind
-            """
-            """
-            start_indices = []
-            end_indices = []
-            #ind = 0
-            model_data_grps = self.model_data.groupby(by=self.param_names)
-            for pt in self.probs.points.iterrows():
-                param_vals = {p:pt[1][p] for p in self.param_names}
-                param_spacing = {fp['name']:fp['spacing'] for fp in self.fit_params}
-                param_width = {fp['name']:fp['min_width'] for fp in self.fit_params}
-                query_str = ''
-                for n in param_vals.keys():
-                    # figure out how to be more consistent about this between linear/log
-                    # but this should work for now
-                    if param_spacing[n]=='log':
-                        tol = param_vals[n]**1.1 - param_vals[n]
-                        query_str = query_str + 'abs(%E-%s)<abs(%E) & '%(param_vals[n],n,tol)
-                    elif param_spacing[n]=='linear':
-                        tol = 0.1*param_width[n]
-                        query_str = query_str + 'abs(%f-%s)<abs(%f) & '%(param_vals[n],n,tol)
-                query_str = query_str[:-3]
-                #print(query_str)
-                subset = self.model_data.query(query_str)
-                start_ind = subset.index[0]
-                end_ind = subset.index[-1]+1
-                self.start_indices.append(start_ind)
-                self.end_indices.append(end_ind)
-            """
-
         elif mode=='add':
             # import and sort data
             new_data = dd.io.load(argv['fpath']).sort_values(self.param_names)
@@ -375,25 +329,6 @@ class model(object):
 
             # append the model data
             self.model_data = pd.concat([self.model_data,new_data])
-
-            #ind = 0
-
-            """
-            model_data_grps = self.model_data.groupby(by=self.param_names)
-            #self.start_indices = np.zeros(len(self.probs.points),dtype=int)
-            #self.end_indices = np.zeros(len(self.probs.points),dtype=int)
-            start_indices = np.zeros(len(self.probs.points),dtype=int)
-            end_indices = np.zeros(len(self.probs.points),dtype=int)
-            #for pt in self.probs.points[ind_arr].iterrows():
-            for pt in self.probs.points.iterrows():
-                subset_inds = model_data_grps.groups[tuple(pt[1][self.param_names].tolist())]
-                if len(subset_inds)==0:
-                    print('Something went wrong calculating sim indices! Could not find any points in model data for params %s.'%query_str)
-                start_ind = int(min(subset_inds))
-                end_ind = int(max(subset_inds))
-                start_indices[pt[0]] = start_ind
-                end_indices[pt[0]] = end_ind
-            """
             self.needs_new_model_data = False
 
             # calculate deltas?
@@ -444,47 +379,6 @@ class model(object):
         # to put in a PMF from before
         # maybe not necessary with ability to load state
 
-    def get_model_data(self,ec,params):
-        """
-        Look up modeled data from self.model_data DataFrame.
-
-        Both args should be dicts.
-
-        This is almost certainly not implemented in the most efficient way currently. Also parameter values had better not be 0.
-
-        Todo:
-            fix the not allowing zero-valued parameters thing
-        """
-        # find index in self.probs of these param values
-        p_query_str = ''
-        for p in self.param_names:
-            #print params, p, params[p]
-            p_query_str = p_query_str + 'abs(%f-%s)/%s<1e-6 & '%(params[p],p,p)
-        p_query_str = p_query_str[:-3]
-        pt = self.probs.points.query(p_query_str)
-        if not len(pt)==1:
-            print("Something went wrong finding the modeled data! Couldn't find data at %s"%p_query_str)
-        else:
-            ind_low = pt['start_ind']
-            ind_hi = pt['end_end']
-            #i = pt.index[0]
-            #ind_low = self.start_indices[i]
-            #ind_hi = self.end_indices[i]
-
-        # pull out modeled data at that parameter space point...
-        data_subset = self.model_data.iloc[ind_low:ind_hi]
-
-        # now query for the EC's in question
-        ec_query_str = ''
-        for c in self.ec_names:
-            ec_query_str = ec_query_str + 'abs(%f-%s)<1e-6 & '%(ec[c],c)
-        ec_query_str = ec_query_str[:-3]
-        pt = data_subset.query(ec_query_str)
-        if not len(pt)==1:
-            print("Something went wrong finding the modeled data! Couldn't find data at %s, %s"%(p_query_str,ec_query_str))
-        else:
-            return float(pt[self.output_var])
-
     def run(self, **argv):
         """
         Do Bayes!
@@ -494,6 +388,9 @@ class model(object):
             save_step (`int`): interval (number of data points) at which to save intermediate PMF's (defaults to 10, 0 to save only final, <0 to save none)
             th_pm (`float`): threshold quantity of probability mass to be concentrated in th_pv fraction of parameter space to trigger the run to stop (defaults to 0.8)
             th_pv (`float`): threshold fraction of parameter space volume for th_pm fraction of probability to be concentrated into to trigger the run to stop (defaults to 0.05)
+
+        Todo:
+            add option for multiple runs and then averaging
         """
         save_step = argv.setdefault('save_step',10)
         th_pm = argv.setdefault('th_pm',0.8)
@@ -509,7 +406,7 @@ class model(object):
             pass
 
         # FOR NOW set error = deltas
-        self.model_data['error'] = self.model_data['deltas']
+        self.model_data['error'] = 2*self.model_data['deltas']
 
         # randomize observation order first
         self.obs_data = self.obs_data.sample(frac=1)
@@ -518,17 +415,9 @@ class model(object):
             print(count,obs[1])
             ec = obs[1][self.ec_names]
             ecpt = tuple([ec[n] for n in self.ec_names])
-            model_here = self.model_data.iloc[self.model_data_ecgrps.groups[ecpt]]
+            model_here = deepcopy(self.model_data.loc[self.model_data_ecgrps.groups[ecpt]])
 
             lkl = self.probs.likelihood(meas=obs[1][self.output_var], model_at_ec=model_here,output_col=self.output_var)
-
-
-            # hacky error approximation for now
-            #print(0.2*abs(obs[1][self.output_var]),0.01)
-            #err = max(0.2*abs(obs[1][self.output_var]),0.02)
-            #print(count, obs[1][self.output_var])
-            #lkl = self.probs.likelihood(obs[1], obs[1][self.output_var], err, self.get_model_data)
-
 
             self.probs.multiply(lkl)
             if save_step >0 and count % save_step == 0:
@@ -563,13 +452,6 @@ class model(object):
             to_drop = self.model_data.loc[box[1]['start_ind']:box[1]['end_ind']].index
             #sprint(to_drop)
             self.model_data.drop(to_drop,inplace=True)
-        """
-        for i in sorted(dropped_inds,reverse=True):
-            to_drop = self.model_data.loc[self.start_indices[i]:self.end_indices[i]].index
-            self.model_data.drop(to_drop,inplace=True)
-            del self.start_indices[i]
-            del self.end_indices[i]
-        """
 
         # update flags
         self.needs_new_model_data = True
@@ -663,7 +545,7 @@ class model(object):
                     ind_tuple = []
                     param_point = self.probs.points.loc[row[0]]
                     if param_point['new']==True:
-                        delta_inds_to_update.append(row[1]['index'])
+                        delta_inds_to_update.append(int(row[1]['index']))
                     p_ind = 0
                     for param in self.param_names:
                         min_val = param_point[param+'_min']
@@ -705,8 +587,8 @@ class model(object):
             else:
                 # temporary array to copy all the values into
                 deltas_temp = deepcopy(deltas)
-                deltas_temp[vals.index] = grad[ind_lists.values()] # Numpy
-                deltas[[delta_inds_to_update]] = deltas_temp[[delta_inds_to_update]]
+                deltas_temp[vals.index] = grad[ind_lists.values()] # Numpy "advanced indexing"
+                deltas[delta_inds_to_update] = deltas_temp[delta_inds_to_update]
             self.model_data['deltas'] = deltas
 
             #count = count+1
@@ -744,3 +626,15 @@ class model(object):
 
         # save the file
         dd.io.save(filename,state)
+
+    def visualize_grid(self,**argv):
+        self.probs.visualize(just_grid=True,**argv)
+
+    def visualize_probs(self,**argv):
+        """
+        Visualize the PMF with a corner plot.
+
+        Args:
+            same as pmf.visualize()
+        """
+        self.probs.visualize(**argv)

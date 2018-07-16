@@ -336,6 +336,7 @@ class Pmf(object):
 
         Todo:
             alternative error models?
+            should set some global error value option
             allow feeding in a list of observations?
         """
 
@@ -357,6 +358,11 @@ class Pmf(object):
             model_pt = model_data.iloc[point[0]]
             model_val = float(model_pt[output_col])
             err = float(model_pt['error'])
+
+            # testing this option
+            if abs(err) < abs(0.001 * model_val):
+                err = max(0.001*model_val,1e-6)
+
             new_probs[point[0]] = norm.pdf(meas, loc=model_val, scale=abs(err))
 
         # copy these values in
@@ -365,6 +371,8 @@ class Pmf(object):
         # make sure that the likelihood isn't zero everywhere...
         if self.equals_ish(np.sum(new_probs),0):
             print('likelihood has no probability! :(')
+        if any(np.isnan(np.array(self.points['prob']))):
+            raise ValueError('Uh-oh, some probability is NaN!')
         lkl.normalize()
         return lkl
 
@@ -514,9 +522,15 @@ class Pmf(object):
 
         return patches
 
-    def visualize(self, frac_points=1.0, just_grid=False):
+    def visualize(self, **argv):
         """
         Make histogram matrix to visualize the PMF.
+
+        Args:
+            frac_points (`float`): number >0 and <=1 indicating fraction of total points to simulate (will take the most probable, defaults to 1.0)
+            just_grid (`bool`): whether to show only the grid (i.e. visualize subdivisions) or the whole PMF (defaults to False)
+            fpath (`str`): optional, path to save image to
+            true_vals (`dict`): optional, set of param values to highlight on PMF
 
         Todo:
             include option to outline all boxes to see subdivisions
@@ -525,6 +539,29 @@ class Pmf(object):
             probably just add a bunch of optional arguments to handle these
             make it faster...
         """
+        # read in options
+        frac_points = argv.get('frac_points',1.0)
+        just_grid = argv.get('just_grid',False)
+        if 'fpath' in argv.keys():
+            save_file = True
+            fpath = argv['fpath']
+        else:
+            save_file = False
+        if 'true_vals' in argv.keys():
+            # check that all params are there
+            true_vals = argv['true_vals']
+            if not set(true_vals.keys())==set([p['name'] for p in self.params]):
+                print('Your true_vals do not have all the paramter names! Proceeding without them.')
+                plot_true_vals = False
+            # check that values are within ranges
+            elif not all(true_vals[p['name']]>p['edges'][0] and true_vals[p['name']]<p['edges'][-1] for p in self.params):
+                print('Your true_vals are not within the correct bounds. Proceeding without them.')
+                plot_true_vals = False
+            else:
+                plot_true_vals = True
+        else:
+            plot_true_vals = False
+
         #start_time = timeit.default_timer()
 
         # find ranges to plot - this likely needs tweaking
@@ -556,21 +593,29 @@ class Pmf(object):
                     axes[rownum][colnum].set_xscale('log')
 
                 if rownum==colnum: #diagonal - single-variable histogram
-                    #diag_start = timeit.default_timer()
-                    bins, probs = self.project_1D(x_param)
-                    #checkpoint = round(timeit.default_timer()-diag_start,2)
-                    #print('project_1D took ' + str(checkpoint) + ' seconds')
-                    if x_param['spacing']=='log':
-                        vals = [math.sqrt(bins[i]*bins[i+1]) for i in range(len(probs))]
-                    elif x_param['spacing']=='linear':
-                        vals = [0.5*(bins[i]+bins[i+1]) for i in range(len(probs))]
-                    axes[rownum][colnum].hist(vals, weights=probs, bins=bins, edgecolor='k', linewidth=1.0)
-                    # formatting
-                    axes[rownum][colnum].set_ylim(0,1)
+                    if just_grid:
+                        fig.delaxes(axes[rownum][colnum])
+                    else:
+                        #diag_start = timeit.default_timer()
+                        bins, probs = self.project_1D(x_param)
+                        #checkpoint = round(timeit.default_timer()-diag_start,2)
+                        #print('project_1D took ' + str(checkpoint) + ' seconds')
+                        if x_param['spacing']=='log':
+                            vals = [math.sqrt(bins[i]*bins[i+1]) for i in range(len(probs))]
+                        elif x_param['spacing']=='linear':
+                            vals = [0.5*(bins[i]+bins[i+1]) for i in range(len(probs))]
+                        axes[rownum][colnum].hist(vals, weights=probs, bins=bins, edgecolor='k', linewidth=1.0)
+                        # formatting
+                        axes[rownum][colnum].set_ylim(0,1)
 
-                    #diag_finish = timeit.default_timer()
-                    #diag_time = round(diag_finish-diag_start,2)
-                    #print('diagonal plot finished in ' + str(diag_time) + ' seconds')
+                        # add true value if desired
+                        if plot_true_vals:
+                            true_x = [true_vals[x_param['name']]]
+                            axes[rownum][colnum].scatter(true_x,[min([max(probs)+0.05,0.95])],200,'r',marker='*')
+
+                        #diag_finish = timeit.default_timer()
+                        #diag_time = round(diag_finish-diag_start,2)
+                        #print('diagonal plot finished in ' + str(diag_time) + ' seconds')
 
                 elif rownum > colnum: # below diagonal
                     #offdiag_start = timeit.default_timer()
@@ -587,6 +632,11 @@ class Pmf(object):
                     axes[rownum][colnum].set_ylim(plot_ranges[y_param['name']][0],plot_ranges[y_param['name']][1])
                     if y_param['spacing']=='log':
                         axes[rownum][colnum].set_yscale('log')
+
+                    if plot_true_vals:
+                        true_x = [true_vals[x_param['name']]]
+                        true_y = [true_vals[y_param['name']]]
+                        axes[rownum][colnum].scatter(true_x,true_y,200,c="None",marker='o',linewidths=3,edgecolors='r',zorder=20)
                     #offdiag_finish = timeit.default_timer()
                     #offdiag_time = round(offdiag_finish-offdiag_start,2)
                     #print('off-diagonal plot finished in ' + str(offdiag_time) + ' seconds')
@@ -603,3 +653,5 @@ class Pmf(object):
                 axes[i][0].set_ylabel(ylabel)
 
         plt.tight_layout()
+        if save_file:
+            plt.savefig(fpath)
