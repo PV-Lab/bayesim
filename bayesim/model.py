@@ -428,6 +428,9 @@ class model(object):
 
             self.model_data = pd.DataFrame.from_dict(vecs)
 
+        # reset index to avoid duplication
+        self.model_data.reset_index(inplace=True,drop=True)
+
         # round EC's and generate groups
         rd_dct = {n:self.ec_tol_digits for n in self.ec_names}
         self.model_data = self.model_data.round(rd_dct)
@@ -558,6 +561,7 @@ class model(object):
         # remove model_data for dropped boxes
         for box in dropped_boxes.iterrows():
             to_drop = self.model_data.loc[box[1]['start_ind']:box[1]['end_ind']].index
+            #sprint(to_drop)
             self.model_data.drop(to_drop,inplace=True)
         """
         for i in sorted(dropped_inds,reverse=True):
@@ -609,19 +613,19 @@ class model(object):
         param_lengths = [len(set(self.probs.points[p])) for p in self.param_names]
 
         if 'deltas' in self.model_data.columns:
-            deltas = list(deepcopy(self.model_data['deltas']))
+            deltas = np.array(deepcopy(self.model_data['deltas']))
         else:
             deltas = np.zeros(len(self.model_data))
 
         # for every set of conditions...
-        print(len(self.model_data_ecgrps))
         #count = 0
         for grp, vals in self.model_data_ecgrps:
             #if count%5==0:print(count)
             #print(grp,vals.index)
             # construct matrix of output_var({fit_params})
-            subset = deepcopy(self.model_data.iloc[vals.index])
+            subset = deepcopy(self.model_data.loc[vals.index])
             # sort and reset index of subset to match probs so we can use the find_neighbor_boxes function if needed
+            subset.drop_duplicates(subset=self.param_names,inplace=True)
             subset.sort_values(self.param_names,inplace=True)
             subset.reset_index(inplace=True)
             #print(len(subset),len(self.probs.points))
@@ -631,55 +635,81 @@ class model(object):
 
             # check if on a grid
             if not len(subset)==np.product(param_lengths):
-                # construct grid at the highest level of subdivision and do matrix procedure on that
-                # then only update the new boxes
-                
-                # for every new point, find neighbors in probs of that index
-                # take indices from that to get neighboring output values
-                # find biggest delta out of those
-                #print(len(self.probs.points[self.probs.points['new']==True]))
-                #count = 0
-                #for pt in self.probs.points[self.probs.points['new']==True].iterrows():
-                    #if count % 50 == 0: print(count)
-                    #nb_inds = self.probs.find_neighbor_boxes(pt[0]).index
-                    #nbs = subset.loc[nb_inds]
-                    #print(pt,nbs)
+                is_grid = False
+                # construct grid at the highest level of subdivision
+                mat_shape = []
+                param_vals = {}
+                pvals_indices = {}
+                #indices_lists = []
+                for param in self.fit_params:
+                    pname = param['name']
+                    min_edge = param['edges'][0]
+                    max_edge = param['edges'][-1]
+                    length = 2*param['length']*2**self.probs.num_sub+1
+                    if param['spacing']=='linear':
+                        param_vals[pname] = np.linspace(min_edge,max_edge,length)[1:-1:2]
+                    elif param['spacing']=='log':
+                        param_vals[pname] = np.logspace(np.log10(min_edge),np.log10(max_edge),length)[1:-1:2]
+                    mat_shape.append(len(param_vals[pname]))
+                    pvals_indices[pname] = {param_vals[pname][i]:i for i in range(len(param_vals[pname]))}
+                    #indices_lists.append(range(len(param_vals[pname])))
+                mat = np.zeros(mat_shape)
+                # populate that grid...
+                # at each row in subset, find list of indices into matrix that that output should go into and copy it in
+                ind_lists = {p:[] for p in self.param_names}
+                delta_inds_to_update = []
+                for row in subset.iterrows():
+                    slices = []
+                    ind_tuple = []
+                    param_point = self.probs.points.loc[row[0]]
+                    if param_point['new']==True:
+                        delta_inds_to_update.append(row[1]['index'])
+                    p_ind = 0
+                    for param in self.param_names:
+                        min_val = param_point[param+'_min']
+                        max_val = param_point[param+'_max']
+                        inds = [pvals_indices[param][v] for v in param_vals[param] if v>min_val and v<max_val]
+                        slices.append(slice(min(inds),max(inds)+1,None))
+                        ind_lists[param].append(inds[0])
+                        p_ind = p_ind+1
+                    output_val = row[1][self.output_var]
+                    mat[slices] = output_val
 
-                    # get big model data index, that's where the delta goes
-                    #delta_index = int(subset.loc[pt[0]]['index'])
-                    #this_output = subset.loc[pt[0]][self.output_var]
-                    #deltas[delta_index] = max([abs(subset.loc[i][self.output_var]-this_output) for i in nb_inds])
-                    #print(delta_index,deltas[delta_index])
-                    #deltas[subset.iloc[pt[0]['index']] = max([abs(subset[self.output_var].loc[i]-subset[self.output_var].loc[pt[1]['index']][self.output_var]) for i in nb_inds])
-                    #count = count+1
+                # check if any zeros remain
+                if np.any(abs(mat)<1e-10):
+                    print('There are deltas very close to zero...watch out!')
 
-            else: # we can do it the matrix way
+            else:
+                is_grid = True
                 mat = np.reshape(list(subset[self.output_var]), param_lengths)
 
-                # given matrix, compute largest differences along any direction
-                winner_dim = [len(mat.shape)]
-                winner_dim.extend(mat.shape)
-                winners = np.zeros(winner_dim)
+            # given matrix, compute largest differences along any direction
+            winner_dim = [len(mat.shape)]
+            winner_dim.extend(mat.shape)
+            winners = np.zeros(winner_dim)
 
-                for i in range(len(mat.shape)):
-                    # build delta matrix
-                    deltas_here = np.absolute(np.diff(mat,axis=i))
-                    pad_widths = [(0,0) for j in range(len(mat.shape))]
-                    pad_widths[i] = (1,1)
-                    deltas_here = np.pad(deltas_here, pad_widths, mode='constant', constant_values=0)
-                    # build "winner" matrix
-                    winners[i]=np.maximum(deltas_here[[Ellipsis]+[slice(None,mat.shape[i],None)]+[slice(None)]*(len(mat.shape)-i-1)],deltas_here[[Ellipsis]+[slice(1,mat.shape[i]+1,None)]+[slice(None)]*(len(mat.shape)-i-1)])
+            for i in range(len(mat.shape)):
+                # build delta matrix
+                deltas_here = np.absolute(np.diff(mat,axis=i))
+                pad_widths = [(0,0) for j in range(len(mat.shape))]
+                pad_widths[i] = (1,1)
+                deltas_here = np.pad(deltas_here, pad_widths, mode='constant', constant_values=0)
+                # build "winner" matrix
+                winners[i]=np.maximum(deltas_here[[Ellipsis]+[slice(None,mat.shape[i],None)]+[slice(None)]*(len(mat.shape)-i-1)],deltas_here[[Ellipsis]+[slice(1,mat.shape[i]+1,None)]+[slice(None)]*(len(mat.shape)-i-1)])
 
-                    grad = np.amax(winners,axis=0)
+                grad = np.amax(winners,axis=0)
 
-                    # save these values to the appropriate indices in the vector - check that these are ordered correctly!!!
-                    #print(grad.shape,deltas.shape,grad.flatten().shape)
-
+            # save these values to the appropriate indices in the vector
+            if is_grid:
                 deltas[vals.index] = grad.flatten()
+            else:
+                # temporary array to copy all the values into
+                deltas_temp = deepcopy(deltas)
+                deltas_temp[vals.index] = grad[ind_lists.values()] # Numpy
+                deltas[[delta_inds_to_update]] = deltas_temp[[delta_inds_to_update]]
+            self.model_data['deltas'] = deltas
 
-            count = count+1
-        # add the vector to self.model_data
-        self.model_data['deltas'] = deltas
+            #count = count+1
 
     def save_state(self,filename='bayesim_state.h5'):
         """

@@ -224,6 +224,7 @@ class Pmf(object):
         # pick out the boxes that will be subdivided
         to_subdivide = self.points[self.points['prob']>threshold_prob]
         #print(len(to_subdivide))
+        dropped_boxes = deepcopy(to_subdivide)
 
         num_high_prob_boxes = len(to_subdivide)
 
@@ -244,7 +245,7 @@ class Pmf(object):
 
         # create new boxes (and delete old ones)
         new_boxes = []
-        dropped_inds = []
+        #dropped_inds = []
         for box in to_subdivide.iterrows():
             # check if minimum width is already satisfied
             num_divs_here = num_divs
@@ -259,7 +260,7 @@ class Pmf(object):
                     print('Minimum width/factor of ' + str(p['min_width']) + ' already satisfied for ' + p['name'] + ' at point: \n' + str(box[1]))
 
             # first, remove this box from DataFrame
-            dropped_inds.append(box[0])
+            #dropped_inds.append(box[0])
             self.points = self.points.drop([box[0]])
 
             # create new DataFrame with subdivided boxes
