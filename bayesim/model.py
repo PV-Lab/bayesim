@@ -65,8 +65,8 @@ class model(object):
             self.model_data_ecgrps = state['model_data_ecgrps']
             self.needs_new_model_data = state['needs_new_model_data']
             self.obs_data = state['obs_data']
-            self.start_indices = state['start_indices']
-            self.end_indices = state['end_indices']
+            #self.start_indices = state['start_indices']
+            #self.end_indices = state['end_indices']
             self.is_run = state['is_run']
 
 
@@ -92,8 +92,8 @@ class model(object):
             self.model_data = []
             self.needs_new_model_data = True
             self.obs_data = []
-            self.start_indices = []
-            self.end_indices = []
+            #self.start_indices = []
+            #self.end_indices = []
             self.is_run = False
             self.num_sub = 0 # number of subdivisions done
 
@@ -225,6 +225,24 @@ class model(object):
                 raise ValueError('The experimental conditions do not match to %d digits between the observed and modeled data at the modeled parameter space point %s!'%(self.ec_tol_digits,name))
                 return
 
+    def calc_indices(self):
+        """
+        Compute starting and ending indices in self.model_data for each point in self.probs.
+        """
+        start_indices = np.zeros(len(self.probs.points),dtype=int)
+        end_indices = np.zeros(len(self.probs.points),dtype=int)
+        model_data_grps = self.model_data.groupby(by=self.param_names)
+        for pt in self.probs.points.iterrows():
+            subset_inds = model_data_grps.groups[tuple(pt[1][self.param_names].tolist())]
+            if len(subset_inds)==0:
+                print('Something went wrong calculating sim indices! Could not find any points in model data for params %s.'%pt)
+            start_ind = int(min(subset_inds))
+            end_ind = int(max(subset_inds))
+            start_indices[pt[0]] = start_ind
+            end_indices[pt[0]] = end_ind
+        self.probs.points['start_ind'] = start_indices
+        self.probs.points['end_ind'] = end_indices
+
     def attach_model(self,**argv):
         """
         Attach the model for the data, either by feeding in a file of precomputed data or a function that does the computing.
@@ -289,12 +307,27 @@ class model(object):
                     for name,vals in param_vals:
                         params.add_fit_param(name=name,vals=vals)
 
-
             # generate self.params if necessary? (might be done by here)
 
-            # compute self.start_indices and self.end_indices...
-            # (rewrite using groupby and compare speeds)
-            ind = 0
+            """
+            model_data_grps = self.model_data.groupby(by=self.param_names)
+            self.start_indices = np.zeros(len(self.probs.points),dtype=int)
+            self.end_indices = np.zeros(len(self.probs.points),dtype=int)
+            #for pt in self.probs.points[ind_arr].iterrows():
+            for pt in self.probs.points.iterrows():
+                subset_inds = model_data_grps.groups[tuple(pt[1][self.param_names].tolist())]
+                if len(subset_inds)==0:
+                    print('Something went wrong calculating sim indices! Could not find any points in model data for params %s.'%query_str)
+                start_ind = int(min(subset_inds))
+                end_ind = int(max(subset_inds))
+                self.start_indices[pt[0]] = start_ind
+                self.end_indices[pt[0]] = end_ind
+            """
+            """
+            start_indices = []
+            end_indices = []
+            #ind = 0
+            model_data_grps = self.model_data.groupby(by=self.param_names)
             for pt in self.probs.points.iterrows():
                 param_vals = {p:pt[1][p] for p in self.param_names}
                 param_spacing = {fp['name']:fp['spacing'] for fp in self.fit_params}
@@ -316,6 +349,7 @@ class model(object):
                 end_ind = subset.index[-1]+1
                 self.start_indices.append(start_ind)
                 self.end_indices.append(end_ind)
+            """
 
         elif mode=='add':
             # import and sort data
@@ -325,7 +359,7 @@ class model(object):
             self.check_data_columns(model_data=new_data,output_column=output_col)
 
             # next get list of parameter space points
-            new_points_grps = new_data.groupby(self.param_names)
+            new_points_grps = new_data.groupby(by=self.param_names)
             new_points = pd.DataFrame.from_records(data=[list(k) for k in new_points_grps.groups.keys()],columns=self.param_names).sort_values(self.param_names).reset_index(drop=True)
 
             # check that the points are the right ones
@@ -342,11 +376,14 @@ class model(object):
             # append the model data
             self.model_data = pd.concat([self.model_data,new_data])
 
-            ind = 0
+            #ind = 0
 
+            """
             model_data_grps = self.model_data.groupby(by=self.param_names)
-            self.start_indices = np.zeros(len(self.probs.points),dtype=int)
-            self.end_indices = np.zeros(len(self.probs.points),dtype=int)
+            #self.start_indices = np.zeros(len(self.probs.points),dtype=int)
+            #self.end_indices = np.zeros(len(self.probs.points),dtype=int)
+            start_indices = np.zeros(len(self.probs.points),dtype=int)
+            end_indices = np.zeros(len(self.probs.points),dtype=int)
             #for pt in self.probs.points[ind_arr].iterrows():
             for pt in self.probs.points.iterrows():
                 subset_inds = model_data_grps.groups[tuple(pt[1][self.param_names].tolist())]
@@ -354,9 +391,9 @@ class model(object):
                     print('Something went wrong calculating sim indices! Could not find any points in model data for params %s.'%query_str)
                 start_ind = int(min(subset_inds))
                 end_ind = int(max(subset_inds))
-                self.start_indices[pt[0]] = start_ind
-                self.end_indices[pt[0]] = end_ind
-
+                start_indices[pt[0]] = start_ind
+                end_indices[pt[0]] = end_ind
+            """
             self.needs_new_model_data = False
 
             # calculate deltas?
@@ -369,9 +406,10 @@ class model(object):
             ec_vecs = {c:[] for c in self.ec_names}
             model_vals = []
             # self.start_indices and end_indices are indexed the same way as self.prob.points and will be a quick way to get to the model data for a given point in parameter space and then only search through the different experimental conditions
+
             for pt in self.probs.points.iterrows():
                 param_vals = {p:pt[1][p] for p in self.param_names}
-                self.start_indices.append(len(model_vals))
+                #self.start_indices.append(len(model_vals))
                 for d in self.obs_data.iterrows():
                     ec_vals = {c:d[1][c] for c in self.ec_names}
                     # add param and EC vals to the columns
@@ -382,7 +420,7 @@ class model(object):
                     # compute/look up the model data
                     # need to make sure that model_func takes in params and EC in appropriate format
                     model_vals.append(model_func(ec_vals,param_vals))
-                self.end_indices.append(len(model_vals))
+                #self.end_indices.append(len(model_vals))
             # merge dictionaries together to put into a model data df
             vecs = deepcopy(param_vecs)
             vecs.update(ec_vecs)
@@ -395,9 +433,9 @@ class model(object):
         self.model_data = self.model_data.round(rd_dct)
         self.model_data_ecgrps = self.model_data.groupby(self.ec_names)
 
-        # update flag
+        # update flag and indices
         self.needs_new_model_data = False
-
+        self.calc_indices()
 
     #def attach_probs(self, pmf):
         # to put in a PMF from before
@@ -410,6 +448,9 @@ class model(object):
         Both args should be dicts.
 
         This is almost certainly not implemented in the most efficient way currently. Also parameter values had better not be 0.
+
+        Todo:
+            fix the not allowing zero-valued parameters thing
         """
         # find index in self.probs of these param values
         p_query_str = ''
@@ -421,9 +462,11 @@ class model(object):
         if not len(pt)==1:
             print("Something went wrong finding the modeled data! Couldn't find data at %s"%p_query_str)
         else:
-            i = pt.index[0]
-            ind_low = self.start_indices[i]
-            ind_hi = self.end_indices[i]
+            ind_low = pt['start_ind']
+            ind_hi = pt['end_end']
+            #i = pt.index[0]
+            #ind_low = self.start_indices[i]
+            #ind_hi = self.end_indices[i]
 
         # pull out modeled data at that parameter space point...
         data_subset = self.model_data.iloc[ind_low:ind_hi]
@@ -510,19 +553,19 @@ class model(object):
         self.num_sub = self.num_sub + 1
         filename = 'new_sim_points_%d.h5'%(self.num_sub)
         new_boxes, dropped_boxes = self.probs.subdivide(threshold_prob)
-        dropped_inds = list(dropped_boxes.index)
+        #dropped_inds = list(dropped_boxes.index)
 
-        # remove start and end indices for subdivided boxes
+        # remove model_data for dropped boxes
+        for box in dropped_boxes.iterrows():
+            to_drop = self.model_data.loc[box[1]['start_ind']:box[1]['end_ind']].index
+            self.model_data.drop(to_drop,inplace=True)
+        """
         for i in sorted(dropped_inds,reverse=True):
+            to_drop = self.model_data.loc[self.start_indices[i]:self.end_indices[i]].index
+            self.model_data.drop(to_drop,inplace=True)
             del self.start_indices[i]
             del self.end_indices[i]
-
-        # do something with the deltas from the dropped new_boxes
-        # also clear out the model data
-        for box in dropped_boxes.iterrows():
-            # need to implement
-            pass
-            # maybe for now just call the delta half of the previous one?
+        """
 
         # update flags
         self.needs_new_model_data = True
@@ -559,60 +602,82 @@ class model(object):
         Calculates largest difference in modeled output along any parameter direction for each experimental condition, to be used for error in calculating likelihoods. Currently only works if data is on a grid.
 
         (also assumes it's sorted by param names and then EC's)
+
+        Todo:
+            For subdivided case, figure out how to get data on a bigger matrix to do calculation faster!!!
         """
         param_lengths = [len(set(self.probs.points[p])) for p in self.param_names]
 
-        deltas = np.zeros(len(self.model_data))
+        if 'deltas' in self.model_data.columns:
+            deltas = list(deepcopy(self.model_data['deltas']))
+        else:
+            deltas = np.zeros(len(self.model_data))
+
         # for every set of conditions...
+        print(len(self.model_data_ecgrps))
+        #count = 0
         for grp, vals in self.model_data_ecgrps:
+            #if count%5==0:print(count)
             #print(grp,vals.index)
             # construct matrix of output_var({fit_params})
-            subset = self.model_data.iloc[vals.index]
+            subset = deepcopy(self.model_data.iloc[vals.index])
+            # sort and reset index of subset to match probs so we can use the find_neighbor_boxes function if needed
+            subset.sort_values(self.param_names,inplace=True)
+            subset.reset_index(inplace=True)
+            #print(len(subset),len(self.probs.points))
+            #print(subset[self.param_names].head(),self.probs.points[self.param_names].head())
+            if not all(subset[self.param_names]==self.probs.points[self.param_names]):
+                raise ValueError('Subset at %s does not match probability grid!'%grp)
+
             # check if on a grid
             if not len(subset)==np.product(param_lengths):
-                raise ValueError('Data is not on a grid!')
-                # sketching out the correct way to do this
-                # get all_current_values for each param and build grid of that dimension
-                # nested loops over each set of values...
-                #     find point in param space that that value combination sits inside
-                #     put that value into grid - there will be neighbor duplicates for non-subdivided boxes
-                # then the rest of the analysis should just work, as long as we unroll the matrix carefully and only update the new boxes
+                # construct grid at the highest level of subdivision and do matrix procedure on that
+                # then only update the new boxes
+                
+                # for every new point, find neighbors in probs of that index
+                # take indices from that to get neighboring output values
+                # find biggest delta out of those
+                #print(len(self.probs.points[self.probs.points['new']==True]))
+                #count = 0
+                #for pt in self.probs.points[self.probs.points['new']==True].iterrows():
+                    #if count % 50 == 0: print(count)
+                    #nb_inds = self.probs.find_neighbor_boxes(pt[0]).index
+                    #nbs = subset.loc[nb_inds]
+                    #print(pt,nbs)
 
-            else:
+                    # get big model data index, that's where the delta goes
+                    #delta_index = int(subset.loc[pt[0]]['index'])
+                    #this_output = subset.loc[pt[0]][self.output_var]
+                    #deltas[delta_index] = max([abs(subset.loc[i][self.output_var]-this_output) for i in nb_inds])
+                    #print(delta_index,deltas[delta_index])
+                    #deltas[subset.iloc[pt[0]['index']] = max([abs(subset[self.output_var].loc[i]-subset[self.output_var].loc[pt[1]['index']][self.output_var]) for i in nb_inds])
+                    #count = count+1
+
+            else: # we can do it the matrix way
                 mat = np.reshape(list(subset[self.output_var]), param_lengths)
 
-            # given matrix, compute largest differences along any direction
-            winner_dim = [len(mat.shape)]
-            winner_dim.extend(mat.shape)
-            winners = np.zeros(winner_dim)
+                # given matrix, compute largest differences along any direction
+                winner_dim = [len(mat.shape)]
+                winner_dim.extend(mat.shape)
+                winners = np.zeros(winner_dim)
 
-            for i in range(len(mat.shape)):
-                # build delta matrix
-                deltas_here = np.absolute(np.diff(mat,axis=i))
-                pad_widths = [(0,0) for j in range(len(mat.shape))]
-                pad_widths[i] = (1,1)
-                deltas_here = np.pad(deltas_here, pad_widths, mode='constant', constant_values=0)
-                # build "winner" matrix
-                winners[i]=np.maximum(deltas_here[[Ellipsis]+[slice(None,mat.shape[i],None)]+[slice(None)]*(len(mat.shape)-i-1)],deltas_here[[Ellipsis]+[slice(1,mat.shape[i]+1,None)]+[slice(None)]*(len(mat.shape)-i-1)])
+                for i in range(len(mat.shape)):
+                    # build delta matrix
+                    deltas_here = np.absolute(np.diff(mat,axis=i))
+                    pad_widths = [(0,0) for j in range(len(mat.shape))]
+                    pad_widths[i] = (1,1)
+                    deltas_here = np.pad(deltas_here, pad_widths, mode='constant', constant_values=0)
+                    # build "winner" matrix
+                    winners[i]=np.maximum(deltas_here[[Ellipsis]+[slice(None,mat.shape[i],None)]+[slice(None)]*(len(mat.shape)-i-1)],deltas_here[[Ellipsis]+[slice(1,mat.shape[i]+1,None)]+[slice(None)]*(len(mat.shape)-i-1)])
 
-            grad = np.amax(winners,axis=0)
+                    grad = np.amax(winners,axis=0)
 
-            # save these values to the appropriate indices in the vector - check that these are ordered correctly!!!
-            #print(grad.shape,deltas.shape,grad.flatten().shape)
+                    # save these values to the appropriate indices in the vector - check that these are ordered correctly!!!
+                    #print(grad.shape,deltas.shape,grad.flatten().shape)
 
-            # add an if statement for gridded data
-            deltas[vals.index] = grad.flatten()
+                deltas[vals.index] = grad.flatten()
 
-            # then an else for carefully unrolling grad matrix...
-            # basically need to reverse procedure from before:
-            # iterate over each point in subset, find indices of all_values matrix that are inside it
-            # check that all values inside those (if multiple) in matrix are equal
-            # if not, throw an error
-            # if so, take that value and put it in the list
-
-        # get subset of model data that corresponds to new param points!!
-        raise notImplementedError('Finish implementing this!')
-
+            count = count+1
         # add the vector to self.model_data
         self.model_data['deltas'] = deltas
 
@@ -643,8 +708,8 @@ class model(object):
         state['model_data_ecgrps'] = self.model_data_ecgrps
         state['needs_new_model_data'] = self.needs_new_model_data
         state['obs_data'] = self.obs_data
-        state['start_indices'] = self.start_indices
-        state['end_indices'] = self.end_indices
+        #state['start_indices'] = self.start_indices
+        #state['end_indices'] = self.end_indices
         state['is_run'] = self.is_run
 
         # save the file

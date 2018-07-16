@@ -17,7 +17,6 @@ class Pmf(object):
     Todo:
         make a save_state function for this
         (long-term) allow for non-gridded parameter space (Voronoi? Or MCMC with no subdivision)
-        make a way to visualize the grid
     """
 
     def make_points_list(self, params, total_prob=1.0, new=True, num_sub=0):
@@ -269,7 +268,7 @@ class Pmf(object):
                 # copy same params except for ranges
                 new_pl.add_fit_param(name=p['name'],val_range=[box[1][p['name']+'_min'],box[1][p['name']+'_max']],length=num_divs_here[p['name']],min_width=p['min_width'],spacing=p['spacing'],units=p['units'])
             # make new df, spreading total prob from original box among new smaller ones
-            new_boxes.append(self.make_points_list(new_pl.fit_params,total_prob=box[1]['prob'],new=True,num_sub=self.num_sub))
+            new_boxes.append(self.make_points_list(new_pl.fit_params,total_prob=box[1]['prob'],new=True,num_sub=box[1]['num_sub']+1))
 
         new_boxes = pd.concat(new_boxes)
 
@@ -364,7 +363,7 @@ class Pmf(object):
 
         # make sure that the likelihood isn't zero everywhere...
         if self.equals_ish(np.sum(new_probs),0):
-            print('likelihood has no probability! :( This happened at this measurement:\n', conditions)
+            print('likelihood has no probability! :(')
         lkl.normalize()
         return lkl
 
