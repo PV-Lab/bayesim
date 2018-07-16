@@ -106,7 +106,7 @@ examples/diode/new_sim_*.h5
 examples/diode/bayesim_state.h5
 examples/TE/new_sim_outputs_1.h5
 examples/TE/new_sim_points_1.h5
-examples/states/*
+examples/TE/states/*
 examples/TE/PMF_*.h5
 examples/TE/*.tar.gz
 examples/TE/.DS_Store
