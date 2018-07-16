@@ -110,3 +110,4 @@ examples/TE/states/*
 examples/TE/PMF_*.h5
 examples/TE/*.tar.gz
 examples/TE/.DS_Store
+examples/*/*PMF*.h5

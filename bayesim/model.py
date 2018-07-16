@@ -388,15 +388,15 @@ class model(object):
             save_step (`int`): interval (number of data points) at which to save intermediate PMF's (defaults to 10, 0 to save only final, <0 to save none)
             th_pm (`float`): threshold quantity of probability mass to be concentrated in th_pv fraction of parameter space to trigger the run to stop (defaults to 0.8)
             th_pv (`float`): threshold fraction of parameter space volume for th_pm fraction of probability to be concentrated into to trigger the run to stop (defaults to 0.05)
+            num_runs (`int`): Number of times to run to threshold (final result will be average of these, defaults to 3)
 
         Todo:
             add option for multiple runs and then averaging
         """
-        save_step = argv.setdefault('save_step',10)
-        th_pm = argv.setdefault('th_pm',0.8)
-        th_pv = argv.setdefault('th_pv',0.05)
-        th_pm = argv['th_pm']
-        th_pv = argv['th_pv']
+        save_step = argv.get('save_step',10)
+        th_pm = argv.get('th_pm',0.8)
+        th_pv = argv.get('th_pv',0.05)
+        num_runs = argv.get('num_runs',3)
 
         # check if needs new model data or already has run
         if self.needs_new_model_data:
@@ -406,30 +406,40 @@ class model(object):
             pass
 
         # FOR NOW set error = deltas
-        self.model_data['error'] = 2*self.model_data['deltas']
+        self.model_data['error'] = self.model_data['deltas']
 
         # randomize observation order first
         self.obs_data = self.obs_data.sample(frac=1)
         count = 0
-        for obs in self.obs_data.iterrows():
-            print(count,obs[1])
-            ec = obs[1][self.ec_names]
-            ecpt = tuple([ec[n] for n in self.ec_names])
-            model_here = deepcopy(self.model_data.loc[self.model_data_ecgrps.groups[ecpt]])
+        probs_lists = []
+        for i in range(num_runs):
+            self.probs.uniformize()
+            at_threshold=False
+            print('*****RUN %d*****'%(i+1))
+            while not at_threshold:
+                obs = self.obs_data.iloc[count]
+                print(obs)
+                ec = obs[self.ec_names]
+                ecpt = tuple([ec[n] for n in self.ec_names])
+                model_here = deepcopy(self.model_data.loc[self.model_data_ecgrps.groups[ecpt]])
 
-            lkl = self.probs.likelihood(meas=obs[1][self.output_var], model_at_ec=model_here,output_col=self.output_var)
+                lkl = self.probs.likelihood(meas=obs[self.output_var], model_at_ec=model_here,output_col=self.output_var)
 
-            self.probs.multiply(lkl)
-            if save_step >0 and count % save_step == 0:
-                dd.io.save('PMF_%d.h5'%(count),self.probs.points)
-            if np.sum(self.probs.most_probable(int(th_pv*len(self.probs.points)))['prob'])>th_pm:
-                print('Fed in %d points and now time to subdivide!'%(count+1))
-                if save_step >=0:
-                    dd.io.save('PMF_final.h5',self.probs.points)
-                self.is_run = True
-                break
-            else:
-                count = count + 1
+                self.probs.multiply(lkl)
+                if save_step >0 and count % save_step == 0:
+                    dd.io.save('sub%d_run%d_PMF_%d.h5'%(self.num_sub,i,count),self.probs.points)
+                if np.sum(self.probs.most_probable(int(th_pv*len(self.probs.points)))['prob'])>th_pm:
+                    print('Reached threshold!')
+                    probs_lists.append(np.array(self.probs.points['prob']))
+                    if save_step >=0:
+                        dd.io.save('sub%d_run%d_PMF_final.h5'%(self.num_sub,i),self.probs.points)
+                    at_threshold=True
+                else:
+                    count = count + 1
+
+        probs = np.mean(probs_lists,axis=0)
+        self.probs.points['prob'] = probs
+        self.is_run = True
 
     def subdivide(self, **argv):
         """
