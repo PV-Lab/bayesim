@@ -80,7 +80,7 @@ class model(object):
                 self.fit_params = []
                 self.param_names = []
 
-            if 'ec_names' in argv.keys():
+            if 'ec' in argv.keys():
                 self.ec_names = argv['ec']
             else:
                 self.ec_names = []
@@ -125,14 +125,16 @@ class model(object):
         Attach measured dataset.
 
         Args:
+            mode (`str`): 'file' or 'function'
+            fixed_error (`float`): required if running in function mode or if file doesn't have an 'error' column, value to use as uncertainty in measurement
             output_column (`str`): optional, header of column containing output data (required if different from self.output_var)
 
         Todo:
             generate and save list of all sets of EC's that were measured
             add option to just feed in a DataFrame
         """
-        mode = argv.setdefault('mode','file')
-        output_col = argv.setdefault('output_column',self.output_var)
+        mode = argv.get('mode','file')
+        output_col = argv.get('output_column',self.output_var)
 
         if mode == 'file':
             self.obs_data = dd.io.load(argv['fpath'])
@@ -141,17 +143,23 @@ class model(object):
             if output_col not in cols:
                 raise NameError('Your output variable name, %s, is not the name of a column in your input data!' %(output_col))
                 return
+            elif 'fixed_error' not in argv.keys() and 'error' not in cols:
+                raise NameError('You need to either provide a value for fixed_error or your measurement data needs to have an error column!')
+                return
             else:
                 cols.remove(output_col)
                 if self.ec_names == []:
                     print('Identified experimental conditions as %s. If this is wrong, rerun and explicitly specify them with attach_ec (make sure they match data file columns) or remove extra columns from data file.' %(str(cols)))
                     self.ec_names = cols
                 else:
-                    if set(cols) == set(self.ec_names):
+                    if 'error' not in cols:
+                        self.obs_data['error'] = argv['fixed_error']*np.ones(len(self.obs_data))
+                        cols.extend('error')
+                    if set(cols) == set(self.ec_names+['error']):
                         pass # all good
-                    elif set(self.ec_names) <= set(cols):
+                    elif set(self.ec_names+['error']) <= set(cols):
                         print('Ignoring extra columns in data file: %s'%(str(list(set(cols)-set(ec)))))
-                    elif set(cols) <= set(self.ec_names):
+                    elif set(cols) <= set(self.ec_names+['error']):
                         print('These experimental conditions were missing from your data file: %s\nProceeding assuming that %s is the full set of experimental conditions...'%(str(list(set(ec)-set(cols))), str(cols)))
                         self.ec_names = cols
 
@@ -340,11 +348,9 @@ class model(object):
             param_vecs = {p:[] for p in self.param_names}
             ec_vecs = {c:[] for c in self.ec_names}
             model_vals = []
-            # self.start_indices and end_indices are indexed the same way as self.prob.points and will be a quick way to get to the model data for a given point in parameter space and then only search through the different experimental conditions
 
             for pt in self.probs.points.iterrows():
                 param_vals = {p:pt[1][p] for p in self.param_names}
-                #self.start_indices.append(len(model_vals))
                 for d in self.obs_data.iterrows():
                     ec_vals = {c:d[1][c] for c in self.ec_names}
                     # add param and EC vals to the columns
@@ -355,7 +361,7 @@ class model(object):
                     # compute/look up the model data
                     # need to make sure that model_func takes in params and EC in appropriate format
                     model_vals.append(model_func(ec_vals,param_vals))
-                #self.end_indices.append(len(model_vals))
+
             # merge dictionaries together to put into a model data df
             vecs = deepcopy(param_vecs)
             vecs.update(ec_vecs)
@@ -391,54 +397,60 @@ class model(object):
             num_runs (`int`): Number of times to run to threshold (final result will be average of these, defaults to 3)
 
         Todo:
-            add option for multiple runs and then averaging
+            write measurement points used to a log file instead of printing to screen
+            make default value of th_pv dimension-number-dependent
+            deal with wraparound if a run goes through all the sims (unlikely)
         """
         save_step = argv.get('save_step',10)
         th_pm = argv.get('th_pm',0.8)
         th_pv = argv.get('th_pv',0.05)
         num_runs = argv.get('num_runs',3)
 
-        # check if needs new model data or already has run
         if self.needs_new_model_data:
-            pass
+            raise ValueError('You need to attach model data before running!')
+            return
 
         if self.is_run:
-            pass
+            print('Running again at the same subdivision level. Previous results may be overridden...')
 
-        # FOR NOW set error = deltas
-        self.model_data['error'] = self.model_data['deltas']
+        # FOR NOW set error = 2*deltas (need to tweak this probably)
+        self.model_data['error'] = 2*self.model_data['deltas']
 
         # randomize observation order first
         self.obs_data = self.obs_data.sample(frac=1)
-        count = 0
+        i = 0
         probs_lists = []
-        for i in range(num_runs):
+        for j in range(num_runs):
+            count = 0
             self.probs.uniformize()
             at_threshold=False
-            print('*****RUN %d*****'%(i+1))
+            print('\n*****RUN %d*****'%(j+1))
             while not at_threshold:
-                obs = self.obs_data.iloc[count]
+                obs = self.obs_data.iloc[i] # use different observations for each run
                 print(obs)
                 ec = obs[self.ec_names]
                 ecpt = tuple([ec[n] for n in self.ec_names])
                 model_here = deepcopy(self.model_data.loc[self.model_data_ecgrps.groups[ecpt]])
 
-                lkl = self.probs.likelihood(meas=obs[self.output_var], model_at_ec=model_here,output_col=self.output_var)
+                lkl = self.probs.likelihood(meas=obs, model_at_ec=model_here,output_col=self.output_var)
 
                 self.probs.multiply(lkl)
                 if save_step >0 and count % save_step == 0:
-                    dd.io.save('sub%d_run%d_PMF_%d.h5'%(self.num_sub,i,count),self.probs.points)
+                    dd.io.save('sub%d_run%d_PMF_%d.h5'%(self.num_sub,j+1,count),self.probs.points)
                 if np.sum(self.probs.most_probable(int(th_pv*len(self.probs.points)))['prob'])>th_pm:
                     print('Reached threshold!')
                     probs_lists.append(np.array(self.probs.points['prob']))
                     if save_step >=0:
-                        dd.io.save('sub%d_run%d_PMF_final.h5'%(self.num_sub,i),self.probs.points)
+                        dd.io.save('sub%d_run%d_PMF_final.h5'%(self.num_sub,j+1),self.probs.points)
                     at_threshold=True
                 else:
                     count = count + 1
+                    i = i + 1
 
         probs = np.mean(probs_lists,axis=0)
         self.probs.points['prob'] = probs
+        if save_step >=0:
+            dd.io.save('sub%d_PMF_final.h5'%(self.num_sub),self.probs.points)
         self.is_run = True
 
     def subdivide(self, **argv):

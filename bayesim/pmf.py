@@ -346,6 +346,8 @@ class Pmf(object):
         model_data.sort_values([p['name'] for p in self.params])
         model_data.reset_index(drop=True)
         output_col = argv['output_col']
+        meas_val = meas[output_col]
+        meas_err = meas['error']
 
         # set up likelihood DF
         lkl = deepcopy(self)
@@ -357,13 +359,11 @@ class Pmf(object):
             #model_val = model_func(ec, dict(point[1]))
             model_pt = model_data.iloc[point[0]]
             model_val = float(model_pt[output_col])
-            err = float(model_pt['error'])
+            model_err = float(model_pt['error'])
 
-            # testing this option
-            if abs(err) < abs(0.001 * model_val):
-                err = max(0.001*model_val,1e-6)
+            err = max(model_err,meas_err)
 
-            new_probs[point[0]] = norm.pdf(meas, loc=model_val, scale=abs(err))
+            new_probs[point[0]] = norm.pdf(meas_val, loc=model_val, scale=abs(err))
 
         # copy these values in
         lkl.points['prob'] = new_probs
@@ -379,14 +379,12 @@ class Pmf(object):
     def most_probable(self, n):
         """Return the n largest probabilities in a new DataFrame.
         """
-
         sorted_probs = self.points.sort_values(by='prob',ascending=False)
         return sorted_probs.iloc[0:n]
 
     def equals_ish(self, num1, num2, thresh = 1e-12):
         """helper function to deal with machine error issues
         """
-
         if abs(num1-num2) < thresh:
             return True
         else:
@@ -403,7 +401,6 @@ class Pmf(object):
             Returns:
                 True if bin limits are equal to or inside point bounds, False otherwise
         """
-
         if (bin_lims[0] >= bounds[0] or self.equals_ish(bin_lims[0], bounds[0])) and (bin_lims[1] <= bounds[1] or self.equals_ish(bin_lims[1],bounds[1])):
             return True
         else:
@@ -421,7 +418,6 @@ class Pmf(object):
         Returns:
             float: Fraction of prob that should be in this bin
         """
-
         if log_spacing:
             bin_length = bin_lims[1]/bin_lims[0]
             point_length = bounds[1]/bounds[0]
@@ -446,7 +442,6 @@ class Pmf(object):
         Todo:
             make it faster?
         """
-
         ## first find bin edges
         # pull all bounds, then flatten, remove duplicates, and sort
         bins = sorted(list(set(list(self.points[param['name']+'_min'])+list(self.points[param['name']+'_max']))))
@@ -533,7 +528,6 @@ class Pmf(object):
             true_vals (`dict`): optional, set of param values to highlight on PMF
 
         Todo:
-            include option to outline all boxes to see subdivisions
             figure out axis labeling and stuff for units, logs, etc.
             how to rescale - e.g. eliminating areas where prob less than some threshold?
             probably just add a bunch of optional arguments to handle these
