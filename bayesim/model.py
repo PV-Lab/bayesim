@@ -125,57 +125,81 @@ class model(object):
         Attach measured dataset.
 
         Args:
-            mode (`str`): 'file' or 'function'
+            keep_all (`bool`): whether to keep all the data in the file (longer simulation times) or to clip out data points that are close to each other (defaults to False)
+            ec_x_var (`str`): required if keep_all is False, the experimental condition over which to measure differences (e.g. V for JV(Ti) curves in PV)
+            max_ec_x_step (`float`): used if keep_all is False, largest step to take in the ec_x_var before keeping a point even if curve if "flat" (defaults to 0.05 * range of ec_x_var)
+            thresh_dif_frac (`float`): used if keep_all is False, threshold (as a percentage of the maximum value, defaults to 0.03)
             fixed_error (`float`): required if running in function mode or if file doesn't have an 'error' column, value to use as uncertainty in measurement
             output_column (`str`): optional, header of column containing output data (required if different from self.output_var)
 
         Todo:
-            generate and save list of all sets of EC's that were measured
+            choose points from a larger file based on percent change
             add option to just feed in a DataFrame
         """
-        mode = argv.get('mode','file')
-        output_col = argv.get('output_column',self.output_var)
+        output_col = argv.get('output_column', self.output_var)
+        keep_all = argv.get('keep_all', False)
+        thresh_dif_frac = argv.get('thresh_dif_frac', 0.01)
+        if not keep_all:
+            ec_x_var = argv['ec_x_var']
 
-        if mode == 'file':
-            self.obs_data = dd.io.load(argv['fpath'])
-            # get EC names if necessary
-            cols = list(self.obs_data.columns)
-            if output_col not in cols:
-                raise NameError('Your output variable name, %s, is not the name of a column in your input data!' %(output_col))
-                return
-            elif 'fixed_error' not in argv.keys() and 'error' not in cols:
-                raise NameError('You need to either provide a value for fixed_error or your measurement data needs to have an error column!')
-                return
-            else:
-                cols.remove(output_col)
-                if self.ec_names == []:
-                    print('Identified experimental conditions as %s. If this is wrong, rerun and explicitly specify them with attach_ec (make sure they match data file columns) or remove extra columns from data file.' %(str(cols)))
-                    self.ec_names = cols
-                else:
-                    if 'error' not in cols:
-                        self.obs_data['error'] = argv['fixed_error']*np.ones(len(self.obs_data))
-                        cols.extend('error')
-                    if set(cols) == set(self.ec_names+['error']):
-                        pass # all good
-                    elif set(self.ec_names+['error']) <= set(cols):
-                        print('Ignoring extra columns in data file: %s'%(str(list(set(cols)-set(ec)))))
-                    elif set(cols) <= set(self.ec_names+['error']):
-                        print('These experimental conditions were missing from your data file: %s\nProceeding assuming that %s is the full set of experimental conditions...'%(str(list(set(ec)-set(cols))), str(cols)))
-                        self.ec_names = cols
-
-            # round EC values
-            rd_dct = {n:self.ec_tol_digits for n in self.ec_names}
-            self.obs_data = self.obs_data.round(rd_dct)
-
-            # sort observed data
-            self.obs_data.sort_values(by=self.ec_names)
-
-            # populate list of EC points
-            self.ec_pts =  pd.DataFrame.from_records(data=[list(k) for k in self.obs_data.groupby(self.ec_names).groups.keys()],columns=self.ec_names).round(self.ec_tol_digits).sort_values(self.ec_names).reset_index(drop=True)
-
+        self.obs_data = dd.io.load(argv['fpath'])
+        # get EC names if necessary
+        cols = list(self.obs_data.columns)
+        if output_col not in cols:
+            raise NameError('Your output variable name, %s, is not the name of a column in your input data!' %(output_col))
+            return
+        elif 'fixed_error' not in argv.keys() and 'error' not in cols:
+            raise NameError('You need to either provide a value for fixed_error or your measurement data needs to have an error column!')
+            return
         else:
-            # this option hasn't been tested and is maybe unnecessary
-            self.obs_data = eval(argv['name']+'()')
+            cols.remove(output_col)
+            if self.ec_names == []:
+                print('Identified experimental conditions as %s. If this is wrong, rerun and explicitly specify them with attach_ec (make sure they match data file columns) or remove extra columns from data file.' %(str(cols)))
+                self.ec_names = cols
+            else:
+                if 'error' not in cols:
+                    self.obs_data['error'] = argv['fixed_error']*np.ones(len(self.obs_data))
+                    cols.extend('error')
+                if set(cols) == set(self.ec_names+['error']):
+                    pass # all good
+                elif set(self.ec_names+['error']) <= set(cols):
+                    print('Ignoring extra columns in data file: %s'%(str(list(set(cols)-set(ec)))))
+                elif set(cols) <= set(self.ec_names+['error']):
+                    print('These experimental conditions were missing from your data file: %s\nProceeding assuming that %s is the full set of experimental conditions...'%(str(list(set(ec)-set(cols))), str(cols)))
+                    self.ec_names = cols
+
+        # pick out rows to keep - the way to do this thresholding should probably be tweaked
+        if not keep_all:
+            other_ecs = [ec for ec in self.ec_names if not ec==ec_x_var]
+            obs_data_grps = self.obs_data.groupby(by=other_ecs)
+            for grp in obs_data_grps.groups.keys():
+                subset = deepcopy(self.obs_data.loc[obs_data_grps.groups[grp]]).sort_values(ec_x_var)
+                if 'max_ec_x_step' in argv.keys():
+                    max_step = argv['max_ec_x_step']
+                else:
+                    max_step = 0.1 * max(subset[ec_x_var]-min(subset[ec_x_var]))
+                thresh = thresh_dif_frac * (max(subset[self.output_var])-min(subset[self.output_var]))
+            i = 0
+            while i < len(subset)-1:
+                this_pt = subset.iloc[i]
+                next_pt = subset.iloc[i+1]
+                if next_pt[ec_x_var]-this_pt[ec_x_var] >= max_step:
+                    i = i+1
+                elif next_pt[self.output_var]-this_pt[self.output_var] < thresh:
+                    subset.drop(next_pt.name,inplace=True)
+                    self.obs_data.drop(next_pt.name,inplace=True)
+                else:
+                    i = i+1
+
+        # round EC values
+        rd_dct = {n:self.ec_tol_digits for n in self.ec_names}
+        self.obs_data = self.obs_data.round(rd_dct)
+
+        # sort observed data
+        self.obs_data.sort_values(by=self.ec_names)
+
+        # populate list of EC points
+        self.ec_pts =  pd.DataFrame.from_records(data=[list(k) for k in self.obs_data.groupby(self.ec_names).groups.keys()],columns=self.ec_names).round(self.ec_tol_digits).sort_values(self.ec_names).reset_index(drop=True)
 
     def check_data_columns(self,**argv):
         """
@@ -397,7 +421,6 @@ class model(object):
             num_runs (`int`): Number of times to run to threshold (final result will be average of these, defaults to 3)
 
         Todo:
-            write measurement points used to a log file instead of printing to screen
             make default value of th_pv dimension-number-dependent
             deal with wraparound if a run goes through all the sims (unlikely)
         """
@@ -422,12 +445,13 @@ class model(object):
         probs_lists = []
         for j in range(num_runs):
             count = 0
+            obs_indices = []
             self.probs.uniformize()
             at_threshold=False
             print('\n*****RUN %d*****'%(j+1))
             while not at_threshold:
                 obs = self.obs_data.iloc[i] # use different observations for each run
-                print(obs)
+                obs_indices.append(i)
                 ec = obs[self.ec_names]
                 ecpt = tuple([ec[n] for n in self.ec_names])
                 model_here = deepcopy(self.model_data.loc[self.model_data_ecgrps.groups[ecpt]])
@@ -438,11 +462,12 @@ class model(object):
                 if save_step >0 and count % save_step == 0:
                     dd.io.save('sub%d_run%d_PMF_%d.h5'%(self.num_sub,j+1,count),self.probs.points)
                 if np.sum(self.probs.most_probable(int(th_pv*len(self.probs.points)))['prob'])>th_pm:
-                    print('Reached threshold!')
+                    print('Reached threshold after %d observation points were fed in!'%(count))
                     probs_lists.append(np.array(self.probs.points['prob']))
                     if save_step >=0:
                         dd.io.save('sub%d_run%d_PMF_final.h5'%(self.num_sub,j+1),self.probs.points)
                     at_threshold=True
+                    dd.io.save('sub%d_run%d_obs_list.h5'%(self.num_sub,j+1),self.obs_data.iloc[obs_indices])
                 else:
                     count = count + 1
                     i = i + 1
@@ -489,7 +514,7 @@ class model(object):
         Note that this could be very slow if used on the initial grid (i.e. for potentially millions of points) - it's better for after a subdivide call.
 
         Todo:
-            potentially save to HDF5 instead?
+            make it faster somehow?
         """
         # First, find all parameter points marked as 'new' and pick out just the columns with the values
         param_pts = self.probs.points[self.probs.points['new']==True][self.param_names]
