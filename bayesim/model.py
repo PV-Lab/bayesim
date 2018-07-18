@@ -4,6 +4,8 @@ import pandas as pd
 import deepdish as dd
 from copy import deepcopy
 import numpy as np
+import matplotlib.pyplot as plt
+import random
 
 class model(object):
     """
@@ -126,7 +128,7 @@ class model(object):
 
         Args:
             keep_all (`bool`): whether to keep all the data in the file (longer simulation times) or to clip out data points that are close to each other (defaults to False)
-            ec_x_var (`str`): required if keep_all is False, the experimental condition over which to measure differences (e.g. V for JV(Ti) curves in PV)
+            ec_x_var (`str`): required if keep_all is False, the experimental condition over which to measure differences (e.g. V for JV(Ti) curves in PV). It will also be used in plotting later.
             max_ec_x_step (`float`): used if keep_all is False, largest step to take in the ec_x_var before keeping a point even if curve if "flat" (defaults to 0.05 * range of ec_x_var)
             thresh_dif_frac (`float`): used if keep_all is False, threshold (as a percentage of the maximum value, defaults to 0.03)
             fixed_error (`float`): required if running in function mode or if file doesn't have an 'error' column, value to use as uncertainty in measurement
@@ -139,8 +141,8 @@ class model(object):
         output_col = argv.get('output_column', self.output_var)
         keep_all = argv.get('keep_all', False)
         thresh_dif_frac = argv.get('thresh_dif_frac', 0.01)
-        if not keep_all:
-            ec_x_var = argv['ec_x_var']
+        if 'ec_x_var' in argv.keys():
+            self.ec_x_var = argv['ec_x_var']
 
         self.obs_data = dd.io.load(argv['fpath'])
         # get EC names if necessary
@@ -170,21 +172,21 @@ class model(object):
 
         # pick out rows to keep - the way to do this thresholding should probably be tweaked
         if not keep_all:
-            other_ecs = [ec for ec in self.ec_names if not ec==ec_x_var]
+            other_ecs = [ec for ec in self.ec_names if not ec==self.ec_x_var]
             obs_data_grps = self.obs_data.groupby(by=other_ecs)
             for grp in obs_data_grps.groups.keys():
-                subset = deepcopy(self.obs_data.loc[obs_data_grps.groups[grp]]).sort_values(ec_x_var)
+                subset = deepcopy(self.obs_data.loc[obs_data_grps.groups[grp]]).sort_values(self.ec_x_var)
                 if 'max_ec_x_step' in argv.keys():
                     max_step = argv['max_ec_x_step']
                 else:
-                    max_step = 0.1 * max(subset[ec_x_var]-min(subset[ec_x_var]))
-                    print('Using %.2f as the maximum step size in %s when choosing observation points to keep.'%(max_step,ec_x_var))
+                    max_step = 0.1 * max(subset[self.ec_x_var]-min(subset[self.ec_x_var]))
+                    print('Using %.2f as the maximum step size in %s when choosing observation points to keep.'%(max_step,self.ec_x_var))
                 thresh = thresh_dif_frac * (max(subset[self.output_var])-min(subset[self.output_var]))
                 i = 0
                 while i < len(subset)-1:
                     this_pt = subset.iloc[i]
                     next_pt = subset.iloc[i+1]
-                    if next_pt[ec_x_var]-this_pt[ec_x_var] >= max_step:
+                    if next_pt[self.ec_x_var]-this_pt[self.ec_x_var] >= max_step:
                         i = i+1
                     elif next_pt[self.output_var]-this_pt[self.output_var] < thresh:
                         subset.drop(next_pt.name,inplace=True)
@@ -260,9 +262,9 @@ class model(object):
         """
         start_indices = np.zeros(len(self.probs.points),dtype=int)
         end_indices = np.zeros(len(self.probs.points),dtype=int)
-        model_data_grps = self.model_data.groupby(by=self.param_names)
+        self.model_data_grps = self.model_data.groupby(by=self.param_names)
         for pt in self.probs.points.iterrows():
-            subset_inds = model_data_grps.groups[tuple(pt[1][self.param_names].tolist())]
+            subset_inds = self.model_data_grps.groups[tuple(pt[1][self.param_names].tolist())]
             if len(subset_inds)==0:
                 print('Something went wrong calculating sim indices! Could not find any points in model data for params %s.'%pt)
             start_ind = int(min(subset_inds))
@@ -406,9 +408,81 @@ class model(object):
         self.needs_new_model_data = False
         self.calc_indices()
 
-    #def attach_probs(self, pmf):
-        # to put in a PMF from before
-        # maybe not necessary with ability to load state
+    def comparison_plot(self,**argv):
+        """
+        Plot observed data vs. highest-probability modeled data.
+
+        Args:
+            ecs (`dict`): optional, dict of EC values at which to plot. If not provided, they will be chosen randomly. This can also be a list of dicts for multiple points.
+            num_param_pts (`int`): number of the most probable parameter space points to plot (defaults to 1 or len(ec) if ec is provided)
+            ec_x_var (`str`): one of self.ec_names, will overwrite if this was provided before in attach_observations, required if it wasn't. If ec was provided, this will supercede that
+            fpath (`str`): optional, path to save image to if desired (if num_plots>1, this will be used as a prefix)
+        """
+        # read in options and do some sanity checks
+        if 'ecs' in argv.keys():
+            ecs = argv['ecs']
+        else:
+            ec_tuple = random.choice(self.model_data_ecgrps.groups.keys())
+            ecs = {self.ec_names[i]:ec_tuple[i] for i in range(len(ec_tuple))}
+
+        num_param_pts = argv.get('num_plots',1)
+        if isinstance(ecs,list) or isinstance(ecs,np.ndarray):
+            if not len(ecs)==num_plots:
+                print('You provided a list of experimental conditions at which to plot of a different length than num_plots. Overriding num_plots=%d with len(ec)=%d'%(num_plots,len(ec)))
+        else:
+            ecs = [ecs]
+
+        if 'ec_x_var' in argv.keys():
+            self.ec_x_var = argv['ec_x_var']
+
+        if not hasattr(self,'ec_x_var'):
+            print('You have not provided an x-variable from your experimental conditions against which to plot. Choosing the first one in the list, %s.'%(self.ec_names[0]))
+            self.ec_x_var = self.ec_names[0]
+
+        # need to fix this check
+        #if self.ec_x_var in ecs.keys():
+            #print('You provided a fixed value for your x variable, ignoring that and plotting the full range.')
+            #del ecs[self.ec_x_var]
+
+        other_ecs = [n for n in self.ec_names if not n==self.ec_x_var]
+
+        param_pts = self.probs.most_probable(num_param_pts)
+
+        fig, axs = plt.subplots(len(ecs),sharex=True)
+
+        for i in range(len(ecs)):
+            ec = ecs[i]
+            obs_data = self.obs_data
+            plot_title = ''
+            for c in other_ecs:
+                obs_data =  obs_data[abs(obs_data[c]-ec[c])<=10**(-1*self.ec_tol_digits)]
+                plot_title = plot_title + '%s=%f, '%(c,ec[c])
+            obs_data = obs_data.sort_values(by=[self.ec_x_var])
+            plt.plot(obs_data[self.ec_x_var],obs_data[self.output_var])
+            j = 1
+            legend_list = ['observed','modeled']
+            for pt in param_pts.iterrows():
+                #print(pt[1])
+                #print(tuple([pt[1][n] for n in self.param_names]))
+                model_data = self.model_data.loc[self.model_data_grps.groups[tuple([pt[1][n] for n in self.param_names])]]
+                for c in other_ecs:
+                    model_data =  model_data[abs(model_data[c]-ec[c])<=10**(-1*self.ec_tol_digits)]
+                model_data.sort_values(by=[self.ec_x_var])
+                for p in self.param_names:
+                    plot_title = plot_title + '%s=%f, '%(p,pt[1][p])
+                plt.plot(model_data[self.ec_x_var],model_data[self.output_var])
+                if j>1:
+                    legend_list[1] = 'modeled 1'
+                    legend_list[i] = 'modeled %d'%i
+                j = j + 1
+            if len(ecs)>1:
+                ax = axs[i]
+            else:
+                ax = axs
+            plt.xlabel(self.ec_x_var)
+            ax.set_ylabel(self.output_var)
+            plt.legend(legend_list)
+            ax.set_title(plot_title)
 
     def run(self, **argv):
         """
@@ -472,6 +546,10 @@ class model(object):
                 else:
                     count = count + 1
                     i = i + 1
+                    if i>=len(self.obs_data):
+                        i=0
+                    if count>=len(self.obs_data):
+                        print('Used all the observation points! Wrapping around to the beginning.')
 
         probs = np.mean(probs_lists,axis=0)
         self.probs.points['prob'] = probs
@@ -567,47 +645,30 @@ class model(object):
             if not len(subset)==np.product(param_lengths):
                 is_grid = False
                 # construct grid at the highest level of subdivision
-                mat_shape = []
-                param_vals = {}
-                pvals_indices = {}
-                #indices_lists = []
-                for param in self.fit_params:
-                    pname = param['name']
-                    min_edge = param['edges'][0]
-                    max_edge = param['edges'][-1]
-                    length = 2*param['length']*2**self.probs.num_sub+1
-                    if param['spacing']=='linear':
-                        param_vals[pname] = np.linspace(min_edge,max_edge,length)[1:-1:2]
-                    elif param['spacing']=='log':
-                        param_vals[pname] = np.logspace(np.log10(min_edge),np.log10(max_edge),length)[1:-1:2]
-                    mat_shape.append(len(param_vals[pname]))
-                    pvals_indices[pname] = {param_vals[pname][i]:i for i in range(len(param_vals[pname]))}
-                    #indices_lists.append(range(len(param_vals[pname])))
-                mat = np.zeros(mat_shape)
+                #mat, param_vals, pvals_indices = self.probs.make_dense_grid()
                 # populate that grid...
                 # at each row in subset, find list of indices into matrix that that output should go into and copy it in
+                """
                 ind_lists = {p:[] for p in self.param_names}
                 delta_inds_to_update = []
                 for row in subset.iterrows():
                     slices = []
-                    ind_tuple = []
                     param_point = self.probs.points.loc[row[0]]
                     if param_point['new']==True:
                         delta_inds_to_update.append(int(row[1]['index']))
-                    p_ind = 0
                     for param in self.param_names:
                         min_val = param_point[param+'_min']
                         max_val = param_point[param+'_max']
                         inds = [pvals_indices[param][v] for v in param_vals[param] if v>min_val and v<max_val]
                         slices.append(slice(min(inds),max(inds)+1,None))
                         ind_lists[param].append(inds[0])
-                        p_ind = p_ind+1
                     output_val = row[1][self.output_var]
                     mat[slices] = output_val
-
-                # check if any zeros remain
-                if np.any(abs(mat)<1e-10):
-                    print('There are deltas very close to zero...watch out!')
+                """
+                dense_grid = self.probs.populate_dense_grid(subset,self.output_var,True,True)
+                mat = dense_grid['mat']
+                delta_inds_to_update = dense_grid['new_inds']
+                ind_lists = dense_grid['ind_lists']
 
             else:
                 is_grid = True

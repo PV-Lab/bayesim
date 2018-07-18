@@ -7,6 +7,7 @@ from copy import deepcopy
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import bayesim.param_list as pl
+import timeit
 
 class Pmf(object):
     """
@@ -427,6 +428,95 @@ class Pmf(object):
 
         return bin_length/point_length
 
+    def make_dense_grid(self):
+        """
+        Construct a grid and corresponding lists of parameter values over the full parameter space at the highest degree of subdivision.
+
+        Returns:
+            mat (:obj:`np.array`): matrix of zeros of shape (len(p1),len(p2)...for p in self.params)
+            param_vals (`dict`): dict with keys of param names and values lists of box centers
+            pvals_indices (`dict`): dict with keys of param names and values more dicts, each of which has keys of that params values and values of the index along that dimension of mat
+        """
+        mat_shape = []
+        param_vals = {}
+        pvals_indices = {}
+        #indices_lists = []
+        for param in self.params:
+            pname = param['name']
+            min_edge = param['edges'][0]
+            max_edge = param['edges'][-1]
+            length = 2*param['length']*2**self.num_sub+1
+            if param['spacing']=='linear':
+                param_vals[pname] = np.linspace(min_edge,max_edge,length)[1:-1:2]
+            elif param['spacing']=='log':
+                param_vals[pname] = np.logspace(np.log10(min_edge),np.log10(max_edge),length)[1:-1:2]
+            mat_shape.append(len(param_vals[pname]))
+            pvals_indices[pname] = {param_vals[pname][i]:i for i in range(len(param_vals[pname]))}
+            #indices_lists.append(range(len(param_vals[pname])))
+        mat = np.zeros(mat_shape)
+        return mat, param_vals, pvals_indices
+
+    def populate_dense_grid(self,df,col_to_pull,flag_new,make_ind_lists):
+        """
+        Populate a grid such as the one created by make_dense_grid.
+
+        Args:
+            df (`obj`:DataFrame): DataFrame to populate from (should have columns for every param)
+            col_to_pull (`str`): name of the column to use when populating grid points
+            flag_new (`bool`): whether to return a list of indices corresponding to new points (will use 'index' column rather than row names, used by bayesim.model.calc_model_gradients)
+            make_ind_lists (`bool`): whether to return a list of indices corresponding to the first in every slice (used by bayesim.model.calc_model_gradients)
+
+        Returns:
+            a dict with keys for each thing requested
+
+        Todo:
+            add informative checks and error messages
+        """
+        mat_shape = []
+        param_vals = {}
+        pvals_indices = {}
+        #indices_lists = []
+        for param in self.params:
+            pname = param['name']
+            min_edge = param['edges'][0]
+            max_edge = param['edges'][-1]
+            length = 2*param['length']*2**self.num_sub+1
+            if param['spacing']=='linear':
+                param_vals[pname] = np.linspace(min_edge,max_edge,length)[1:-1:2]
+            elif param['spacing']=='log':
+                param_vals[pname] = np.logspace(np.log10(min_edge),np.log10(max_edge),length)[1:-1:2]
+            mat_shape.append(len(param_vals[pname]))
+            pvals_indices[pname] = {param_vals[pname][i]:i for i in range(len(param_vals[pname]))}
+            #indices_lists.append(range(len(param_vals[pname])))
+        mat = np.zeros(mat_shape)
+
+        if make_ind_lists:
+            ind_lists = {p['name']:[] for p in self.params}
+        if flag_new:
+            new_inds= []
+        for pt in df.iterrows():
+            slices = []
+            param_point = self.points.loc[pt[0]] # if df isn't self.points
+            if flag_new and param_point['new']==True:
+                new_inds.append(int(pt[1]['index']))
+            for p in self.params:
+                pname = p['name']
+                min_val = param_point[pname+'_min']
+                max_val = param_point[pname+'_max']
+                inds = [pvals_indices[pname][v] for v in param_vals[pname] if v>min_val and v<max_val]
+                slices.append(slice(min(inds),max(inds)+1,None))
+                if make_ind_lists:
+                    ind_lists[pname].append(inds[0])
+            prob = param_point['prob']
+            mat[slices] = prob
+
+        return_dict = {'mat':mat,'param_vals':param_vals}
+        if flag_new:
+            return_dict['new_inds'] = new_inds
+        if make_ind_lists:
+            return_dict['ind_lists'] = ind_lists
+        return return_dict
+
     def project_1D(self, param):
 
         """
@@ -450,37 +540,28 @@ class Pmf(object):
         for i in [len(bins)-j-1 for j in range(len(bins)-1)]: #count backwards
             if self.equals_ish(bins[i],bins[i-1]): del bins[i]
 
-        ## now for every pair of bin edges, get the probability
+        # generate dense grid and populate with probabilities
+        dense_grid = self.populate_dense_grid(self.points,'prob',False,False)
+        mat = dense_grid['mat']
+        param_vals = dense_grid['param_vals']
+
+        # sum along all dimensions except the parameter of interest
+        param_names = [p['name'] for p in self.params]
+        param_ind = param_names.index(param['name'])
+        inds_to_sum_along = tuple([i for i in range(len(mat.shape)) if not i==param_ind])
+        dense_probs_list = np.sum(mat,axis=inds_to_sum_along)
+
+        # sum these into the bins
         probs = np.zeros(len(bins)-1)
-        if param['spacing']=='log':
-            log_spaced=True
-        elif param['spacing']=='linear':
-            log_spaced=False
-
-        for i in range(len(probs)):
-            this_bin = [bins[i],bins[i+1]]
-            for row in self.points.iterrows():
-                this_point = (row[1][param['name']+'_min'],row[1][param['name']+'_max'])
-                if self.inside_bounds(this_bin,this_point):
-                    # take the appropriate fraction of the probability
-                    prob_to_add = self.length_fraction(this_bin, this_point, log_spaced) * row[1]['prob']
-                    probs[i] = probs[i] + prob_to_add
-
-        ## finally, normalize according to length and scaling (log vs. linear)
-        if log_spaced:
-            bin_lengths = [bins[i+1]/bins[i] for i in range(len(bins)-1)]
-            bins = [math.log(edge,10) for edge in bins]
-        else:
-            bin_lengths = [bins[i+1]-bins[i] for i in range(len(bins)-1)]
-
-        probs = [probs[i]/bin_lengths[i] for i in range(len(probs))]
-        # and normalize actual PMF
-        norm = np.sum(probs)
-        probs = [prob/norm for prob in probs]
-
-        ## now go back to actual values
-        if log_spaced:
-            bins = [math.pow(10, b) for b in bins]
+        i = 0 # index into probs
+        j = 0 # index into dense_probs_list
+        while j<len(dense_probs_list):
+            v = param_vals[param['name']][j]
+            if v>bins[i] and v<bins[i+1]: # if this value is in this bin
+                probs[i] = probs[i] + dense_probs_list[j] # add it
+                j = j+1 # and go to the next value
+            else: # if it's not in this bin
+                i = i+1 # go to the next bin
 
         return bins, probs
 
@@ -499,10 +580,12 @@ class Pmf(object):
         Todo:
             Maybe would speed up things if I passed the list of parameters for the patches rather than the objects themselves?
         """
+
         x_name = x_param['name']
         y_name = y_param['name']
         max_prob = max(self.points['prob'])
         patches = []
+
         for row in self.points.iterrows():
             x_min = row[1][x_name+'_min']
             x_width = row[1][x_name+'_max'] - x_min
@@ -514,6 +597,9 @@ class Pmf(object):
                 alpha = row[1]['prob']/max_prob
                 if alpha>1e-3: #this speeds it up a lot
                     patches.append(mpl.patches.Rectangle((x_min,y_min),x_width,y_width,alpha=alpha))
+
+        # make a big matrix
+        #big_grid =
 
         return patches
 
