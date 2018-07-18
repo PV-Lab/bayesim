@@ -6,6 +6,8 @@ from copy import deepcopy
 import numpy as np
 import matplotlib.pyplot as plt
 import random
+import os
+import sys
 
 class model(object):
     """
@@ -414,23 +416,20 @@ class model(object):
 
         Args:
             ecs (`dict`): optional, dict of EC values at which to plot. If not provided, they will be chosen randomly. This can also be a list of dicts for multiple points.
-            num_param_pts (`int`): number of the most probable parameter space points to plot (defaults to 1 or len(ec) if ec is provided)
+            num_param_pts (`int`): number of the most probable parameter space points to plot (defaults to 1)
             ec_x_var (`str`): one of self.ec_names, will overwrite if this was provided before in attach_observations, required if it wasn't. If ec was provided, this will supercede that
             fpath (`str`): optional, path to save image to if desired (if num_plots>1, this will be used as a prefix)
         """
         # read in options and do some sanity checks
         if 'ecs' in argv.keys():
             ecs = argv['ecs']
+            if not (isinstance(ecs,list) or isinstance(ecs,np.ndarray)):
+                ecs = [ecs]
         else:
             ec_tuple = random.choice(self.model_data_ecgrps.groups.keys())
-            ecs = {self.ec_names[i]:ec_tuple[i] for i in range(len(ec_tuple))}
+            ecs = [{self.ec_names[i]:ec_tuple[i] for i in range(len(ec_tuple))}]
 
-        num_param_pts = argv.get('num_plots',1)
-        if isinstance(ecs,list) or isinstance(ecs,np.ndarray):
-            if not len(ecs)==num_plots:
-                print('You provided a list of experimental conditions at which to plot of a different length than num_plots. Overriding num_plots=%d with len(ec)=%d'%(num_plots,len(ec)))
-        else:
-            ecs = [ecs]
+        num_param_pts = argv.get('num_param_pts',1)
 
         if 'ec_x_var' in argv.keys():
             self.ec_x_var = argv['ec_x_var']
@@ -448,9 +447,14 @@ class model(object):
 
         param_pts = self.probs.most_probable(num_param_pts)
 
-        fig, axs = plt.subplots(len(ecs),sharex=True)
+        fig, axs = plt.subplots(len(ecs),sharex=True,figsize=(6,4*len(ecs)))
 
         for i in range(len(ecs)):
+            if len(ecs)>1:
+                ax = axs[i]
+            else:
+                ax = axs
+            ax.set_prop_cycle(None)
             ec = ecs[i]
             obs_data = self.obs_data
             plot_title = ''
@@ -458,9 +462,9 @@ class model(object):
                 obs_data =  obs_data[abs(obs_data[c]-ec[c])<=10**(-1*self.ec_tol_digits)]
                 plot_title = plot_title + '%s=%f, '%(c,ec[c])
             obs_data = obs_data.sort_values(by=[self.ec_x_var])
-            plt.plot(obs_data[self.ec_x_var],obs_data[self.output_var])
+            ax.plot(obs_data[self.ec_x_var],obs_data[self.output_var])
             j = 1
-            legend_list = ['observed','modeled']
+            legend_list = ['observed']
             for pt in param_pts.iterrows():
                 #print(pt[1])
                 #print(tuple([pt[1][n] for n in self.param_names]))
@@ -468,20 +472,23 @@ class model(object):
                 for c in other_ecs:
                     model_data =  model_data[abs(model_data[c]-ec[c])<=10**(-1*self.ec_tol_digits)]
                 model_data.sort_values(by=[self.ec_x_var])
+                ax.plot(model_data[self.ec_x_var],model_data[self.output_var])
+                leg_label = 'modeled: '
                 for p in self.param_names:
-                    plot_title = plot_title + '%s=%f, '%(p,pt[1][p])
-                plt.plot(model_data[self.ec_x_var],model_data[self.output_var])
-                if j>1:
-                    legend_list[1] = 'modeled 1'
-                    legend_list[i] = 'modeled %d'%i
+                    leg_label = leg_label + '%s=%f, '%(p,pt[1][p])
+                leg_label = leg_label[:-2]
+                legend_list.append(leg_label)
                 j = j + 1
-            if len(ecs)>1:
-                ax = axs[i]
-            else:
-                ax = axs
+
+            # set ylims to match observed data
+            obs_max = max(obs_data[self.output_var])
+            obs_min = min(obs_data[self.output_var])
+            obs_width = obs_max-obs_min
+            ax.set_ylim([obs_min-0.05*obs_width,obs_max+0.05*obs_width])
             plt.xlabel(self.ec_x_var)
             ax.set_ylabel(self.output_var)
-            plt.legend(legend_list)
+            ax.legend(legend_list)
+            plot_title = plot_title[:-2]
             ax.set_title(plot_title)
 
     def run(self, **argv):
@@ -493,17 +500,19 @@ class model(object):
             save_step (`int`): interval (number of data points) at which to save intermediate PMF's (defaults to 10, 0 to save only final, <0 to save none)
             th_pm (`float`): threshold quantity of probability mass to be concentrated in th_pv fraction of parameter space to trigger the run to stop (defaults to 0.8)
             th_pv (`float`): threshold fraction of parameter space volume for th_pm fraction of probability to be concentrated into to trigger the run to stop (defaults to 0.05)
-            num_runs (`int`): Number of times to run to threshold (final result will be average of these, defaults to 3)
+            min_num_pts (`int`): minimum number of observation points to use - if threshold is reached before this number of points has been used, it will start over and the final PMF will be the average of the number of runs needed to use sufficient points (defaults to 50)
 
         Todo:
             make default value of th_pv dimension-number-dependent
             deal with wraparound if a run goes through all the sims (unlikely)
         """
+        # read in options
         save_step = argv.get('save_step',10)
         th_pm = argv.get('th_pm',0.8)
         th_pv = argv.get('th_pv',0.05)
-        num_runs = argv.get('num_runs',3)
+        min_num_pts = argv.get('min_num_pts',50)
 
+        # do some sanity checks
         if self.needs_new_model_data:
             raise ValueError('You need to attach model data before running!')
             return
@@ -511,50 +520,60 @@ class model(object):
         if self.is_run:
             print('Running again at the same subdivision level. Previous results may be overridden...')
 
-        # FOR NOW set error = 2*deltas (need to tweak this probably)
-        self.model_data['error'] = 2*self.model_data['deltas']
+        # set up folders for intermediate files
+        if save_step>0:
+            folder = os.getcwd()
+            pmf_folder = folder+'/PMFs/'
+            obs_list_folder = folder+'/obs_lists/'
+            for fp in [pmf_folder,obs_list_folder]:
+                if not os.path.isdir(fp):
+                    os.mkdir(fp)
 
-        # randomize observation order first
+        # FOR NOW set error = deltas (might want to tweak this)
+        self.model_data['error'] = self.model_data['deltas']
+
+        # randomize observation order
         self.obs_data = self.obs_data.sample(frac=1)
-        i = 0
+        num_pts_used = 0
+        num_runs = 0
         probs_lists = []
-        for j in range(num_runs):
-            count = 1
+        while num_pts_used < min_num_pts:
+            prev_used_pts = num_pts_used
+            num_runs = num_runs + 1
             obs_indices = []
             self.probs.uniformize()
             at_threshold=False
-            print('\n*****RUN %d*****'%(j+1))
             while not at_threshold:
-                obs = self.obs_data.iloc[i] # use different observations for each run
-                obs_indices.append(i)
+                # get observed and modeled data
+                obs = self.obs_data.iloc[num_pts_used]
+                obs_indices.append(num_pts_used)
                 ec = obs[self.ec_names]
                 ecpt = tuple([ec[n] for n in self.ec_names])
                 model_here = deepcopy(self.model_data.loc[self.model_data_ecgrps.groups[ecpt]])
 
+                # compute likelihood and do a Bayesian update
                 lkl = self.probs.likelihood(meas=obs, model_at_ec=model_here,output_col=self.output_var)
-
                 self.probs.multiply(lkl)
-                if save_step >0 and count % save_step == 0:
-                    dd.io.save('sub%d_run%d_PMF_%d.h5'%(self.num_sub,j+1,count),self.probs.points)
+                num_pts_used = num_pts_used + 1
+
+                # save intermediate PMF if necessary
+                if save_step >0 and num_pts_used % save_step == 0:
+                    dd.io.save(pmf_folder+'sub%d_run%d_PMF_%d.h5'%(self.num_sub,num_runs,num_pts_used-prev_used_pts),self.probs.points)
+
+                # check if threshold probability concentration has been reached
                 if np.sum(self.probs.most_probable(int(th_pv*len(self.probs.points)))['prob'])>th_pm:
-                    print('Reached threshold after %d observation points were fed in!'%(count))
                     probs_lists.append(np.array(self.probs.points['prob']))
-                    if save_step >=0:
-                        dd.io.save('sub%d_run%d_PMF_final.h5'%(self.num_sub,j+1),self.probs.points)
+                    if save_step >= 0:
+                        dd.io.save(pmf_folder+'sub%d_run%d_PMF_final.h5'%(self.num_sub,num_runs),self.probs.points)
                     at_threshold=True
-                    dd.io.save('sub%d_run%d_obs_list.h5'%(self.num_sub,j+1),self.obs_data.iloc[obs_indices])
-                else:
-                    count = count + 1
-                    i = i + 1
-                    if i>=len(self.obs_data):
-                        i=0
-                    if count>=len(self.obs_data):
-                        print('Used all the observation points! Wrapping around to the beginning.')
+                    dd.io.save(obs_list_folder+'sub%d_run%d_obs_list.h5'%(self.num_sub,num_runs),self.obs_data.iloc[obs_indices])
 
         probs = np.mean(probs_lists,axis=0)
         self.probs.points['prob'] = probs
+        print('Did a total of %d runs to use a total of %d observations.'%(num_runs,num_pts_used))
+
         if save_step >=0:
-            dd.io.save('sub%d_PMF_final.h5'%(self.num_sub),self.probs.points)
+            dd.io.save(pmf_folder+'sub%d_PMF_final.h5'%(self.num_sub),self.probs.points)
         self.is_run = True
 
     def subdivide(self, **argv):
