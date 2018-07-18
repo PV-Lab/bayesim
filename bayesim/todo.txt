@@ -1,0 +1,29 @@
+copy todos from other places to here
+
+count how many times deltas vs. errors were used (can use this in demo described below))
+
+try starting from closer to posterior from pre-subdivision rather than totally uniformizing? (maybe average that posterior with a uniform)
+
+check variables I've added and add to save_state (maybe use the m.__dict__ function?)
+
+change project_2D to use grid also
+
+make demonstration of how data sampling and error estimates matter, especially at high subdivision, and influence things in unintuitive but systematic ways especially with log vs linear spacing
+
+figure out weird plotting thing with TE (something is transposed?)
+
+add option for log comparison rather than just linear
+
+save units for EC's (maybe build them into param_list?)
+
+update commandline stuff
+
+why does the diode example keep making "valleys" near the right answer?!?
+
+make default value of th_pv dimension-number-dependent
+
+test what happens with calc_gradients if a box is subdivided only in one direction
+
+plotting points from an inference run?
+
+sample through various EC's more systematically rather than totally randomly?
