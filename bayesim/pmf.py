@@ -522,7 +522,7 @@ class Pmf(object):
         Make histogram matrix to visualize the PMF.
 
         Args:
-            frac_points (`float`): number >0 and <=1 indicating fraction of total points to simulate (will take the most probable, defaults to 1.0)
+            frac_points (`float`): number >0 and <=1 indicating fraction of total points to visualize (will take the most probable, defaults to 1.0)
             just_grid (`bool`): whether to show only the grid (i.e. visualize subdivisions) or the whole PMF (defaults to False)
             fpath (`str`): optional, path to save image to
             true_vals (`dict`): optional, set of param values to highlight on PMF
@@ -556,7 +556,7 @@ class Pmf(object):
         else:
             plot_true_vals = False
 
-        #start_time = timeit.default_timer()
+        start_time = timeit.default_timer()
 
         # find ranges to plot - this likely needs tweaking
         N = len(self.points)
@@ -567,9 +567,9 @@ class Pmf(object):
 
         fig, axes = plt.subplots(nrows=len(self.params), ncols=len(self.params), figsize=(10,9))
 
-        #check1 = timeit.default_timer()
-        #time1 = round(check1-start_time,2)
-        #print('setup finished in ' + str(time1) + ' seconds')
+        check1 = timeit.default_timer()
+        time1 = round(check1-start_time,2)
+        print('setup finished in ' + str(time1) + ' seconds')
 
         for rownum in range(0,len(self.params)):
             for colnum in range(0,len(self.params)):
@@ -590,10 +590,10 @@ class Pmf(object):
                     if just_grid:
                         fig.delaxes(axes[rownum][colnum])
                     else:
-                        #diag_start = timeit.default_timer()
+                        diag_start = timeit.default_timer()
                         bins, probs = self.project_1D(x_param)
-                        #checkpoint = round(timeit.default_timer()-diag_start,2)
-                        #print('project_1D took ' + str(checkpoint) + ' seconds')
+                        checkpoint = round(timeit.default_timer()-diag_start,2)
+                        print('project_1D took ' + str(checkpoint) + ' seconds')
                         if x_param['spacing']=='log':
                             vals = [math.sqrt(bins[i]*bins[i+1]) for i in range(len(probs))]
                         elif x_param['spacing']=='linear':
@@ -607,19 +607,19 @@ class Pmf(object):
                             true_x = [true_vals[x_param['name']]]
                             axes[rownum][colnum].scatter(true_x,[min([max(probs)+0.05,0.95])],200,'r',marker='*')
 
-                        #diag_finish = timeit.default_timer()
-                        #diag_time = round(diag_finish-diag_start,2)
-                        #print('diagonal plot finished in ' + str(diag_time) + ' seconds')
+                        diag_finish = timeit.default_timer()
+                        diag_time = round(diag_finish-diag_start,2)
+                        print('diagonal plot finished in ' + str(diag_time) + ' seconds')
 
                 elif rownum > colnum: # below diagonal
-                    #offdiag_start = timeit.default_timer()
+                    offdiag_start = timeit.default_timer()
                     if just_grid:
                         patches = self.project_2D(x_param, y_param, no_probs=True)
                         axes[rownum][colnum].grid(False)
                     else:
                         patches = self.project_2D(x_param, y_param)
-                    #checkpoint = round(timeit.default_timer()-offdiag_start,2)
-                    #print('project_2D took ' + str(checkpoint) + ' seconds')
+                    checkpoint = round(timeit.default_timer()-offdiag_start,2)
+                    print('project_2D took ' + str(checkpoint) + ' seconds')
                     for patch in patches:
                         axes[rownum][colnum].add_patch(patch)
                     # formatting
@@ -631,9 +631,9 @@ class Pmf(object):
                         true_x = [true_vals[x_param['name']]]
                         true_y = [true_vals[y_param['name']]]
                         axes[rownum][colnum].scatter(true_x,true_y,200,c="None",marker='o',linewidths=3,edgecolors='r',zorder=20)
-                    #offdiag_finish = timeit.default_timer()
-                    #offdiag_time = round(offdiag_finish-offdiag_start,2)
-                    #print('off-diagonal plot finished in ' + str(offdiag_time) + ' seconds')
+                    offdiag_finish = timeit.default_timer()
+                    offdiag_time = round(offdiag_finish-offdiag_start,2)
+                    print('off-diagonal plot finished in ' + str(offdiag_time) + ' seconds')
 
                 else: # above diagonal
                     fig.delaxes(axes[rownum][colnum])

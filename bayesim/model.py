@@ -178,18 +178,19 @@ class model(object):
                     max_step = argv['max_ec_x_step']
                 else:
                     max_step = 0.1 * max(subset[ec_x_var]-min(subset[ec_x_var]))
+                    print('Using %.2f as the maximum step size in %s when choosing observation points to keep.'%(max_step,ec_x_var))
                 thresh = thresh_dif_frac * (max(subset[self.output_var])-min(subset[self.output_var]))
-            i = 0
-            while i < len(subset)-1:
-                this_pt = subset.iloc[i]
-                next_pt = subset.iloc[i+1]
-                if next_pt[ec_x_var]-this_pt[ec_x_var] >= max_step:
-                    i = i+1
-                elif next_pt[self.output_var]-this_pt[self.output_var] < thresh:
-                    subset.drop(next_pt.name,inplace=True)
-                    self.obs_data.drop(next_pt.name,inplace=True)
-                else:
-                    i = i+1
+                i = 0
+                while i < len(subset)-1:
+                    this_pt = subset.iloc[i]
+                    next_pt = subset.iloc[i+1]
+                    if next_pt[ec_x_var]-this_pt[ec_x_var] >= max_step:
+                        i = i+1
+                    elif next_pt[self.output_var]-this_pt[self.output_var] < thresh:
+                        subset.drop(next_pt.name,inplace=True)
+                        self.obs_data.drop(next_pt.name,inplace=True)
+                    else:
+                        i = i+1
 
         # round EC values
         rd_dct = {n:self.ec_tol_digits for n in self.ec_names}
@@ -444,7 +445,7 @@ class model(object):
         i = 0
         probs_lists = []
         for j in range(num_runs):
-            count = 0
+            count = 1
             obs_indices = []
             self.probs.uniformize()
             at_threshold=False
