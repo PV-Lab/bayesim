@@ -512,6 +512,10 @@ class model(object):
         th_pv = argv.get('th_pv',0.05)
         min_num_pts = argv.get('min_num_pts',50)
 
+        if min_num_pts > len(self.obs_data):
+            print('Can not use more observation points than there are in the data. Setting min_num_pts to len(self.obs_data)=%d'%len(self.obs_data))
+            min_num_pts = len(self.obs_data)
+
         # do some sanity checks
         if self.needs_new_model_data:
             raise ValueError('You need to attach model data before running!')
@@ -542,26 +546,34 @@ class model(object):
             num_runs = num_runs + 1
             obs_indices = []
             self.probs.uniformize()
-            at_threshold=False
-            while not at_threshold:
-                # get observed and modeled data
-                obs = self.obs_data.iloc[num_pts_used]
-                obs_indices.append(num_pts_used)
-                ec = obs[self.ec_names]
-                ecpt = tuple([ec[n] for n in self.ec_names])
-                model_here = deepcopy(self.model_data.loc[self.model_data_ecgrps.groups[ecpt]])
+            done=False
+            while not done:
+                # check if we've gone through all the points
+                if num_pts_used == len(self.obs_data):
+                    print('Used all the observed data! Last PMF to go into average may have been further from threshold.')
+                    done = True
+                else:
+                    # get observed and modeled data
+                    obs = self.obs_data.iloc[num_pts_used]
+                    obs_indices.append(num_pts_used)
+                    ec = obs[self.ec_names]
+                    ecpt = tuple([ec[n] for n in self.ec_names])
+                    model_here = deepcopy(self.model_data.loc[self.model_data_ecgrps.groups[ecpt]])
 
-                # compute likelihood and do a Bayesian update
-                lkl = self.probs.likelihood(meas=obs, model_at_ec=model_here,output_col=self.output_var)
-                self.probs.multiply(lkl)
-                num_pts_used = num_pts_used + 1
+                    # compute likelihood and do a Bayesian update
+                    lkl = self.probs.likelihood(meas=obs, model_at_ec=model_here,output_col=self.output_var)
+                    self.probs.multiply(lkl)
+                    num_pts_used = num_pts_used + 1
 
-                # save intermediate PMF if necessary
-                if save_step >0 and num_pts_used % save_step == 0:
-                    dd.io.save(pmf_folder+'sub%d_run%d_PMF_%d.h5'%(self.num_sub,num_runs,num_pts_used-prev_used_pts),self.probs.points)
+                    # save intermediate PMF if necessary
+                    if save_step >0 and (num_pts_used-prev_used_pts) % save_step == 0:
+                        dd.io.save(pmf_folder+'sub%d_run%d_PMF_%d.h5'%(self.num_sub,num_runs,num_pts_used-prev_used_pts),self.probs.points)
 
-                # check if threshold probability concentration has been reached
-                if np.sum(self.probs.most_probable(int(th_pv*len(self.probs.points)))['prob'])>th_pm:
+                    # check if threshold probability concentration has been reached
+                    if np.sum(self.probs.most_probable(int(th_pv*len(self.probs.points)))['prob'])>th_pm:
+                        done = True
+
+                if done:
                     probs_lists.append(np.array(self.probs.points['prob']))
                     if save_step >= 0:
                         dd.io.save(pmf_folder+'sub%d_run%d_PMF_final.h5'%(self.num_sub,num_runs),self.probs.points)
