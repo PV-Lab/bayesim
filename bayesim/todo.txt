@@ -1,29 +1,53 @@
-copy todos from other places to here
+TODO List
 
-count how many times deltas vs. errors were used (can use this in demo described below))
+[* for necessary for initial release, ~ for need to decide, - for future ideas]
 
-try starting from closer to posterior from pre-subdivision rather than totally uniformizing? (maybe average that posterior with a uniform)
+* count how many times deltas vs. errors were used in calculated likelihoods (can use this in demo described below)
 
-check variables I've added and add to save_state (maybe use the m.__dict__ function?)
+* make demonstration of how data sampling and error estimates matter, especially at high subdivision, and influence things in unintuitive but systematic ways especially with log vs linear spacing
 
-change project_2D to use grid also
+~ try starting from closer to posterior from pre-subdivision rather than totally uniformizing? (maybe average that posterior with a uniform)
 
-make demonstration of how data sampling and error estimates matter, especially at high subdivision, and influence things in unintuitive but systematic ways especially with log vs linear spacing
+* update save_state and load_state (maybe use the m.__dict__ function?)
 
-figure out weird plotting thing with TE (something is transposed?)
+* change project_2D to use grid also (also maybe pass patch parameters rather than actual patch objects?)
 
-add option for log comparison rather than just linear
+* figure out weird plotting issue with TE example (something is transposed?)
 
-save units for EC's (maybe build them into param_list?)
+- save units for EC's (maybe build them into param_list?)
 
-update commandline stuff
+* update commandline stuff
 
-why does the diode example keep making "valleys" near the right answer?!?
+* why does the diode example keep making "valleys" near the right answer?!?
 
-make default value of th_pv dimension-number-dependent
+- make default value of th_pv dimension-number-dependent
 
-test what happens with calc_gradients if a box is subdivided only in one direction
+* test what happens with calc_gradients if a box is subdivided only in one direction
 
-plotting points from an inference run?
+~ plotting points from an inference run?
 
-sample through various EC's more systematically rather than totally randomly?
+- sample through various EC's more systematically rather than totally randomly?
+
+- making animation of PMF evolving during a run
+
+- hierarchical indexing to save space rather than everything written out in every row
+
+* fully updated documentation
+
+- option to give Python object (DataFrame) to attach_observations rather than only a file
+
+~ figure out if list_model_pts_to_run can be made faster
+
+~ for big data sets, save_state might need to write separate HDF5 files and store paths to them in the state file
+
+* allow model.__init__ to optionally take in model data
+
+- alternative error models (e.g. lognormal as well as normal)
+
+~ parallelization? May be tricky within a class because of pickleability issues, but there are workarounds e.g. http://qingkaikong.blogspot.com/2016/12/python-parallel-method-in-class.html.
+
+* need some more sanity checks and error messages in pmf.populate_dense_grid
+
+- allow arbitrary parameter space sampling (e.g. user-provided points) in Pmf? Then regions could be defined by a Voronoi tessellation rather than hyper-rectangular-prisms or whatever
+
+* make a save_state function for Pmf.py which model.save_state would just call

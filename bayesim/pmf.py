@@ -14,10 +14,6 @@ class Pmf(object):
     Class that stores a PMF capable of nested sampling / "adaptive mesh refinement".
 
     Stores probabilities in a DataFrame which associates regions of parameter space with probability values.
-
-    Todo:
-        make a save_state function for this
-        (long-term) allow for non-gridded parameter space (Voronoi? Or MCMC with no subdivision)
     """
 
     def make_points_list(self, params, total_prob=1.0, new=True, num_sub=0):
@@ -115,9 +111,6 @@ class Pmf(object):
     def find_neighbor_boxes(self, index):
         """
         Find and return all boxes neighboring the box at index.
-
-        Todo:
-            keep in closest corners rather than only immediately adjacent boxes
         """
         all_vals = {param['name']:self.all_current_values(param['name']) for param in self.params}
         param_spacing = {param['name']:param['spacing'] for param in self.params}
@@ -334,11 +327,6 @@ class Pmf(object):
             meas: one output value e.g. J
             error: error in measured value (stdev of a Gaussian)
             model_func: should accept one dict of params and one of conditions and output measurement
-
-        Todo:
-            alternative error models?
-            should set some global error value option
-            allow feeding in a list of observations?
         """
 
         # read in and process inputs
@@ -468,9 +456,6 @@ class Pmf(object):
 
         Returns:
             a dict with keys for each thing requested
-
-        Todo:
-            add informative checks and error messages
         """
         mat_shape = []
         param_vals = {}
@@ -528,9 +513,6 @@ class Pmf(object):
         Returns:
             bins (:obj:`list` of :obj:`float`): bin edges for plotting with matplotlib.pyplot.hist (has length one more than next return list)
             probs (:obj:`list` of :obj:`float`): probability values for histogram-style plot - note that these technically have units of the inverse of whatever the parameter being plotted is (that is, they're probability densities)
-
-        Todo:
-            make it faster?
         """
         ## first find bin edges
         # pull all bounds, then flatten, remove duplicates, and sort
@@ -576,9 +558,6 @@ class Pmf(object):
 
         Returns:
             (:obj:`list` of :obj:`matplotlib.patches.Rectangle`): patches for plotting the 2D joint probability distribution
-
-        Todo:
-            Maybe would speed up things if I passed the list of parameters for the patches rather than the objects themselves?
         """
 
         x_name = x_param['name']
@@ -612,12 +591,6 @@ class Pmf(object):
             just_grid (`bool`): whether to show only the grid (i.e. visualize subdivisions) or the whole PMF (defaults to False)
             fpath (`str`): optional, path to save image to
             true_vals (`dict`): optional, set of param values to highlight on PMF
-
-        Todo:
-            figure out axis labeling and stuff for units, logs, etc.
-            how to rescale - e.g. eliminating areas where prob less than some threshold?
-            probably just add a bunch of optional arguments to handle these
-            make it faster...
         """
         # read in options
         frac_points = argv.get('frac_points',1.0)

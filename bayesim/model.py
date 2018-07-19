@@ -11,21 +11,10 @@ import sys
 
 class model(object):
     """
-    Updates from 180626 meeting:
-        make subdivide, visualize methods here
+    The main workhorse class of bayesim. Stores the modeled and observed data as well as a Pmf object which maintains the current probability distribution and grid subdivisions.
 
-    Todo:
-        add write_query_str function to stop copying so much code for that...but test groupby speeds first
-        play with hierarchical indexing to save space and/or address above point
-        animating visualization during run
-        figure out how best to feed back and run additional sims after
-            subdivision
-        allow for multiple types of model output
-        figure out data formatting for model and observations
-        put some of the pmf functions here to call directly (visualize, subdivide, etc.)
-        add data plotting options
-        possibly start and end indices should be stored directly in probs to avoid accidentally sorting or deleting from one and not the other
-        maybe include EC in param_list rather than separately?
+    Attributes:
+    [update this]
     """
 
     def __init__(self,**argv):
@@ -39,9 +28,6 @@ class model(object):
             output_var (`str`): name of experimental output measurements
             load_state (`bool`): flag for whether to load state from a file - if True, other inputs (apart from state_file) are ignored
             state_file (`str`): path to file saved by save_state() fcn
-
-        Todo:
-            allow feeding in model, etc. here as well
         """
 
         state_file = argv.setdefault('state_file','bayesim_state.h5')
@@ -135,10 +121,6 @@ class model(object):
             thresh_dif_frac (`float`): used if keep_all is False, threshold (as a percentage of the maximum value, defaults to 0.03)
             fixed_error (`float`): required if running in function mode or if file doesn't have an 'error' column, value to use as uncertainty in measurement
             output_column (`str`): optional, header of column containing output data (required if different from self.output_var)
-
-        Todo:
-            choose points from a larger file based on percent change
-            add option to just feed in a DataFrame
         """
         output_col = argv.get('output_column', self.output_var)
         keep_all = argv.get('keep_all', False)
@@ -285,11 +267,6 @@ class model(object):
             func_name (callable): if mode='function', provide function here
             fpath (`str`): if mode='file', provide path to file
             output_column (`str`): optional, header of column containing output data (required if different from self.output_var)
-        Todo:
-            Should adding additional model data be a separate function?
-            pmf should maybe store start/end indices, either way split out computing them rather than copying code!
-            when adding new data, need to calculate new deltas somehow
-
         """
 
         #mode = argv.setdefault('mode','file')
@@ -501,10 +478,6 @@ class model(object):
             th_pm (`float`): threshold quantity of probability mass to be concentrated in th_pv fraction of parameter space to trigger the run to stop (defaults to 0.8)
             th_pv (`float`): threshold fraction of parameter space volume for th_pm fraction of probability to be concentrated into to trigger the run to stop (defaults to 0.05)
             min_num_pts (`int`): minimum number of observation points to use - if threshold is reached before this number of points has been used, it will start over and the final PMF will be the average of the number of runs needed to use sufficient points (defaults to 50)
-
-        Todo:
-            make default value of th_pv dimension-number-dependent
-            deal with wraparound if a run goes through all the sims (unlikely)
         """
         # read in options
         save_step = argv.get('save_step',10)
@@ -594,9 +567,6 @@ class model(object):
 
         Args:
             threshold_prob (`float`): minimum probability of box to subdivide (default 0.001)
-
-        Todo:
-            Clearing out old model data and handling deltas
         """
         threshold_prob = argv.setdefault('threshold_prob',0.001)
         self.num_sub = self.num_sub + 1
@@ -622,9 +592,6 @@ class model(object):
         Generate full list of model points that need to be run (not just parameter points but also all experimental conditions). Saves to HDF5 at fpath.
 
         Note that this could be very slow if used on the initial grid (i.e. for potentially millions of points) - it's better for after a subdivide call.
-
-        Todo:
-            make it faster somehow?
         """
         # First, find all parameter points marked as 'new' and pick out just the columns with the values
         param_pts = self.probs.points[self.probs.points['new']==True][self.param_names]
@@ -645,9 +612,6 @@ class model(object):
         Calculates largest difference in modeled output along any parameter direction for each experimental condition, to be used for error in calculating likelihoods. Currently only works if data is on a grid.
 
         (also assumes it's sorted by param names and then EC's)
-
-        Todo:
-            For subdivided case, figure out how to get data on a bigger matrix to do calculation faster!!!
         """
         param_lengths = [len(set(self.probs.points[p])) for p in self.param_names]
 
@@ -736,9 +700,6 @@ class model(object):
     def save_state(self,filename='bayesim_state.h5'):
         """
         Save the entire state of this model object to an HDF5 file so that work can be resumed later.
-
-        Todo:
-            possibly writing some potentially large things (probs_points, model_data, obs_data) to separate files and storing paths to them
         """
 
         # construct a dict with all the state variables
