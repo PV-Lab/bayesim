@@ -3,21 +3,21 @@ TO DO LIST FOR BAYESIM
 
 [* for necessary for initial release, ~ for need to decide if it's necessary, - for future ideas]
 
-* count how many times deltas vs. errors were used in calculated likelihoods (can use this in demo described below)
+* either solve the stitching nonuniform box sizes together or implement the "zooming" thing
+
+* check on deltas (getting weird zigzag PMF's sometimes)
+
+* figure out weird plotting issue with TE example (something is transposed?)
 
 * make demonstration of how data sampling and error estimates matter, especially at high subdivision, and influence things in unintuitive but systematic ways especially with log vs linear spacing
 
-* update save_state and load_state (maybe use the m.__dict__ function?)
+* update save_state and load_state
 
-* change project_2D to use grid also (also maybe pass patch parameters rather than actual patch objects?)
-
-* figure out weird plotting issue with TE example (something is transposed?)
+* clean up args to populate_dense_grid fcn
 
 * need some more sanity checks and error messages in pmf.populate_dense_grid
 
 * update commandline stuff
-
-* why does the diode example keep making "valleys" near the right answer?!? (guessing to do with sampling)
 
 * test what happens with calc_gradients if a box is subdivided only in one direction
 
@@ -30,7 +30,7 @@ TO DO LIST FOR BAYESIM
 * make a save_state function for Pmf.py which model.save_state would just call
 
 
-~ try starting from closer to posterior from pre-subdivision rather than totally uniformizing? (maybe average that posterior with a uniform)
+~ change project_2D to use grid also (also maybe pass patch parameters rather than actual patch objects?) NOTE: tried this and it seemed to get slower, at least up to the scale I tried (~1000 grid points)
 
 ~ plotting points from an inference run?
 
@@ -40,18 +40,18 @@ TO DO LIST FOR BAYESIM
 
 ~ for big data sets, save_state might need to write separate HDF5 files and store paths to them in the state file
 
+~ save units for EC's (maybe build them into param_list?)
 
-- save units for EC's (maybe build them into param_list?)
+~ make default value of th_pv dimension-number-dependent
 
-- make default value of th_pv dimension-number-dependent
+~ option to give Python object (DataFrame) to attach_observations rather than only a file
+
 
 - sample through various EC's more systematically rather than totally randomly?
 
 - making animation of PMF evolving during a run
 
 - hierarchical indexing to save space rather than everything written out in every row
-
-- option to give Python object (DataFrame) to attach_observations rather than only a file
 
 - alternative error models (e.g. lognormal as well as normal)
 

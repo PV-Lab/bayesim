@@ -332,7 +332,6 @@ class model(object):
 
             # check that the points are the right ones
             ind_arr = self.probs.points['new']==True
-            #if not all(new_points == self.probs.points[self.param_names].tail(len(new_points)).sort_values(self.param_names).reset_index(drop=True)):
             if not all(new_points == self.probs.points[self.param_names][ind_arr].sort_values(self.param_names).reset_index(drop=True)):
                 # probably shouldn't rely on ordering but rather explicitly save new_pts somewhere or something like that
                 raise ValueError('The parameter points in your newly added data do not match the newly added points in the PMF!')
@@ -403,7 +402,7 @@ class model(object):
             if not (isinstance(ecs,list) or isinstance(ecs,np.ndarray)):
                 ecs = [ecs]
         else:
-            ec_tuple = random.choice(self.model_data_ecgrps.groups.keys())
+            ec_tuple = random.choice(list(self.model_data_ecgrps.groups.keys()))
             ecs = [{self.ec_names[i]:ec_tuple[i] for i in range(len(ec_tuple))}]
 
         num_param_pts = argv.get('num_param_pts',1)
@@ -478,12 +477,14 @@ class model(object):
             th_pm (`float`): threshold quantity of probability mass to be concentrated in th_pv fraction of parameter space to trigger the run to stop (defaults to 0.8)
             th_pv (`float`): threshold fraction of parameter space volume for th_pm fraction of probability to be concentrated into to trigger the run to stop (defaults to 0.05)
             min_num_pts (`int`): minimum number of observation points to use - if threshold is reached before this number of points has been used, it will start over and the final PMF will be the average of the number of runs needed to use sufficient points (defaults to 50)
+            force_exp_err (`bool`): If true, likelihood calculations will use only experimental errors and ignore the computed model errors.
         """
         # read in options
         save_step = argv.get('save_step',10)
         th_pm = argv.get('th_pm',0.8)
         th_pv = argv.get('th_pv',0.05)
         min_num_pts = argv.get('min_num_pts',50)
+        force_exp_err = argv.get('force_exp_err',False)
 
         if min_num_pts > len(self.obs_data):
             print('Can not use more observation points than there are in the data. Setting min_num_pts to len(self.obs_data)=%d'%len(self.obs_data))
@@ -506,19 +507,34 @@ class model(object):
                 if not os.path.isdir(fp):
                     os.mkdir(fp)
 
-        # FOR NOW set error = deltas (might want to tweak this)
+        # set error = deltas (might want to tweak this)
         self.model_data['error'] = self.model_data['deltas']
+
+        # TESTING THIS
+        # rather than uniformizing, averaging the previous probs with a quasi-uniform to see if it fixes weird sampling things
+        old_probs = deepcopy(self.probs)
+        uni_probs = deepcopy(self.probs)
+        uni_probs.uniformize()
+        mid_probs = deepcopy(self.probs)
+        mid_probs.points['prob'] = 0.9*old_probs.points['prob'] + 0.1*uni_probs.points['prob']
+        mid_probs.normalize()
+
 
         # randomize observation order
         self.obs_data = self.obs_data.sample(frac=1)
         num_pts_used = 0
         num_runs = 0
         probs_lists = []
+        delta_count_list = []
         while num_pts_used < min_num_pts:
             prev_used_pts = num_pts_used
             num_runs = num_runs + 1
             obs_indices = []
-            self.probs.uniformize()
+
+            #self.probs.uniformize()
+            # TESTING
+            self.probs = mid_probs
+
             done=False
             while not done:
                 # check if we've gone through all the points
@@ -534,9 +550,10 @@ class model(object):
                     model_here = deepcopy(self.model_data.loc[self.model_data_ecgrps.groups[ecpt]])
 
                     # compute likelihood and do a Bayesian update
-                    lkl = self.probs.likelihood(meas=obs, model_at_ec=model_here,output_col=self.output_var)
+                    lkl, delta_count = self.probs.likelihood(meas=obs, model_at_ec=model_here,output_col=self.output_var,force_exp_err=force_exp_err)
                     self.probs.multiply(lkl)
                     num_pts_used = num_pts_used + 1
+                    delta_count_list.append(delta_count)
 
                     # save intermediate PMF if necessary
                     if save_step >0 and (num_pts_used-prev_used_pts) % save_step == 0:
@@ -557,6 +574,8 @@ class model(object):
         self.probs.points['prob'] = probs
         print('Did a total of %d runs to use a total of %d observations.'%(num_runs,num_pts_used))
 
+        print('\nAn average of %d / %d probability points used model errors (rather than experimental errors) during this run.'%(int(round(np.mean(delta_count_list))),len(self.probs.points)))
+
         if save_step >=0:
             dd.io.save(pmf_folder+'sub%d_PMF_final.h5'%(self.num_sub),self.probs.points)
         self.is_run = True
@@ -566,7 +585,7 @@ class model(object):
         Subdivide the probability distribution and save the list of new sims to run to a file.
 
         Args:
-            threshold_prob (`float`): minimum probability of box to subdivide (default 0.001)
+            threshold_prob (`float`): minimum probability of box to (keep and) subdivide (default 0.001)
         """
         threshold_prob = argv.setdefault('threshold_prob',0.001)
         self.num_sub = self.num_sub + 1
@@ -622,11 +641,14 @@ class model(object):
 
         # for every set of conditions...
         #count = 0
-        for grp, vals in self.model_data_ecgrps:
+        for grp in self.model_data_ecgrps.groups:
+            #print('***'+str(grp)+'***')
+            inds = self.model_data_ecgrps.groups[grp]
+            #print(vals)
             #if count%5==0:print(count)
             #print(grp,vals.index)
             # construct matrix of output_var({fit_params})
-            subset = deepcopy(self.model_data.loc[vals.index])
+            subset = deepcopy(self.model_data.loc[inds])
             # sort and reset index of subset to match probs so we can use the find_neighbor_boxes function if needed
             subset.drop_duplicates(subset=self.param_names,inplace=True)
             subset.sort_values(self.param_names,inplace=True)
@@ -640,26 +662,6 @@ class model(object):
             if not len(subset)==np.product(param_lengths):
                 is_grid = False
                 # construct grid at the highest level of subdivision
-                #mat, param_vals, pvals_indices = self.probs.make_dense_grid()
-                # populate that grid...
-                # at each row in subset, find list of indices into matrix that that output should go into and copy it in
-                """
-                ind_lists = {p:[] for p in self.param_names}
-                delta_inds_to_update = []
-                for row in subset.iterrows():
-                    slices = []
-                    param_point = self.probs.points.loc[row[0]]
-                    if param_point['new']==True:
-                        delta_inds_to_update.append(int(row[1]['index']))
-                    for param in self.param_names:
-                        min_val = param_point[param+'_min']
-                        max_val = param_point[param+'_max']
-                        inds = [pvals_indices[param][v] for v in param_vals[param] if v>min_val and v<max_val]
-                        slices.append(slice(min(inds),max(inds)+1,None))
-                        ind_lists[param].append(inds[0])
-                    output_val = row[1][self.output_var]
-                    mat[slices] = output_val
-                """
                 dense_grid = self.probs.populate_dense_grid(subset,self.output_var,True,True)
                 mat = dense_grid['mat']
                 delta_inds_to_update = dense_grid['new_inds']
@@ -668,6 +670,9 @@ class model(object):
             else:
                 is_grid = True
                 mat = np.reshape(list(subset[self.output_var]), param_lengths)
+
+            #print('outputs:')
+            #print(mat)
 
             # given matrix, compute largest differences along any direction
             winner_dim = [len(mat.shape)]
@@ -685,13 +690,17 @@ class model(object):
 
                 grad = np.amax(winners,axis=0)
 
+            #print('deltas:')
+            #print(grad)
+
             # save these values to the appropriate indices in the vector
             if is_grid:
-                deltas[vals.index] = grad.flatten()
+                deltas[inds] = grad.flatten()
             else:
                 # temporary array to copy all the values into
                 deltas_temp = deepcopy(deltas)
-                deltas_temp[vals.index] = grad[ind_lists.values()] # Numpy "advanced indexing"
+                #print(inds, list(ind_lists.values()))
+                deltas_temp[list(inds)] = grad[list(ind_lists.values())] # Numpy "advanced indexing"
                 deltas[delta_inds_to_update] = deltas_temp[delta_inds_to_update]
             self.model_data['deltas'] = deltas
 

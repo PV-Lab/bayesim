@@ -1,13 +1,14 @@
 import numpy as np
 import pandas as pd
 import math
-from scipy.stats import norm
+from scipy.stats import norm,lognorm
 from itertools import product
 from copy import deepcopy
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import bayesim.param_list as pl
 import timeit
+from itertools import product
 
 class Pmf(object):
     """
@@ -202,11 +203,9 @@ class Pmf(object):
 
     def subdivide(self, threshold_prob, include_neighbors=True):
         """
-        Subdivide all boxes with P > threshold_prob and assign "locally uniform" probabilities within each box. If include_neighbors is true, also subdivide all boxes neighboring those boxes to facilitate flow of probability mass.
+        Subdivide all boxes with P > threshold_prob and assign "locally uniform" probabilities within each box. If include_neighbors is true, also subdivide all boxes neighboring those boxes.
 
-        For now, just divides into two along each direction. Ideas for improvement:
-        * divide proportional to probability mass in that box such that minimum prob is roughly equal to maximum prob of undivided boxes
-        * user-specified divisions along dimensions (including NOT dividing in a given direction)
+        Boxes with P < threshold_prob are deleted.
         """
         num_divs = {p['name']:2 for p in self.params} #dummy for now
 
@@ -268,7 +267,9 @@ class Pmf(object):
         new_boxes = pd.concat(new_boxes)
 
         # concatenate new DataFrame to self.points
+        # TESTING - completely drop all the non-subdivided boxes
         self.points = pd.concat([self.points,new_boxes])
+        #self.points = new_boxes
 
         # sort values
         self.points = self.points.sort_values([p['name'] for p in self.params])
@@ -326,7 +327,9 @@ class Pmf(object):
             ec: dict with keys of condition names and values
             meas: one output value e.g. J
             error: error in measured value (stdev of a Gaussian)
-            model_func: should accept one dict of params and one of conditions and output measurement
+            model_func: should accept one dict of params and one of conditions and output measurement (might deprecate)
+
+            force_exp_err (`bool`): If true, likelihood calculations will use only experimental errors and ignore the computed model errors.
         """
 
         # read in and process inputs
@@ -337,10 +340,14 @@ class Pmf(object):
         output_col = argv['output_col']
         meas_val = meas[output_col]
         meas_err = meas['error']
+        force_exp_err = argv.get('force_exp_err',False)
 
         # set up likelihood DF
         lkl = deepcopy(self)
         new_probs = np.zeros([len(lkl.points),1])
+
+        delta_count = 0
+        exp_err_count = 0
 
         # here's the actual loop that computes the likelihoods
         for point in lkl.points.iterrows():
@@ -349,9 +356,16 @@ class Pmf(object):
             model_pt = model_data.iloc[point[0]]
             model_val = float(model_pt[output_col])
             model_err = float(model_pt['error'])
+            if force_exp_err:
+                err = meas_err
+            else:
+                err = max(model_err,meas_err)
 
-            err = max(model_err,meas_err)
+            # tally how many times deltas were used
+            if err==model_err:
+                delta_count = delta_count + 1
 
+            # TESTING
             new_probs[point[0]] = norm.pdf(meas_val, loc=model_val, scale=abs(err))
 
         # copy these values in
@@ -363,7 +377,7 @@ class Pmf(object):
         if any(np.isnan(np.array(self.points['prob']))):
             raise ValueError('Uh-oh, some probability is NaN!')
         lkl.normalize()
-        return lkl
+        return lkl, delta_count
 
     def most_probable(self, n):
         """Return the n largest probabilities in a new DataFrame.
@@ -378,43 +392,6 @@ class Pmf(object):
             return True
         else:
             return False
-
-    def inside_bounds(self, bin_lims, bounds):
-        """
-            Helper function for project_1D.
-
-            Args:
-                bin_lims (:obj:`list` of :obj:`float`): lower and upper bound of bin in question
-                bounds (:obj:`list` of :obj:`float`): lower and upper bound of param point in question
-
-            Returns:
-                True if bin limits are equal to or inside point bounds, False otherwise
-        """
-        if (bin_lims[0] >= bounds[0] or self.equals_ish(bin_lims[0], bounds[0])) and (bin_lims[1] <= bounds[1] or self.equals_ish(bin_lims[1],bounds[1])):
-            return True
-        else:
-            return False
-
-    def length_fraction(self, bin_lims, bounds, log_spacing):
-        """
-        Another helper function for project_1D.
-
-        Args:
-            bin_lims (:obj:`list` of :obj:`float`): lower and upper bound of bin in question
-            bounds (:obj:`list` of :obj:`float`): lower and upper bound of Param_point
-            log_spacing (bool): whether spacing is logarithmic or not
-
-        Returns:
-            float: Fraction of prob that should be in this bin
-        """
-        if log_spacing:
-            bin_length = bin_lims[1]/bin_lims[0]
-            point_length = bounds[1]/bounds[0]
-        else:
-            bin_length = bin_lims[1]-bin_lims[0]
-            point_length = bounds[1]-bounds[0]
-
-        return bin_length/point_length
 
     def make_dense_grid(self):
         """
@@ -444,7 +421,7 @@ class Pmf(object):
         mat = np.zeros(mat_shape)
         return mat, param_vals, pvals_indices
 
-    def populate_dense_grid(self,df,col_to_pull,flag_new,make_ind_lists):
+    def populate_dense_grid(self,df,col_to_pull,flag_new,make_ind_lists,return_edges=False):
         """
         Populate a grid such as the one created by make_dense_grid.
 
@@ -453,6 +430,7 @@ class Pmf(object):
             col_to_pull (`str`): name of the column to use when populating grid points
             flag_new (`bool`): whether to return a list of indices corresponding to new points (will use 'index' column rather than row names, used by bayesim.model.calc_model_gradients)
             make_ind_lists (`bool`): whether to return a list of indices corresponding to the first in every slice (used by bayesim.model.calc_model_gradients)
+            return_edges (`bool`): whether to return list of edge values also (used by bayesim.pmf.project_2D)
 
         Returns:
             a dict with keys for each thing requested
@@ -460,7 +438,8 @@ class Pmf(object):
         mat_shape = []
         param_vals = {}
         pvals_indices = {}
-        #indices_lists = []
+        param_edges = {}
+
         for param in self.params:
             pname = param['name']
             min_edge = param['edges'][0]
@@ -468,17 +447,21 @@ class Pmf(object):
             length = 2*param['length']*2**self.num_sub+1
             if param['spacing']=='linear':
                 param_vals[pname] = np.linspace(min_edge,max_edge,length)[1:-1:2]
+                param_edges[pname] = np.linspace(min_edge,max_edge,length)[::2]
             elif param['spacing']=='log':
                 param_vals[pname] = np.logspace(np.log10(min_edge),np.log10(max_edge),length)[1:-1:2]
+                param_edges[pname] = np.logspace(np.log10(min_edge),np.log10(max_edge),length)[::2]
             mat_shape.append(len(param_vals[pname]))
             pvals_indices[pname] = {param_vals[pname][i]:i for i in range(len(param_vals[pname]))}
             #indices_lists.append(range(len(param_vals[pname])))
         mat = np.zeros(mat_shape)
 
+        # initialize optional things
         if make_ind_lists:
             ind_lists = {p['name']:[] for p in self.params}
         if flag_new:
-            new_inds= []
+            new_inds = []
+
         for pt in df.iterrows():
             slices = []
             param_point = self.points.loc[pt[0]] # if df isn't self.points
@@ -492,14 +475,19 @@ class Pmf(object):
                 slices.append(slice(min(inds),max(inds)+1,None))
                 if make_ind_lists:
                     ind_lists[pname].append(inds[0])
-            prob = param_point['prob']
-            mat[slices] = prob
+            if col_to_pull == 'prob':
+                val = param_point['prob']/(2**(len(self.params)*(self.num_sub-param_point['num_sub'])))
+            else:
+                val = pt[1][col_to_pull]
+            mat[slices] = val
 
         return_dict = {'mat':mat,'param_vals':param_vals}
         if flag_new:
             return_dict['new_inds'] = new_inds
         if make_ind_lists:
             return_dict['ind_lists'] = ind_lists
+        if return_edges:
+            return_dict['param_edges'] = param_edges
         return return_dict
 
     def project_1D(self, param):
@@ -576,10 +564,40 @@ class Pmf(object):
                 alpha = row[1]['prob']/max_prob
                 if alpha>1e-3: #this speeds it up a lot
                     patches.append(mpl.patches.Rectangle((x_min,y_min),x_width,y_width,alpha=alpha))
+        """
+        # generate dense grid and populate with probabilities
+        dense_grid = self.populate_dense_grid(self.points,'prob',False,False,return_edges=True)
+        mat = dense_grid['mat']
+        param_vals = dense_grid['param_vals']
+        param_edges = dense_grid['param_edges']
 
-        # make a big matrix
-        #big_grid =
+        # sum along all dimensions except the parameter of interest
+        param_names = [p['name'] for p in self.params]
+        param_inds = [param_names.index(p['name']) for p in self.params]
+        inds_to_sum_along = tuple([i for i in range(len(mat.shape)) if not i in param_inds])
+        dense_probs_list = np.sum(mat,axis=inds_to_sum_along)
+        print(dense_probs_list.shape)
 
+        # generate list of patch parameters - first need every pair of indices
+        ind_pairs = product(*[range(i) for i in dense_probs_list.shape])
+        patch_params = []
+        for pr in ind_pairs:
+            x_min = param_edges[x_name][pr[0]]
+            x_width = param_edges[x_name][pr[0]+1] - x_min
+            y_min = param_edges[y_name][pr[1]]
+            y_width = param_edges[y_name][pr[1]+1] - y_min
+            if no_probs:
+                fill = False
+                ec = 'k'
+                alpha = 0
+            else:
+                alpha = dense_probs_list[pr]/max_prob
+                ec = 'None'
+                fill=True
+            patch_params.append({'args':[(x_min,y_min),x_width,y_width],'kwargs':{'fill':fill,'ec':ec,'alpha':alpha}})
+
+        return patch_params
+        """
         return patches
 
     def visualize(self, **argv):
@@ -628,7 +646,7 @@ class Pmf(object):
 
         check1 = timeit.default_timer()
         time1 = round(check1-start_time,2)
-        print('setup finished in ' + str(time1) + ' seconds')
+        #print('setup finished in ' + str(time1) + ' seconds')
 
         for rownum in range(0,len(self.params)):
             for colnum in range(0,len(self.params)):
@@ -652,7 +670,7 @@ class Pmf(object):
                         diag_start = timeit.default_timer()
                         bins, probs = self.project_1D(x_param)
                         checkpoint = round(timeit.default_timer()-diag_start,2)
-                        print('project_1D took ' + str(checkpoint) + ' seconds')
+                        #print('project_1D took ' + str(checkpoint) + ' seconds')
                         if x_param['spacing']=='log':
                             vals = [math.sqrt(bins[i]*bins[i+1]) for i in range(len(probs))]
                         elif x_param['spacing']=='linear':
@@ -668,19 +686,23 @@ class Pmf(object):
 
                         diag_finish = timeit.default_timer()
                         diag_time = round(diag_finish-diag_start,2)
-                        print('diagonal plot finished in ' + str(diag_time) + ' seconds')
+                        #print('diagonal plot finished in ' + str(diag_time) + ' seconds')
 
                 elif rownum > colnum: # below diagonal
                     offdiag_start = timeit.default_timer()
                     if just_grid:
                         patches = self.project_2D(x_param, y_param, no_probs=True)
+                        #patch_params = self.project_2D(x_param, y_param, no_probs=True)
                         axes[rownum][colnum].grid(False)
                     else:
                         patches = self.project_2D(x_param, y_param)
+                        #patch_params = self.project_2D(x_param, y_param)
                     checkpoint = round(timeit.default_timer()-offdiag_start,2)
-                    print('project_2D took ' + str(checkpoint) + ' seconds')
+                    #print('project_2D took ' + str(checkpoint) + ' seconds')
                     for patch in patches:
+                    #for patch in patch_params:
                         axes[rownum][colnum].add_patch(patch)
+                        #axes[rownum][colnum].add_patch(mpl.patches.Rectangle(*patch['args'],**patch['kwargs']))
                     # formatting
                     axes[rownum][colnum].set_ylim(plot_ranges[y_param['name']][0],plot_ranges[y_param['name']][1])
                     if y_param['spacing']=='log':
@@ -692,7 +714,7 @@ class Pmf(object):
                         axes[rownum][colnum].scatter(true_x,true_y,200,c="None",marker='o',linewidths=3,edgecolors='r',zorder=20)
                     offdiag_finish = timeit.default_timer()
                     offdiag_time = round(offdiag_finish-offdiag_start,2)
-                    print('off-diagonal plot finished in ' + str(offdiag_time) + ' seconds')
+                    #print('off-diagonal plot finished in ' + str(offdiag_time) + ' seconds')
 
                 else: # above diagonal
                     fig.delaxes(axes[rownum][colnum])
