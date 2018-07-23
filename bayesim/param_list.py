@@ -33,7 +33,6 @@ class param_list(object):
 
         # read in info
         param_info = dict(argv)
-        spacing = param_info['spacing']
         length = param_info['length']
 
         # compute edges and values
@@ -50,28 +49,39 @@ class param_list(object):
             vals = argv['vals']
             assert(len(vals)>=2), "vals should have at least two values"
             vals = sorted(vals)
-            edges = np.zeros(len(vals))
-            for i in range(len(vals)):
+            param_info['length'] = len(vals)
+            edges = np.zeros(len(vals)+1)
+
+            # first edge
+            if spacing=='linear':
+                edges[0] = vals[0]-0.5*(vals[1]-vals[0])
+            elif spacing=='log':
+                edges[0] = vals[0]*((vals[1]/vals[0])**0.5)
+            # most of the edges
+            for i in range(1,len(vals)):
                 if spacing=='linear':
-                    edges[i] = vals[i]-0.5*(vals[i+1]-vals[i])
+                    edges[i] = vals[i]-0.5*(vals[i]-vals[i-1])
                 elif spacing=='log':
-                    edges[i] = vals[i]/((vals[i+1]/vals[i])**0.5)
+                    edges[i] = vals[i]/((vals[i]/vals[i-1])**0.5)
             # last edge
             if spacing=='linear':
                 edges[len(vals)] = vals[-1]+0.5*(vals[-1]-vals[-2])
             elif spacing=='log':
                 edges[len(vals)] = vals[-1]*((vals[-1]/vals[-2])**0.5)
-            val_range = [min(edges),max(edges)]
 
-        param_info['val_range'] = val_range
+            val_range = [min(edges),max(edges)]
+            param_info['val_range'] = val_range
+
         param_info['edges'] = edges
         param_info['vals'] = vals
+        #print(param_info['name'],param_info['edges'])
 
         if 'min_width' not in argv.keys():
             if spacing == 'linear':
                 min_width = (1./(10*length))*(val_range[1]-val_range[0])
             elif spacing == 'log':
                 min_width = (val_range[1]/val_range[0])**(1./(10*length))
+                #print(param_info['name'],val_range[0],val_range[1],min_width)
             param_info['min_width'] = min_width
 
         self.fit_params.append(param_info)

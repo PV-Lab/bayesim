@@ -3,9 +3,7 @@ TO DO LIST FOR BAYESIM
 
 [* for necessary for initial release, ~ for need to decide if it's necessary, - for future ideas]
 
-* either solve the stitching nonuniform box sizes together or implement the "zooming" thing
-
-* check on deltas (getting weird zigzag PMF's sometimes)
+* maybe do project_2D with plt.imshow()?
 
 * figure out weird plotting issue with TE example (something is transposed?)
 

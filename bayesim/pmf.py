@@ -17,7 +17,7 @@ class Pmf(object):
     Stores probabilities in a DataFrame which associates regions of parameter space with probability values.
     """
 
-    def make_points_list(self, params, total_prob=1.0, new=True, num_sub=0):
+    def make_points_list(self, params, total_prob=1.0, new=True):
         """
         Helper function for Pmf.__init__ as well as Pmf.subdivide.
         Given names and values for parameters, generate DataFrame listing
@@ -57,7 +57,6 @@ class Pmf(object):
 
         df = pd.DataFrame(data=points, columns=columns)
         df['prob'] = [total_prob/len(df) for i in range(len(df))]
-        df['num_sub'] = [num_sub for i in range(len(df))]
 
         return df
 
@@ -217,7 +216,7 @@ class Pmf(object):
         # pick out the boxes that will be subdivided
         to_subdivide = self.points[self.points['prob']>threshold_prob]
         #print(len(to_subdivide))
-        dropped_boxes = deepcopy(to_subdivide)
+        #dropped_boxes = deepcopy(to_subdivide)
 
         num_high_prob_boxes = len(to_subdivide)
 
@@ -262,14 +261,19 @@ class Pmf(object):
                 # copy same params except for ranges
                 new_pl.add_fit_param(name=p['name'],val_range=[box[1][p['name']+'_min'],box[1][p['name']+'_max']],length=num_divs_here[p['name']],min_width=p['min_width'],spacing=p['spacing'],units=p['units'])
             # make new df, spreading total prob from original box among new smaller ones
-            new_boxes.append(self.make_points_list(new_pl.fit_params,total_prob=box[1]['prob'],new=True,num_sub=box[1]['num_sub']+1))
+            new_boxes.append(self.make_points_list(new_pl.fit_params,total_prob=box[1]['prob'],new=True))
 
         new_boxes = pd.concat(new_boxes)
 
-        # concatenate new DataFrame to self.points
-        # TESTING - completely drop all the non-subdivided boxes
-        self.points = pd.concat([self.points,new_boxes])
-        #self.points = new_boxes
+        # put in the new points (and completely drop the old ones)
+        self.points = new_boxes
+
+        # make new lists of self.params (this way might be slow...)
+        new_params = pl.param_list()
+        param_names = [p['name'] for p in self.params]
+        for p in self.params:
+            new_params.add_fit_param(name=p['name'], vals=list(set(list(self.points[p['name']]))),spacing=p['spacing'])
+        self.params = [p for p in new_params.fit_params]
 
         # sort values
         self.points = self.points.sort_values([p['name'] for p in self.params])
@@ -282,7 +286,7 @@ class Pmf(object):
 
         print(str(num_high_prob_boxes) + ' box(es) with probability > ' + str(threshold_prob) + ' and ' + str(num_nbs) + ' neighboring boxes subdivided!')
 
-        return new_boxes, to_subdivide
+        return new_boxes
 
     def multiply(self, other_pmf):
         """
@@ -365,7 +369,6 @@ class Pmf(object):
             if err==model_err:
                 delta_count = delta_count + 1
 
-            # TESTING
             new_probs[point[0]] = norm.pdf(meas_val, loc=model_val, scale=abs(err))
 
         # copy these values in
@@ -393,34 +396,6 @@ class Pmf(object):
         else:
             return False
 
-    def make_dense_grid(self):
-        """
-        Construct a grid and corresponding lists of parameter values over the full parameter space at the highest degree of subdivision.
-
-        Returns:
-            mat (:obj:`np.array`): matrix of zeros of shape (len(p1),len(p2)...for p in self.params)
-            param_vals (`dict`): dict with keys of param names and values lists of box centers
-            pvals_indices (`dict`): dict with keys of param names and values more dicts, each of which has keys of that params values and values of the index along that dimension of mat
-        """
-        mat_shape = []
-        param_vals = {}
-        pvals_indices = {}
-        #indices_lists = []
-        for param in self.params:
-            pname = param['name']
-            min_edge = param['edges'][0]
-            max_edge = param['edges'][-1]
-            length = 2*param['length']*2**self.num_sub+1
-            if param['spacing']=='linear':
-                param_vals[pname] = np.linspace(min_edge,max_edge,length)[1:-1:2]
-            elif param['spacing']=='log':
-                param_vals[pname] = np.logspace(np.log10(min_edge),np.log10(max_edge),length)[1:-1:2]
-            mat_shape.append(len(param_vals[pname]))
-            pvals_indices[pname] = {param_vals[pname][i]:i for i in range(len(param_vals[pname]))}
-            #indices_lists.append(range(len(param_vals[pname])))
-        mat = np.zeros(mat_shape)
-        return mat, param_vals, pvals_indices
-
     def populate_dense_grid(self,df,col_to_pull,flag_new,make_ind_lists,return_edges=False):
         """
         Populate a grid such as the one created by make_dense_grid.
@@ -428,7 +403,6 @@ class Pmf(object):
         Args:
             df (`obj`:DataFrame): DataFrame to populate from (should have columns for every param)
             col_to_pull (`str`): name of the column to use when populating grid points
-            flag_new (`bool`): whether to return a list of indices corresponding to new points (will use 'index' column rather than row names, used by bayesim.model.calc_model_gradients)
             make_ind_lists (`bool`): whether to return a list of indices corresponding to the first in every slice (used by bayesim.model.calc_model_gradients)
             return_edges (`bool`): whether to return list of edge values also (used by bayesim.pmf.project_2D)
 
@@ -436,54 +410,51 @@ class Pmf(object):
             a dict with keys for each thing requested
         """
         mat_shape = []
-        param_vals = {}
         pvals_indices = {}
         param_edges = {}
 
         for param in self.params:
+            """
             pname = param['name']
             min_edge = param['edges'][0]
             max_edge = param['edges'][-1]
-            length = 2*param['length']*2**self.num_sub+1
+            length = 2*param['length']+1
             if param['spacing']=='linear':
                 param_vals[pname] = np.linspace(min_edge,max_edge,length)[1:-1:2]
                 param_edges[pname] = np.linspace(min_edge,max_edge,length)[::2]
             elif param['spacing']=='log':
                 param_vals[pname] = np.logspace(np.log10(min_edge),np.log10(max_edge),length)[1:-1:2]
                 param_edges[pname] = np.logspace(np.log10(min_edge),np.log10(max_edge),length)[::2]
-            mat_shape.append(len(param_vals[pname]))
-            pvals_indices[pname] = {param_vals[pname][i]:i for i in range(len(param_vals[pname]))}
+            """
+            mat_shape.append(param['length'])
+            pvals_indices[param['name']] = {param['vals'][i]:i for i in range(len(param['vals']))}
             #indices_lists.append(range(len(param_vals[pname])))
-        mat = np.zeros(mat_shape)
+        #mat = np.zeros(mat_shape)
+        mat = np.full(mat_shape,np.nan)
 
         # initialize optional things
         if make_ind_lists:
             ind_lists = {p['name']:[] for p in self.params}
-        if flag_new:
-            new_inds = []
 
         for pt in df.iterrows():
             slices = []
             param_point = self.points.loc[pt[0]] # if df isn't self.points
-            if flag_new and param_point['new']==True:
-                new_inds.append(int(pt[1]['index']))
             for p in self.params:
                 pname = p['name']
                 min_val = param_point[pname+'_min']
                 max_val = param_point[pname+'_max']
-                inds = [pvals_indices[pname][v] for v in param_vals[pname] if v>min_val and v<max_val]
+                inds = [pvals_indices[pname][v] for v in p['vals'] if v>min_val and v<max_val]
                 slices.append(slice(min(inds),max(inds)+1,None))
                 if make_ind_lists:
                     ind_lists[pname].append(inds[0])
             if col_to_pull == 'prob':
-                val = param_point['prob']/(2**(len(self.params)*(self.num_sub-param_point['num_sub'])))
+                #val = param_point['prob']/(2**(len(self.params)*(self.num_sub-param_point['num_sub'])))
+                val = param_point['prob']
             else:
                 val = pt[1][col_to_pull]
             mat[slices] = val
 
-        return_dict = {'mat':mat,'param_vals':param_vals}
-        if flag_new:
-            return_dict['new_inds'] = new_inds
+        return_dict = {'mat':mat}
         if make_ind_lists:
             return_dict['ind_lists'] = ind_lists
         if return_edges:
@@ -513,26 +484,16 @@ class Pmf(object):
         # generate dense grid and populate with probabilities
         dense_grid = self.populate_dense_grid(self.points,'prob',False,False)
         mat = dense_grid['mat']
-        param_vals = dense_grid['param_vals']
 
         # sum along all dimensions except the parameter of interest
         param_names = [p['name'] for p in self.params]
         param_ind = param_names.index(param['name'])
         inds_to_sum_along = tuple([i for i in range(len(mat.shape)) if not i==param_ind])
-        dense_probs_list = np.sum(mat,axis=inds_to_sum_along)
+        print(param['name'])
+        #print(mat,inds_to_sum_along)
+        probs = np.nansum(mat,axis=inds_to_sum_along)
 
-        # sum these into the bins
-        probs = np.zeros(len(bins)-1)
-        i = 0 # index into probs
-        j = 0 # index into dense_probs_list
-        while j<len(dense_probs_list):
-            v = param_vals[param['name']][j]
-            if v>bins[i] and v<bins[i+1]: # if this value is in this bin
-                probs[i] = probs[i] + dense_probs_list[j] # add it
-                j = j+1 # and go to the next value
-            else: # if it's not in this bin
-                i = i+1 # go to the next bin
-
+        #print(bins,probs)
         return bins, probs
 
     def project_2D(self, x_param, y_param, no_probs=False):

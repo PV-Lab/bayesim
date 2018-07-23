@@ -319,33 +319,6 @@ class model(object):
 
             # generate self.params if necessary? (might be done by here)
 
-        elif mode=='add':
-            # import and sort data
-            new_data = dd.io.load(argv['fpath']).sort_values(self.param_names)
-
-            # check that columns are okay
-            self.check_data_columns(model_data=new_data,output_column=output_col)
-
-            # next get list of parameter space points
-            new_points_grps = new_data.groupby(by=self.param_names)
-            new_points = pd.DataFrame.from_records(data=[list(k) for k in new_points_grps.groups.keys()],columns=self.param_names).sort_values(self.param_names).reset_index(drop=True)
-
-            # check that the points are the right ones
-            ind_arr = self.probs.points['new']==True
-            if not all(new_points == self.probs.points[self.param_names][ind_arr].sort_values(self.param_names).reset_index(drop=True)):
-                # probably shouldn't rely on ordering but rather explicitly save new_pts somewhere or something like that
-                raise ValueError('The parameter points in your newly added data do not match the newly added points in the PMF!')
-                return
-
-            # check that all the EC's are there
-            self.check_ecs(gb=new_points_grps)
-
-            # append the model data
-            self.model_data = pd.concat([self.model_data,new_data])
-            self.needs_new_model_data = False
-
-            # calculate deltas?
-
         elif mode=='function':
             # is there a way to save this (that could be saved to HDF5 too) so that subdivide can automatically call it?
             model_func = argv['func_name']
@@ -590,14 +563,12 @@ class model(object):
         threshold_prob = argv.setdefault('threshold_prob',0.001)
         self.num_sub = self.num_sub + 1
         filename = 'new_sim_points_%d.h5'%(self.num_sub)
-        new_boxes, dropped_boxes = self.probs.subdivide(threshold_prob)
+        new_boxes = self.probs.subdivide(threshold_prob)
         #dropped_inds = list(dropped_boxes.index)
+        self.fit_params = [p for p in self.probs.params]
 
-        # remove model_data for dropped boxes
-        for box in dropped_boxes.iterrows():
-            to_drop = self.model_data.loc[box[1]['start_ind']:box[1]['end_ind']].index
-            #sprint(to_drop)
-            self.model_data.drop(to_drop,inplace=True)
+        # remove old model data
+        self.model_data = []
 
         # update flags
         self.needs_new_model_data = True
@@ -632,12 +603,10 @@ class model(object):
 
         (also assumes it's sorted by param names and then EC's)
         """
-        param_lengths = [len(set(self.probs.points[p])) for p in self.param_names]
+        #param_lengths = [len(set(self.probs.points[p])) for p in self.param_names]
+        param_lengths = [p['length'] for p in self.fit_params]
 
-        if 'deltas' in self.model_data.columns:
-            deltas = np.array(deepcopy(self.model_data['deltas']))
-        else:
-            deltas = np.zeros(len(self.model_data))
+        deltas = np.zeros(len(self.model_data))
 
         # for every set of conditions...
         #count = 0
@@ -664,7 +633,6 @@ class model(object):
                 # construct grid at the highest level of subdivision
                 dense_grid = self.probs.populate_dense_grid(subset,self.output_var,True,True)
                 mat = dense_grid['mat']
-                delta_inds_to_update = dense_grid['new_inds']
                 ind_lists = dense_grid['ind_lists']
 
             else:
@@ -686,9 +654,11 @@ class model(object):
                 pad_widths[i] = (1,1)
                 deltas_here = np.pad(deltas_here, pad_widths, mode='constant', constant_values=0)
                 # build "winner" matrix
-                winners[i]=np.maximum(deltas_here[[Ellipsis]+[slice(None,mat.shape[i],None)]+[slice(None)]*(len(mat.shape)-i-1)],deltas_here[[Ellipsis]+[slice(1,mat.shape[i]+1,None)]+[slice(None)]*(len(mat.shape)-i-1)])
+                winners[i]=np.fmax(deltas_here[[Ellipsis]+[slice(None,mat.shape[i],None)]+[slice(None)]*(len(mat.shape)-i-1)],deltas_here[[Ellipsis]+[slice(1,mat.shape[i]+1,None)]+[slice(None)]*(len(mat.shape)-i-1)])
 
                 grad = np.amax(winners,axis=0)
+                # remove this later
+                self.grad=grad
 
             #print('deltas:')
             #print(grad)
@@ -697,11 +667,10 @@ class model(object):
             if is_grid:
                 deltas[inds] = grad.flatten()
             else:
-                # temporary array to copy all the values into
-                deltas_temp = deepcopy(deltas)
-                #print(inds, list(ind_lists.values()))
-                deltas_temp[list(inds)] = grad[list(ind_lists.values())] # Numpy "advanced indexing"
-                deltas[delta_inds_to_update] = deltas_temp[delta_inds_to_update]
+                # pick out only the boxes that exist
+                #print(ind_lists.values())
+                deltas[inds] = grad[[i for i in list(ind_lists.values())]]
+                #print(len(deltas))
             self.model_data['deltas'] = deltas
 
             #count = count+1
