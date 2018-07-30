@@ -552,17 +552,16 @@ class Pmf(object):
         Args:
             frac_points (`float`): number >0 and <=1 indicating fraction of total points to visualize (will take the most probable, defaults to 1.0)
             just_grid (`bool`): whether to show only the grid (i.e. visualize subdivisions) or the whole PMF (defaults to False)
-            fpath (`str`): optional, path to save image to
+            save_file (`bool`): whether to save a file
+            fpath (`str`): optional, path to save image to, defaults to False
             true_vals (`dict`): optional, set of param values to highlight on PMF
         """
         # read in options
-        frac_points = argv.get('frac_points',1.0)
-        just_grid = argv.get('just_grid',False)
-        if 'fpath' in argv.keys():
-            save_file = True
-            fpath = argv['fpath']
-        else:
-            save_file = False
+        frac_points = argv.get('frac_points', 1.0)
+        just_grid = argv.get('just_grid', False)
+        save_file = argv.get('save_file', False)
+        fpath = argv.get('fpath', 'probs_%d.png'%(self.num_sub))
+
         if 'true_vals' in argv.keys():
             # check that all params are there
             true_vals = argv['true_vals']

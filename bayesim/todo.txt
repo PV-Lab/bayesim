@@ -20,8 +20,14 @@ TO DO LIST FOR BAYESIM
 
 * add more things for model.__init__ to accept (model data, ec_x_var, etc.)
 
+* add tol_digits as a property of any parameter
 
-~ improve defaults in visualize (axis ticks overlapping sometimes, etc.)
+
+~ save units for EC's (maybe build them into param_list?)
+
+~ improve defaults in visualizations - both comparison_plot and probs (axis ticks overlapping sometimes, etc.)
+
+~ include all options in argparser for command line
 
 ~ change project_2D to use grid also (also maybe pass patch parameters rather than actual patch objects?) NOTE: tried this and it seemed to get slower, at least up to the scale I tried (~1000 grid points)
 ~ maybe do project_2D with imshow()?
@@ -34,14 +40,12 @@ TO DO LIST FOR BAYESIM
 
 ~ for big data sets, save_state might need to write separate HDF5 files and store paths to them in the state file
 
-~ save units for EC's (maybe build them into param_list?)
-
 ~ make default value of th_pv dimension-number-dependent
 
 ~ option to give Python object (DataFrame) to attach_observations rather than only a file
 
 
-- sample through various EC's more systematically rather than totally randomly?
+- allow multiple output variables
 
 - making animation of PMF evolving during a run
 

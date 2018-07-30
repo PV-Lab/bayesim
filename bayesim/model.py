@@ -44,6 +44,7 @@ class model(object):
             self.ec_pts = state['ec_pts']
             self.output_var = state['output_var']
             self.ec_tol_digits = state['ec_tol_digits']
+            self.ec_x_var = state['ec_x_var']
 
             # probabilities
             self.probs = Pmf(params=self.fit_params)
@@ -52,6 +53,7 @@ class model(object):
 
             # model
             self.model_data = state['model_data']
+            self.model_data_grps = state['model_data_grps']
             self.model_data_ecgrps = state['model_data_ecgrps']
             self.needs_new_model_data = state['needs_new_model_data']
             self.obs_data = state['obs_data']
@@ -78,10 +80,11 @@ class model(object):
             # placeholders
             self.ec_pts = []
             self.model_data = []
+            self.model_data_grps = []
             self.needs_new_model_data = True
             self.obs_data = []
             self.is_run = False
-
+            self.ec_x_var = ''
 
     def attach_ec_names(self,ec_list):
         """
@@ -408,7 +411,7 @@ class model(object):
             obs_data = self.obs_data
             plot_title = ''
             for c in other_ecs:
-                obs_data =  obs_data[abs(obs_data[c]-ec[c])<=10**(-1*self.ec_tol_digits)]
+                obs_data =  obs_data[abs(obs_data[c]-ec[c])<=10.**(-1.*self.ec_tol_digits)]
                 plot_title = plot_title + '%s=%f, '%(c,ec[c])
             obs_data = obs_data.sort_values(by=[self.ec_x_var])
             ax.plot(obs_data[self.ec_x_var],obs_data[self.output_var])
@@ -417,7 +420,7 @@ class model(object):
             for pt in param_pts.iterrows():
                 model_data = self.model_data.loc[self.model_data_grps.groups[tuple([pt[1][n] for n in self.param_names])]]
                 for c in other_ecs:
-                    model_data =  model_data[abs(model_data[c]-ec[c])<=10**(-1*self.ec_tol_digits)]
+                    model_data =  model_data[abs(model_data[c]-ec[c])<=10.**(-1.*self.ec_tol_digits)]
                 model_data.sort_values(by=[self.ec_x_var])
                 ax.plot(model_data[self.ec_x_var],model_data[self.output_var])
                 leg_label = 'modeled: '
@@ -559,7 +562,6 @@ class model(object):
             threshold_prob (`float`): minimum probability of box to (keep and) subdivide (default 0.001)
         """
         threshold_prob = argv.get('threshold_prob',0.001)
-        filename = 'new_sim_points_%d.h5'%(self.probs.num_sub)
         new_boxes = self.probs.subdivide(threshold_prob)
         #dropped_inds = list(dropped_boxes.index)
         self.fit_params = [p for p in self.probs.params]
@@ -571,6 +573,7 @@ class model(object):
         self.needs_new_model_data = True
         self.is_run = False
         #dd.io.save(filename,new_boxes)
+        filename = 'new_sim_points_%d.h5'%(self.probs.num_sub)
         self.list_model_pts_to_run(fpath=filename)
         print('New model points to simulate are saved in the file %s.'%filename)
 
@@ -580,8 +583,9 @@ class model(object):
 
         Note that this could be very slow if used on the initial grid (i.e. for potentially millions of points) - it's better for after a subdivide call.
         """
-        # First, find all parameter points marked as 'new' and pick out just the columns with the values
-        param_pts = self.probs.points[self.probs.points['new']==True][self.param_names]
+
+        # get just the columns with the parameters
+        param_pts = self.probs.points[self.param_names]
 
         # Now at every point in that list, make a row for every EC point
         param_inds = range(len(param_pts))
@@ -668,6 +672,7 @@ class model(object):
         state['ec'] = self.ec_names
         state['ec_pts'] = self.ec_pts
         state['ec_tol_digits'] = self.ec_tol_digits
+        state['ec_x_var'] = self.ec_x_var
         state['output_var'] = self.output_var
 
         # PMF
@@ -676,6 +681,7 @@ class model(object):
 
         # model/data
         state['model_data'] = self.model_data
+        state['model_data_grps'] = self.model_data_grps
         state['model_data_ecgrps'] = self.model_data_ecgrps
         state['needs_new_model_data'] = self.needs_new_model_data
         state['obs_data'] = self.obs_data
