@@ -3,19 +3,15 @@ TO DO LIST FOR BAYESIM
 
 [* for necessary for initial release, ~ for need to decide if it's necessary, - for future ideas]
 
-* maybe do project_2D with plt.imshow()?
+* update save_state and load_state
 
-* figure out weird plotting issue with TE example (something is transposed?)
+* update commandline stuff
+
+* check all comparisons/tolerances are robust to very tiny numbers
 
 * make demonstration of how data sampling and error estimates matter, especially at high subdivision, and influence things in unintuitive but systematic ways especially with log vs linear spacing
 
-* update save_state and load_state
-
-* clean up args to populate_dense_grid fcn
-
 * need some more sanity checks and error messages in pmf.populate_dense_grid
-
-* update commandline stuff
 
 * test what happens with calc_gradients if a box is subdivided only in one direction
 
@@ -28,7 +24,10 @@ TO DO LIST FOR BAYESIM
 * make a save_state function for Pmf.py which model.save_state would just call
 
 
+~ improve defaults in visualize (axis ticks overlapping sometimes, etc.)
+
 ~ change project_2D to use grid also (also maybe pass patch parameters rather than actual patch objects?) NOTE: tried this and it seemed to get slower, at least up to the scale I tried (~1000 grid points)
+~ maybe do project_2D with imshow()?
 
 ~ plotting points from an inference run?
 

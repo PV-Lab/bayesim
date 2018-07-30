@@ -17,7 +17,7 @@ class Pmf(object):
     Stores probabilities in a DataFrame which associates regions of parameter space with probability values.
     """
 
-    def make_points_list(self, params, total_prob=1.0, new=True):
+    def make_points_list(self, params, total_prob=1.0):
         """
         Helper function for Pmf.__init__ as well as Pmf.subdivide.
         Given names and values for parameters, generate DataFrame listing
@@ -45,15 +45,11 @@ class Pmf(object):
                 row.append(params[j]['vals'][val_index])
                 # get min and max of bounding box
                 row.extend([params[j]['edges'][val_index],params[j]['edges'][val_index+1]])
-            if new:
-                row.extend([True])
-            else:
-                row.extend([False])
             points[i] = row
 
         points = np.array(points)
         param_names = [p['name'] for p in params]
-        columns = [c for l in [[n,n+'_min',n+'_max'] for n in param_names] for c in l]+['new'] # there has to be a more readable way to do this
+        columns = [c for l in [[n,n+'_min',n+'_max'] for n in param_names] for c in l] # there has to be a more readable way to do this
 
         df = pd.DataFrame(data=points, columns=columns)
         df['prob'] = [total_prob/len(df) for i in range(len(df))]
@@ -208,9 +204,7 @@ class Pmf(object):
         """
         num_divs = {p['name']:2 for p in self.params} #dummy for now
 
-        # set all 'new' flags to False and increment subdivide count
-        flags = [False] * len(self.points)
-        self.points['new'] = flags
+        # increment subdivide count
         self.num_sub = self.num_sub + 1
 
         # pick out the boxes that will be subdivided
@@ -261,7 +255,7 @@ class Pmf(object):
                 # copy same params except for ranges
                 new_pl.add_fit_param(name=p['name'],val_range=[box[1][p['name']+'_min'],box[1][p['name']+'_max']],length=num_divs_here[p['name']],min_width=p['min_width'],spacing=p['spacing'],units=p['units'])
             # make new df, spreading total prob from original box among new smaller ones
-            new_boxes.append(self.make_points_list(new_pl.fit_params,total_prob=box[1]['prob'],new=True))
+            new_boxes.append(self.make_points_list(new_pl.fit_params,total_prob=box[1]['prob']))
 
         new_boxes = pd.concat(new_boxes)
 
@@ -396,7 +390,7 @@ class Pmf(object):
         else:
             return False
 
-    def populate_dense_grid(self,df,col_to_pull,flag_new,make_ind_lists,return_edges=False):
+    def populate_dense_grid(self,**argv):
         """
         Populate a grid such as the one created by make_dense_grid.
 
@@ -409,23 +403,18 @@ class Pmf(object):
         Returns:
             a dict with keys for each thing requested
         """
+        # read in inputs
+        df = argv['df']
+        col_to_pull = argv['col_to_pull']
+        make_ind_lists = argv.get('make_ind_lists',True)
+        return_edges = argv.get('return_edges',False)
+
+        # initialize things
         mat_shape = []
         pvals_indices = {}
         param_edges = {}
 
         for param in self.params:
-            """
-            pname = param['name']
-            min_edge = param['edges'][0]
-            max_edge = param['edges'][-1]
-            length = 2*param['length']+1
-            if param['spacing']=='linear':
-                param_vals[pname] = np.linspace(min_edge,max_edge,length)[1:-1:2]
-                param_edges[pname] = np.linspace(min_edge,max_edge,length)[::2]
-            elif param['spacing']=='log':
-                param_vals[pname] = np.logspace(np.log10(min_edge),np.log10(max_edge),length)[1:-1:2]
-                param_edges[pname] = np.logspace(np.log10(min_edge),np.log10(max_edge),length)[::2]
-            """
             mat_shape.append(param['length'])
             pvals_indices[param['name']] = {param['vals'][i]:i for i in range(len(param['vals']))}
             #indices_lists.append(range(len(param_vals[pname])))
@@ -477,10 +466,6 @@ class Pmf(object):
         # pull all bounds, then flatten, remove duplicates, and sort
         bins = sorted(list(set(list(self.points[param['name']+'_min'])+list(self.points[param['name']+'_max']))))
 
-        # set() doesn't seem to perfectly remove duplicates (#YayNumerics) so here's a hacky extra check
-        for i in [len(bins)-j-1 for j in range(len(bins)-1)]: #count backwards
-            if self.equals_ish(bins[i],bins[i-1]): del bins[i]
-
         # generate dense grid and populate with probabilities
         dense_grid = self.populate_dense_grid(self.points,'prob',False,False)
         mat = dense_grid['mat']
@@ -489,11 +474,8 @@ class Pmf(object):
         param_names = [p['name'] for p in self.params]
         param_ind = param_names.index(param['name'])
         inds_to_sum_along = tuple([i for i in range(len(mat.shape)) if not i==param_ind])
-        print(param['name'])
-        #print(mat,inds_to_sum_along)
         probs = np.nansum(mat,axis=inds_to_sum_along)
 
-        #print(bins,probs)
         return bins, probs
 
     def project_2D(self, x_param, y_param, no_probs=False):
@@ -525,6 +507,8 @@ class Pmf(object):
                 alpha = row[1]['prob']/max_prob
                 if alpha>1e-3: #this speeds it up a lot
                     patches.append(mpl.patches.Rectangle((x_min,y_min),x_width,y_width,alpha=alpha))
+
+        # here lies the so-far failed attempt to speed this up with grids
         """
         # generate dense grid and populate with probabilities
         dense_grid = self.populate_dense_grid(self.points,'prob',False,False,return_edges=True)

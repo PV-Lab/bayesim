@@ -30,12 +30,12 @@ class model(object):
             state_file (`str`): path to file saved by save_state() fcn
         """
 
-        state_file = argv.setdefault('state_file','bayesim_state.h5')
-        ec_tol_digits = argv.setdefault('ec_tol_digits',5)
-        load_state = argv.setdefault('load_state',False)
+        state_file = argv.get('state_file','bayesim_state.h5')
+        ec_tol_digits = argv.get('ec_tol_digits',5)
+        load_state = argv.get('load_state',False)
 
         if load_state:
-            state = dd.io.load(argv['state_file'])
+            state = dd.io.load(state_file)
 
             # variables
             self.fit_params = state['fit_params']
@@ -263,15 +263,14 @@ class model(object):
         Attach the model for the data, either by feeding in a file of precomputed data or a function that does the computing.
 
         Args:
-            mode (`str`): 'file', 'function', or 'add' - 'file' or 'function' if populating model_data for the first time, 'add' if attaching new data
+            mode (`str`): 'file' or 'function'
             func_name (callable): if mode='function', provide function here
-            fpath (`str`): if mode='file', provide path to file
+            fpath (`str`): if mode=='file', provide path to file
             output_column (`str`): optional, header of column containing output data (required if different from self.output_var)
         """
 
-        #mode = argv.setdefault('mode','file')
         mode = argv['mode']
-        output_col = argv.setdefault('output_column',self.output_var)
+        output_col = argv.get'output_column',self.output_var)
 
         if mode == 'file':
             # import and sort data on parameter values
@@ -415,8 +414,6 @@ class model(object):
             j = 1
             legend_list = ['observed']
             for pt in param_pts.iterrows():
-                #print(pt[1])
-                #print(tuple([pt[1][n] for n in self.param_names]))
                 model_data = self.model_data.loc[self.model_data_grps.groups[tuple([pt[1][n] for n in self.param_names])]]
                 for c in other_ecs:
                     model_data =  model_data[abs(model_data[c]-ec[c])<=10**(-1*self.ec_tol_digits)]
@@ -560,7 +557,7 @@ class model(object):
         Args:
             threshold_prob (`float`): minimum probability of box to (keep and) subdivide (default 0.001)
         """
-        threshold_prob = argv.setdefault('threshold_prob',0.001)
+        threshold_prob = argv.get('threshold_prob',0.001)
         self.num_sub = self.num_sub + 1
         filename = 'new_sim_points_%d.h5'%(self.num_sub)
         new_boxes = self.probs.subdivide(threshold_prob)
@@ -603,27 +600,19 @@ class model(object):
 
         (also assumes it's sorted by param names and then EC's)
         """
-        #param_lengths = [len(set(self.probs.points[p])) for p in self.param_names]
         param_lengths = [p['length'] for p in self.fit_params]
 
         deltas = np.zeros(len(self.model_data))
 
         # for every set of conditions...
-        #count = 0
         for grp in self.model_data_ecgrps.groups:
-            #print('***'+str(grp)+'***')
             inds = self.model_data_ecgrps.groups[grp]
-            #print(vals)
-            #if count%5==0:print(count)
-            #print(grp,vals.index)
             # construct matrix of output_var({fit_params})
             subset = deepcopy(self.model_data.loc[inds])
             # sort and reset index of subset to match probs so we can use the find_neighbor_boxes function if needed
             subset.drop_duplicates(subset=self.param_names,inplace=True)
             subset.sort_values(self.param_names,inplace=True)
             subset.reset_index(inplace=True)
-            #print(len(subset),len(self.probs.points))
-            #print(subset[self.param_names].head(),self.probs.points[self.param_names].head())
             if not all(subset[self.param_names]==self.probs.points[self.param_names]):
                 raise ValueError('Subset at %s does not match probability grid!'%grp)
 
@@ -631,16 +620,13 @@ class model(object):
             if not len(subset)==np.product(param_lengths):
                 is_grid = False
                 # construct grid at the highest level of subdivision
-                dense_grid = self.probs.populate_dense_grid(subset,self.output_var,True,True)
+                dense_grid = self.probs.populate_dense_grid(subset,self.output_var,make_ind_lists=True)
                 mat = dense_grid['mat']
                 ind_lists = dense_grid['ind_lists']
 
             else:
                 is_grid = True
                 mat = np.reshape(list(subset[self.output_var]), param_lengths)
-
-            #print('outputs:')
-            #print(mat)
 
             # given matrix, compute largest differences along any direction
             winner_dim = [len(mat.shape)]
@@ -653,24 +639,18 @@ class model(object):
                 pad_widths = [(0,0) for j in range(len(mat.shape))]
                 pad_widths[i] = (1,1)
                 deltas_here = np.pad(deltas_here, pad_widths, mode='constant', constant_values=0)
-                # build "winner" matrix
+
+                # build "winner" matrix (ignore nans)
                 winners[i]=np.fmax(deltas_here[[Ellipsis]+[slice(None,mat.shape[i],None)]+[slice(None)]*(len(mat.shape)-i-1)],deltas_here[[Ellipsis]+[slice(1,mat.shape[i]+1,None)]+[slice(None)]*(len(mat.shape)-i-1)])
 
                 grad = np.amax(winners,axis=0)
-                # remove this later
-                self.grad=grad
-
-            #print('deltas:')
-            #print(grad)
 
             # save these values to the appropriate indices in the vector
             if is_grid:
                 deltas[inds] = grad.flatten()
             else:
                 # pick out only the boxes that exist
-                #print(ind_lists.values())
                 deltas[inds] = grad[[i for i in list(ind_lists.values())]]
-                #print(len(deltas))
             self.model_data['deltas'] = deltas
 
             #count = count+1
@@ -693,20 +673,24 @@ class model(object):
         # PMF
         state['probs_points'] = self.probs.points
         state['num_sub'] = self.probs.num_sub
-
+        
         # model/data
         state['model_data'] = self.model_data
         state['model_data_ecgrps'] = self.model_data_ecgrps
         state['needs_new_model_data'] = self.needs_new_model_data
         state['obs_data'] = self.obs_data
-        #state['start_indices'] = self.start_indices
-        #state['end_indices'] = self.end_indices
         state['is_run'] = self.is_run
 
         # save the file
         dd.io.save(filename,state)
 
     def visualize_grid(self,**argv):
+        """
+        Visualize the current state of the grid.
+
+        Args:
+            same as pmf.visualize()
+        """
         self.probs.visualize(just_grid=True,**argv)
 
     def visualize_probs(self,**argv):
