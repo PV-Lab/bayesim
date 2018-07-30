@@ -368,18 +368,22 @@ class model(object):
 
         Args:
             ecs (`dict`): optional, dict of EC values at which to plot. If not provided, they will be chosen randomly. This can also be a list of dicts for multiple points.
+            num_ecs (`int`): number of EC values to plot, defaults to 1 (ignored if ecs is provided)
             num_param_pts (`int`): number of the most probable parameter space points to plot (defaults to 1)
             ec_x_var (`str`): one of self.ec_names, will overwrite if this was provided before in attach_observations, required if it wasn't. If ec was provided, this will supercede that
             fpath (`str`): optional, path to save image to if desired (if num_plots>1, this will be used as a prefix)
         """
         # read in options and do some sanity checks
+        num_ecs = argv.get('num_ecs',1)
         if 'ecs' in argv.keys():
             ecs = argv['ecs']
             if not (isinstance(ecs,list) or isinstance(ecs,np.ndarray)):
                 ecs = [ecs]
         else:
-            ec_tuple = random.choice(list(self.model_data_ecgrps.groups.keys()))
-            ecs = [{self.ec_names[i]:ec_tuple[i] for i in range(len(ec_tuple))}]
+            ecs = []
+            for i in range(num_ecs):
+                ec_tuple = random.choice(list(self.model_data_ecgrps.groups.keys()))
+                ecs.append({self.ec_names[i]:ec_tuple[i] for i in range(len(ec_tuple))})
 
         num_param_pts = argv.get('num_param_pts',1)
 

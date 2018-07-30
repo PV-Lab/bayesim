@@ -22,6 +22,8 @@ TO DO LIST FOR BAYESIM
 
 * add tol_digits as a property of any parameter
 
+* speed up visualize_grid (imshow? maybe the sum would be faster here?)
+
 
 ~ save units for EC's (maybe build them into param_list?)
 
@@ -43,6 +45,8 @@ TO DO LIST FOR BAYESIM
 ~ make default value of th_pv dimension-number-dependent
 
 ~ option to give Python object (DataFrame) to attach_observations rather than only a file
+
+~ play with code profiling to speed up slow steps (e.g. calc_model_gradients)
 
 
 - allow multiple output variables
