@@ -204,9 +204,6 @@ class Pmf(object):
         """
         num_divs = {p['name']:2 for p in self.params} #dummy for now
 
-        # increment subdivide count
-        self.num_sub = self.num_sub + 1
-
         # pick out the boxes that will be subdivided
         to_subdivide = self.points[self.points['prob']>threshold_prob]
         #print(len(to_subdivide))
@@ -277,6 +274,9 @@ class Pmf(object):
 
         # should be normalized already, but just in case:
         self.normalize()
+
+        # increment subdivide count
+        self.num_sub = self.num_sub + 1
 
         print(str(num_high_prob_boxes) + ' box(es) with probability > ' + str(threshold_prob) + ' and ' + str(num_nbs) + ' neighboring boxes subdivided!')
 
@@ -418,7 +418,7 @@ class Pmf(object):
             mat_shape.append(param['length'])
             pvals_indices[param['name']] = {param['vals'][i]:i for i in range(len(param['vals']))}
             #indices_lists.append(range(len(param_vals[pname])))
-        #mat = np.zeros(mat_shape)
+
         mat = np.full(mat_shape,np.nan)
 
         # initialize optional things
@@ -467,7 +467,7 @@ class Pmf(object):
         bins = sorted(list(set(list(self.points[param['name']+'_min'])+list(self.points[param['name']+'_max']))))
 
         # generate dense grid and populate with probabilities
-        dense_grid = self.populate_dense_grid(self.points,'prob',False,False)
+        dense_grid = self.populate_dense_grid(df=self.points, col_to_pull='prob', make_ind_lists=False)
         mat = dense_grid['mat']
 
         # sum along all dimensions except the parameter of interest

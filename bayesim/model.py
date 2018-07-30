@@ -81,7 +81,6 @@ class model(object):
             self.needs_new_model_data = True
             self.obs_data = []
             self.is_run = False
-            self.num_sub = 0 # number of subdivisions done
 
 
     def attach_ec_names(self,ec_list):
@@ -123,10 +122,12 @@ class model(object):
             output_column (`str`): optional, header of column containing output data (required if different from self.output_var)
         """
         output_col = argv.get('output_column', self.output_var)
-        keep_all = argv.get('keep_all', False)
+        keep_all = argv.get('keep_all', True)
         thresh_dif_frac = argv.get('thresh_dif_frac', 0.01)
         if 'ec_x_var' in argv.keys():
             self.ec_x_var = argv['ec_x_var']
+        elif not keep_all:
+            raise NameError('You must specify ec_x_var if you want to throw out data points that are too close together.')
 
         self.obs_data = dd.io.load(argv['fpath'])
         # get EC names if necessary
@@ -270,7 +271,7 @@ class model(object):
         """
 
         mode = argv['mode']
-        output_col = argv.get'output_column',self.output_var)
+        output_col = argv.get('output_column',self.output_var)
 
         if mode == 'file':
             # import and sort data on parameter values
@@ -527,7 +528,7 @@ class model(object):
 
                     # save intermediate PMF if necessary
                     if save_step >0 and (num_pts_used-prev_used_pts) % save_step == 0:
-                        dd.io.save(pmf_folder+'sub%d_run%d_PMF_%d.h5'%(self.num_sub,num_runs,num_pts_used-prev_used_pts),self.probs.points)
+                        dd.io.save(pmf_folder+'sub%d_run%d_PMF_%d.h5'%(self.probs.num_sub,num_runs,num_pts_used-prev_used_pts),self.probs.points)
 
                     # check if threshold probability concentration has been reached
                     if np.sum(self.probs.most_probable(int(th_pv*len(self.probs.points)))['prob'])>th_pm:
@@ -536,9 +537,9 @@ class model(object):
                 if done:
                     probs_lists.append(np.array(self.probs.points['prob']))
                     if save_step >= 0:
-                        dd.io.save(pmf_folder+'sub%d_run%d_PMF_final.h5'%(self.num_sub,num_runs),self.probs.points)
+                        dd.io.save(pmf_folder+'sub%d_run%d_PMF_final.h5'%(self.probs.num_sub,num_runs),self.probs.points)
                     at_threshold=True
-                    dd.io.save(obs_list_folder+'sub%d_run%d_obs_list.h5'%(self.num_sub,num_runs),self.obs_data.iloc[obs_indices])
+                    dd.io.save(obs_list_folder+'sub%d_run%d_obs_list.h5'%(self.probs.num_sub,num_runs),self.obs_data.iloc[obs_indices])
 
         probs = np.mean(probs_lists,axis=0)
         self.probs.points['prob'] = probs
@@ -547,7 +548,7 @@ class model(object):
         print('\nAn average of %d / %d probability points used model errors (rather than experimental errors) during this run.'%(int(round(np.mean(delta_count_list))),len(self.probs.points)))
 
         if save_step >=0:
-            dd.io.save(pmf_folder+'sub%d_PMF_final.h5'%(self.num_sub),self.probs.points)
+            dd.io.save(pmf_folder+'sub%d_PMF_final.h5'%(self.probs.num_sub),self.probs.points)
         self.is_run = True
 
     def subdivide(self, **argv):
@@ -558,8 +559,7 @@ class model(object):
             threshold_prob (`float`): minimum probability of box to (keep and) subdivide (default 0.001)
         """
         threshold_prob = argv.get('threshold_prob',0.001)
-        self.num_sub = self.num_sub + 1
-        filename = 'new_sim_points_%d.h5'%(self.num_sub)
+        filename = 'new_sim_points_%d.h5'%(self.probs.num_sub)
         new_boxes = self.probs.subdivide(threshold_prob)
         #dropped_inds = list(dropped_boxes.index)
         self.fit_params = [p for p in self.probs.params]
@@ -620,7 +620,7 @@ class model(object):
             if not len(subset)==np.product(param_lengths):
                 is_grid = False
                 # construct grid at the highest level of subdivision
-                dense_grid = self.probs.populate_dense_grid(subset,self.output_var,make_ind_lists=True)
+                dense_grid = self.probs.populate_dense_grid(df=subset,col_to_pull=self.output_var,make_ind_lists=True)
                 mat = dense_grid['mat']
                 ind_lists = dense_grid['ind_lists']
 
@@ -650,7 +650,7 @@ class model(object):
                 deltas[inds] = grad.flatten()
             else:
                 # pick out only the boxes that exist
-                deltas[inds] = grad[[i for i in list(ind_lists.values())]]
+                deltas[inds] = grad[[i for i in list([ind_lists[p] for p in self.param_names])]]
             self.model_data['deltas'] = deltas
 
             #count = count+1
@@ -673,7 +673,7 @@ class model(object):
         # PMF
         state['probs_points'] = self.probs.points
         state['num_sub'] = self.probs.num_sub
-        
+
         # model/data
         state['model_data'] = self.model_data
         state['model_data_ecgrps'] = self.model_data_ecgrps

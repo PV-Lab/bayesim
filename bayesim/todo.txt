@@ -1,9 +1,8 @@
 TO DO LIST FOR BAYESIM
 ----------------------
 
-[* for necessary for initial release, ~ for need to decide if it's necessary, - for future ideas]
+[* for necessary for paper, ~ for need to decide if it's necessary, - for future ideas]
 
-* update save_state and load_state
 
 * update commandline stuff
 
@@ -19,9 +18,7 @@ TO DO LIST FOR BAYESIM
 
 * more examples - TIDLS, maybe PC1D, maybe non-ideal diode, etc.
 
-* allow model.__init__ to optionally take in model data
-
-* make a save_state function for Pmf.py which model.save_state would just call
+* add more things for model.__init__ to accept (model data, ec_x_var, etc.)
 
 
 ~ improve defaults in visualize (axis ticks overlapping sometimes, etc.)
