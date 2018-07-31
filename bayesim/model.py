@@ -66,7 +66,6 @@ class model(object):
             self.ec_tol_digits = ec_tol_digits
 
             if 'params' in argv.keys():
-                self.probs = []
                 self.attach_params(argv['params'])
             else:
                 self.fit_params = []
@@ -78,11 +77,13 @@ class model(object):
                 self.ec_names = []
 
             # placeholders
-            self.ec_pts = []
-            self.model_data = []
+            self.probs = Pmf()
+            self.ec_pts = pd.DataFrame()
+            self.model_data = pd.DataFrame()
             self.model_data_grps = []
+            self.model_data_ecgrps = []
             self.needs_new_model_data = True
-            self.obs_data = []
+            self.obs_data = pd.DataFrame()
             self.is_run = False
             self.ec_x_var = ''
 
@@ -112,11 +113,12 @@ class model(object):
         else: # it's just a list of names
             self.param_names = params
 
-    def attach_observations(self,**argv):
+    def attach_observations(self, **argv):
         """
         Attach measured dataset.
 
         Args:
+            fpath (`str`): path to HDF5 file containing observed data
             keep_all (`bool`): whether to keep all the data in the file (longer simulation times) or to clip out data points that are close to each other (defaults to False)
             ec_x_var (`str`): required if keep_all is False, the experimental condition over which to measure differences (e.g. V for JV(Ti) curves in PV). It will also be used in plotting later.
             max_ec_x_step (`float`): used if keep_all is False, largest step to take in the ec_x_var before keeping a point even if curve if "flat" (defaults to 0.05 * range of ec_x_var)
@@ -571,7 +573,7 @@ class model(object):
         self.fit_params = [p for p in self.probs.params]
 
         # remove old model data
-        self.model_data = []
+        self.model_data = pd.DataFrame()
 
         # update flags
         self.needs_new_model_data = True

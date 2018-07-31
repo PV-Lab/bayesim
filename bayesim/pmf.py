@@ -75,6 +75,10 @@ class Pmf(object):
         elif 'param_points' in argv.keys():
             # need to implement
             pass
+        else: # empty arguments
+            self.num_sub = 0
+            self.params = []
+            self.points = pd.DataFrame
 
 
     def normalize(self):

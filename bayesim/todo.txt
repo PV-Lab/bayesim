@@ -3,10 +3,15 @@ TO DO LIST FOR BAYESIM
 
 [* for necessary for paper, ~ for need to decide if it's necessary, - for future ideas]
 
+* try parallelizing calc_model_gradients by using a non-class function
 
-* update commandline stuff
+* add 'verbose' options for slow functions (calc_model_gradients, run, visualize_grid, list_model_pts_to_run, subdivide...)
 
-* check all comparisons/tolerances are robust to very tiny numbers
+* add more things for model.__init__ to accept (model data, ec_x_var, etc.)
+
+* add tol_digits as a property of any parameter and rewrite all comparisons that used equals_ish or anything else
+
+* test/further update commandline stuff
 
 * make demonstration of how data sampling and error estimates matter, especially at high subdivision, and influence things in unintuitive but systematic ways especially with log vs linear spacing
 
@@ -18,12 +23,8 @@ TO DO LIST FOR BAYESIM
 
 * more examples - TIDLS, maybe PC1D, maybe non-ideal diode, etc.
 
-* add more things for model.__init__ to accept (model data, ec_x_var, etc.)
 
-* add tol_digits as a property of any parameter
-
-* speed up visualize_grid (imshow? maybe the sum would be faster here?)
-
+~ speed up visualize_grid somehow
 
 ~ save units for EC's (maybe build them into param_list?)
 
@@ -36,7 +37,7 @@ TO DO LIST FOR BAYESIM
 
 ~ plotting points from an inference run?
 
-~ parallelization? May be tricky within a class because of pickleability issues, but there are workarounds e.g. http://qingkaikong.blogspot.com/2016/12/python-parallel-method-in-class.html.
+~ parallelization? May be tricky within a class because of pickleability issues, but there are workarounds e.g. http://qingkaikong.blogspot.com/2016/12/python-parallel-method-in-class.html. Priority functions: calc_model_gradients, run, visualize_grid (unless I fix that another way)
 
 ~ figure out if list_model_pts_to_run can be made faster
 
