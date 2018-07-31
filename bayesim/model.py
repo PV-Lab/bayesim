@@ -146,8 +146,8 @@ class model(object):
         else:
             cols.remove(output_col)
             if self.ec_names == []:
-                print('Identified experimental conditions as %s. If this is wrong, rerun and explicitly specify them with attach_ec (make sure they match data file columns) or remove extra columns from data file.' %(str(cols)))
-                self.ec_names = cols
+                self.ec_names = [c for c in cols if not c=='error']
+                print('Identified experimental conditions as %s. If this is wrong, rerun and explicitly specify them with attach_ec (make sure they match data file columns) or remove extra columns from data file.' %(str(self.ec_names)))
             else:
                 if 'error' not in cols:
                     self.obs_data['error'] = argv['fixed_error']*np.ones(len(self.obs_data))

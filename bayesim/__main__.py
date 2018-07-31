@@ -39,7 +39,7 @@ def main(args=None):
     # attach modeled data
     if 'mod' in vars(args).keys() :
         m=bym.model(load_state=True, state_name=state_name)
-        m.attach_model(fpath=args.mod)
+        m.attach_model(fpath=args.mod,mode='file')
         m.save_state()
 
     # run inference
