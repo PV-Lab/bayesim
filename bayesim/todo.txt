@@ -13,6 +13,8 @@ TO DO LIST FOR BAYESIM
 
 * test/further update commandline stuff
 
+* fix log spacing on visualize() in CL version
+
 * make demonstration of how data sampling and error estimates matter, especially at high subdivision, and influence things in unintuitive but systematic ways especially with log vs linear spacing
 
 * need some more sanity checks and error messages in pmf.populate_dense_grid
@@ -22,6 +24,8 @@ TO DO LIST FOR BAYESIM
 * fully updated documentation
 
 * more examples - TIDLS, maybe PC1D, maybe non-ideal diode, etc.
+
+* fix save_step behavior in light of new run() protocol
 
 
 ~ speed up visualize_grid somehow

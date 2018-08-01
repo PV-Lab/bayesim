@@ -28,6 +28,7 @@ class model(object):
             output_var (`str`): name of experimental output measurements
             load_state (`bool`): flag for whether to load state from a file - if True, other inputs (apart from state_file) are ignored
             state_file (`str`): path to file saved by save_state() fcn
+            ec_x_var (`str`): EC to plot on x-axis and consider in trimming data
         """
 
         state_file = argv.get('state_file','bayesim_state.h5')
@@ -59,7 +60,6 @@ class model(object):
             self.obs_data = state['obs_data']
             self.is_run = state['is_run']
 
-
         else:
             # read in inputs
             self.output_var = argv['output_var']
@@ -70,14 +70,19 @@ class model(object):
             else:
                 self.fit_params = []
                 self.param_names = []
+                self.probs = Pmf()
 
             if 'ec' in argv.keys():
                 self.ec_names = argv['ec']
             else:
                 self.ec_names = []
 
+            if 'ec_x_var' in argv.keys():
+                self.ec_x_var = argv['ec_x_var']
+            else:
+                self.ec_x_var = ''
+
             # placeholders
-            self.probs = Pmf()
             self.ec_pts = pd.DataFrame()
             self.model_data = pd.DataFrame()
             self.model_data_grps = []
@@ -85,7 +90,6 @@ class model(object):
             self.needs_new_model_data = True
             self.obs_data = pd.DataFrame()
             self.is_run = False
-            self.ec_x_var = ''
 
     def attach_ec_names(self,ec_list):
         """
@@ -108,7 +112,7 @@ class model(object):
             # then we can make the PMF now
             self.fit_params = params.fit_params
             self.param_names = [p['name'] for p in self.fit_params]
-            self.probs = Pmf(params=params.fit_params)
+            self.probs = Pmf(params=self.fit_params)
 
         else: # it's just a list of names
             self.param_names = params
@@ -280,7 +284,7 @@ class model(object):
 
         if mode == 'file':
             # import and sort data on parameter values
-            self.model_data = dd.io.load(argv['fpath']).sort_values(self.param_names+self.ec_names)
+            self.model_data = dd.io.load(argv['fpath']).sort_values(self.param_names+self.ec_names).reset_index(drop=True)
 
             # Check that columns match EC's and parameter names
             self.check_data_columns(model_data=self.model_data,output_column=output_col)
@@ -290,16 +294,17 @@ class model(object):
             param_points = pd.DataFrame.from_records(data=[list(k) for k in param_points_grps.groups.keys()],columns=self.param_names).sort_values(self.param_names).reset_index(drop=True)
 
             # if PMF has been populated, check that points match
-            if not self.probs == [] and not all(param_points==self.probs.points[self.param_names]):
-                print('Your previously populated PMF does not have the same set of parameter space points as your model data. Proceeding using the points from the model data.')
-                self.probs = []
+            if not self.probs.is_empty:
+                if not all(param_points==self.probs.points[self.param_names]):
+                    print('Your previously populated PMF does not have the same set of parameter space points as your model data. Proceeding using the points from the model data.')
+                    self.probs = Pmf()
 
             ## check that all EC's are present at all model points
             # first get list of EC points from observed data (round off and sort values before comparison)
             self.check_ecs(gb=param_points_grps)
 
             # Generate self.probs if necessary
-            if self.probs == []:
+            if self.probs.is_empty:
                 # check that points are on a grid (the quick but slightly less certain way)
                 param_lengths = [len(set(param_points[name])) for name in self.param_names]
                 if not np.product(param_lengths)==len(param_points):
@@ -319,10 +324,10 @@ class model(object):
                             param_spacing[name] = 'log'
 
                     params = pl.param_list()
-                    for name,vals in param_vals:
-                        params.add_fit_param(name=name,vals=vals)
-
-            # generate self.params if necessary? (might be done by here)
+                    for name in param_vals.keys():
+                        params.add_fit_param(name=name,vals=param_vals[name])
+                    self.attach_params(params)
+                    self.probs = Pmf(params=params.fit_params)
 
         elif mode=='function':
             # is there a way to save this (that could be saved to HDF5 too) so that subdivide can automatically call it?
@@ -465,7 +470,6 @@ class model(object):
         th_pv = argv.get('th_pv',0.05)
         min_num_pts = argv.get('min_num_pts',50)
         force_exp_err = argv.get('force_exp_err',False)
-
         if min_num_pts > len(self.obs_data):
             print('Can not use more observation points than there are in the data. Setting min_num_pts to len(self.obs_data)=%d'%len(self.obs_data))
             min_num_pts = len(self.obs_data)
@@ -604,7 +608,7 @@ class model(object):
         sim_pts = pd.DataFrame(data=pts,columns=columns)
         dd.io.save(fpath,sim_pts)
 
-    def calc_model_gradients(self):
+    def calc_model_errors(self):
         """
         Calculates largest difference in modeled output along any parameter direction for each experimental condition, to be used for error in calculating likelihoods. Currently only works if data is on a grid.
 
@@ -620,8 +624,8 @@ class model(object):
             # construct matrix of output_var({fit_params})
             subset = deepcopy(self.model_data.loc[inds])
             # sort and reset index of subset to match probs so we can use the find_neighbor_boxes function if needed
-            subset.drop_duplicates(subset=self.param_names,inplace=True)
-            subset.sort_values(self.param_names,inplace=True)
+            subset.drop_duplicates(subset=self.param_names, inplace=True)
+            subset.sort_values(self.param_names, inplace=True)
             subset.reset_index(inplace=True)
             if not all(subset[self.param_names]==self.probs.points[self.param_names]):
                 raise ValueError('Subset at %s does not match probability grid!'%grp)

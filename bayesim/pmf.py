@@ -72,13 +72,18 @@ class Pmf(object):
             self.num_sub = 0
             self.params = argv['params']
             self.points = self.make_points_list(self.params)
+            if len(self.params)==0:
+                self.is_empty = True
+            else:
+                self.is_empty = False
         elif 'param_points' in argv.keys():
             # need to implement
             pass
         else: # empty arguments
             self.num_sub = 0
             self.params = []
-            self.points = pd.DataFrame
+            self.points = pd.DataFrame()
+            self.is_empty = True
 
 
     def normalize(self):
@@ -617,6 +622,7 @@ class Pmf(object):
                     else:
                         diag_start = timeit.default_timer()
                         bins, probs = self.project_1D(x_param)
+                        print(bins,probs)
                         checkpoint = round(timeit.default_timer()-diag_start,2)
                         #print('project_1D took ' + str(checkpoint) + ' seconds')
                         if x_param['spacing']=='log':
