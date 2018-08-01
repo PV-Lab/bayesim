@@ -22,20 +22,24 @@ class model(object):
         Initialize with a uniform PMF over the fitting parameters.
 
         Args:
+            output_var (`str`): name of experimental output measurements
+            obs_data_path (`str`): path to HDF5 file containing measured data
             fit_params (:obj:`param_list`): param_list object containing parameters to be fit and associated metadata
             ec (:obj:`list` of :obj:`str`): names of experimental conditions
             ec_tol_digits(`int`): number of digits to round off values of EC's (default 5)
-            output_var (`str`): name of experimental output measurements
             load_state (`bool`): flag for whether to load state from a file - if True, other inputs (apart from state_file) are ignored
             state_file (`str`): path to file saved by save_state() fcn
             ec_x_var (`str`): EC to plot on x-axis and consider in trimming data
+            verbose (`bool`): flag for verbosity, defaults to False
         """
-
-        state_file = argv.get('state_file','bayesim_state.h5')
-        ec_tol_digits = argv.get('ec_tol_digits',5)
-        load_state = argv.get('load_state',False)
+        verbose = argv.get('verbose', False)
+        state_file = argv.get('state_file', 'bayesim_state.h5')
+        ec_tol_digits = argv.get('ec_tol_digits', 5)
+        load_state = argv.get('load_state', False)
 
         if load_state:
+            if verbose:
+                print('Loading bayesim state from %s...'%state_file)
             state = dd.io.load(state_file)
 
             # variables
@@ -61,9 +65,13 @@ class model(object):
             self.is_run = state['is_run']
 
         else:
+            if verbose:
+                print('Constructing bayesim model object...')
             # read in inputs
             self.output_var = argv['output_var']
-            self.ec_tol_digits = ec_tol_digits
+
+            if 'obs_data_path' in argv.keys():
+                self.attach_observations(**argv)
 
             if 'params' in argv.keys():
                 self.attach_params(argv['params'])
@@ -78,11 +86,12 @@ class model(object):
                 self.ec_names = []
 
             if 'ec_x_var' in argv.keys():
-                self.ec_x_var = argv['ec_x_var']
+                self.attach_ec_names(**argv)
             else:
                 self.ec_x_var = ''
 
-            # placeholders
+            # placeholders and defaults
+            self.ec_tol_digits = ec_tol_digits # this will go away once param structure is improved
             self.ec_pts = pd.DataFrame()
             self.model_data = pd.DataFrame()
             self.model_data_grps = []
@@ -129,14 +138,20 @@ class model(object):
             thresh_dif_frac (`float`): used if keep_all is False, threshold (as a percentage of the maximum value, defaults to 0.03)
             fixed_error (`float`): required if running in function mode or if file doesn't have an 'error' column, value to use as uncertainty in measurement
             output_column (`str`): optional, header of column containing output data (required if different from self.output_var)
+            verbose (`bool`): flag for verbosity, defaults to False
         """
         output_col = argv.get('output_column', self.output_var)
         keep_all = argv.get('keep_all', True)
         thresh_dif_frac = argv.get('thresh_dif_frac', 0.01)
+        verbose = argv.get('verbose', False)
+
         if 'ec_x_var' in argv.keys():
             self.ec_x_var = argv['ec_x_var']
-        elif not keep_all:
+        elif not keep_all and self.ec_x_var=='':
             raise NameError('You must specify ec_x_var if you want to throw out data points that are too close together.')
+
+        if verbose:
+            print('Attaching measured data...')
 
         self.obs_data = dd.io.load(argv['fpath'])
         # get EC names if necessary
@@ -166,6 +181,8 @@ class model(object):
 
         # pick out rows to keep - the way to do this thresholding should probably be tweaked
         if not keep_all:
+            if verbose:
+                print('Choosing which measured data to keep...')
             other_ecs = [ec for ec in self.ec_names if not ec==self.ec_x_var]
             obs_data_grps = self.obs_data.groupby(by=other_ecs)
             for grp in obs_data_grps.groups.keys():
@@ -242,7 +259,12 @@ class model(object):
 
         Args:
             gb (:obj:`groupby`): Pandas groupby object of model data grouped by parameter points
+            verbose (`bool`): flag for verbosity, defaults to False
         """
+        verbose = argv.get('verbose', False)
+        if verbose:
+            print('Checking that modeled data contains all experimental conditions at every combination of fit parameters...')
+
         grps = argv['gb']
         # then check at each model point that they match
         for name,group in grps:
@@ -277,10 +299,15 @@ class model(object):
             func_name (callable): if mode='function', provide function here
             fpath (`str`): if mode=='file', provide path to file
             output_column (`str`): optional, header of column containing output data (required if different from self.output_var)
+            verbose (`bool`): flag for verbosity, defaults to False
         """
 
         mode = argv['mode']
         output_col = argv.get('output_column',self.output_var)
+        verbose = argv.get('verbose', False)
+
+        if verbose:
+            print('Attaching simulated data...')
 
         if mode == 'file':
             # import and sort data on parameter values
@@ -305,6 +332,8 @@ class model(object):
 
             # Generate self.probs if necessary
             if self.probs.is_empty:
+                if verbose:
+                    print('Initializing probability distribution...')
                 # check that points are on a grid (the quick but slightly less certain way)
                 param_lengths = [len(set(param_points[name])) for name in self.param_names]
                 if not np.product(param_lengths)==len(param_points):
@@ -463,20 +492,25 @@ class model(object):
             th_pv (`float`): threshold fraction of parameter space volume for th_pm fraction of probability to be concentrated into to trigger the run to stop (defaults to 0.05)
             min_num_pts (`int`): minimum number of observation points to use - if threshold is reached before this number of points has been used, it will start over and the final PMF will be the average of the number of runs needed to use sufficient points (defaults to 50)
             force_exp_err (`bool`): If true, likelihood calculations will use only experimental errors and ignore the computed model errors.
+            verbose (`bool`): flag for verbosity, defaults to False
         """
         # read in options
-        save_step = argv.get('save_step',10)
-        th_pm = argv.get('th_pm',0.8)
-        th_pv = argv.get('th_pv',0.05)
-        min_num_pts = argv.get('min_num_pts',50)
-        force_exp_err = argv.get('force_exp_err',False)
+        save_step = argv.get('save_step', 10)
+        th_pm = argv.get('th_pm', 0.8)
+        th_pv = argv.get('th_pv', 0.05)
+        min_num_pts = argv.get('min_num_pts', 50)
+        force_exp_err = argv.get('force_exp_err', False)
+        verbose = argv.get('verbose', False)
+        if verbose:
+            print('Running inference!')
+
         if min_num_pts > len(self.obs_data):
-            print('Can not use more observation points than there are in the data. Setting min_num_pts to len(self.obs_data)=%d'%len(self.obs_data))
+            print('Cannot use more observation points than there are in the data. Setting min_num_pts to len(self.obs_data)=%d'%len(self.obs_data))
             min_num_pts = len(self.obs_data)
 
         # do some sanity checks
         if self.needs_new_model_data:
-            raise ValueError('You need to attach model data before running!')
+            raise ValueError('Oops, you need to attach model data before running!')
             return
 
         if self.is_run:
@@ -500,7 +534,7 @@ class model(object):
         uni_probs = deepcopy(self.probs)
         uni_probs.uniformize()
         mid_probs = deepcopy(self.probs)
-        mid_probs.points['prob'] = 0.9*old_probs.points['prob'] + 0.1*uni_probs.points['prob']
+        mid_probs.points['prob'] = 0.8*old_probs.points['prob'] + 0.2*uni_probs.points['prob']
         mid_probs.normalize()
 
 
@@ -523,7 +557,7 @@ class model(object):
             while not done:
                 # check if we've gone through all the points
                 if num_pts_used == len(self.obs_data):
-                    print('Used all the observed data! Last PMF to go into average may have been further from threshold.')
+                    print('Used all the observed data! Last PMF to go into average may have been further from threshold condition.')
                     done = True
                 else:
                     # get observed and modeled data
@@ -587,12 +621,19 @@ class model(object):
         self.list_model_pts_to_run(fpath=filename)
         print('New model points to simulate are saved in the file %s.'%filename)
 
-    def list_model_pts_to_run(self,fpath):
+    def list_model_pts_to_run(self, fpath, **argv):
         """
         Generate full list of model points that need to be run (not just parameter points but also all experimental conditions). Saves to HDF5 at fpath.
 
         Note that this could be very slow if used on the initial grid (i.e. for potentially millions of points) - it's better for after a subdivide call.
+
+        Args:
+            fpath (`str`): path to save the list to (HDF5)
+            verbose (`bool`): flag for verbosity, defaults to False
         """
+        verbose = argv.get('verbose', False)
+        if verbose:
+            print('Listing the sets of simulation parameters that need to be run...')
 
         # get just the columns with the parameters
         param_pts = self.probs.points[self.param_names]
@@ -608,12 +649,19 @@ class model(object):
         sim_pts = pd.DataFrame(data=pts,columns=columns)
         dd.io.save(fpath,sim_pts)
 
-    def calc_model_errors(self):
+    def calc_model_errors(self, **argv):
         """
         Calculates largest difference in modeled output along any parameter direction for each experimental condition, to be used for error in calculating likelihoods. Currently only works if data is on a grid.
 
         (also assumes it's sorted by param names and then EC's)
+
+        Args:
+            verbose (`bool`): flag for verbosity, defaults to False
         """
+        verbose = argv.get('verbose', False)
+        if verbose:
+            print('Calculating model errors...')
+
         param_lengths = [p['length'] for p in self.fit_params]
 
         deltas = np.zeros(len(self.model_data))
@@ -667,7 +715,6 @@ class model(object):
                 deltas[inds] = grad[[i for i in list([ind_lists[p] for p in self.param_names])]]
             self.model_data['deltas'] = deltas
 
-            #count = count+1
 
     def save_state(self,filename='bayesim_state.h5'):
         """

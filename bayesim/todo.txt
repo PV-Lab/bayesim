@@ -3,19 +3,19 @@ TO DO LIST FOR BAYESIM
 
 [* for necessary for paper, ~ for need to decide if it's necessary, - for future ideas]
 
-* try parallelizing calc_model_gradients by using a non-class function (it gets reeeeally slow after a few subdivisions)
+* try parallelizing calc_model_errors by using a non-class function (it gets reeeeally slow after a few subdivisions)
 
 * add 'verbose' options for slow functions (calc_model_gradients, run, visualize_grid, list_model_pts_to_run, subdivide...) so CL version will be more talkative
 
-* add more things for model.__init__ to (optinally) accept (model data, ec_x_var, etc.)
+* add more things for model.__init__ to (optionally) accept (model data, ec_x_var, etc.)
 
-* add tol_digits (and units) as a property of any parameter and rewrite all float comparisons to use that (avoid issues with very tiny parameter values)
+* add tol_digits (and units) as a property of any parameter and rewrite all float comparisons to use that (avoid issues with very tiny parameter values), also round to one past this many digits and maybe use as default min_width?
 
 * test what happens with calc_gradients if a box is subdivided only in one direction
 
 * fully updated documentation
 
-* add more options to CL interface
+* add more options to CL interface (e.g. invoking comparison plot/visualize_grid, other tweaks to behavior)
 
 * fix log spacing on visualize() in CL version
 
