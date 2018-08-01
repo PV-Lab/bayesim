@@ -9,13 +9,11 @@ TO DO LIST FOR BAYESIM
 
 * add more things for model.__init__ to accept (model data, ec_x_var, etc.)
 
-* add tol_digits as a property of any parameter and rewrite all comparisons that used equals_ish or anything else
+* add tol_digits (and units) as a property of any parameter and rewrite all comparisons that used equals_ish or anything else
 
 * test/further update commandline stuff
 
 * fix log spacing on visualize() in CL version
-
-* make demonstration of how data sampling and error estimates matter, especially at high subdivision, and influence things in unintuitive but systematic ways especially with log vs linear spacing
 
 * need some more sanity checks and error messages in pmf.populate_dense_grid
 
@@ -30,7 +28,7 @@ TO DO LIST FOR BAYESIM
 
 ~ speed up visualize_grid somehow
 
-~ save units for EC's (maybe build them into param_list?)
+~ save model function somehow to at least theoretically close loop within CL interface
 
 ~ improve defaults in visualizations - both comparison_plot and probs (axis ticks overlapping sometimes, etc.)
 
