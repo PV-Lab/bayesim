@@ -3,27 +3,29 @@ TO DO LIST FOR BAYESIM
 
 [* for necessary for paper, ~ for need to decide if it's necessary, - for future ideas]
 
-* try parallelizing calc_model_gradients by using a non-class function
+* try parallelizing calc_model_gradients by using a non-class function (it gets reeeeally slow after a few subdivisions)
 
-* add 'verbose' options for slow functions (calc_model_gradients, run, visualize_grid, list_model_pts_to_run, subdivide...)
+* add 'verbose' options for slow functions (calc_model_gradients, run, visualize_grid, list_model_pts_to_run, subdivide...) so CL version will be more talkative
 
-* add more things for model.__init__ to accept (model data, ec_x_var, etc.)
+* add more things for model.__init__ to (optinally) accept (model data, ec_x_var, etc.)
 
-* add tol_digits (and units) as a property of any parameter and rewrite all comparisons that used equals_ish or anything else
-
-* test/further update commandline stuff
-
-* fix log spacing on visualize() in CL version
-
-* need some more sanity checks and error messages in pmf.populate_dense_grid
+* add tol_digits (and units) as a property of any parameter and rewrite all float comparisons to use that (avoid issues with very tiny parameter values)
 
 * test what happens with calc_gradients if a box is subdivided only in one direction
 
 * fully updated documentation
 
+* add more options to CL interface
+
+* fix log spacing on visualize() in CL version
+
+* some more sanity checks and error messages in pmf.populate_dense_grid
+
 * more examples - TIDLS, maybe PC1D, maybe non-ideal diode, etc.
 
 * fix save_step behavior in light of new run() protocol
+
+* check 2.7 vs. 3.6 compatibility
 
 
 ~ speed up visualize_grid somehow
