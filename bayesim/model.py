@@ -559,6 +559,7 @@ class Model(object):
             th_pv (`float`): threshold fraction of parameter space volume for th_pm fraction of probability to be concentrated into to trigger the run to stop (defaults to 0.05)
             min_num_pts (`int`): minimum number of observation points to use - if threshold is reached before this number of points has been used, it will start over and the final PMF will be the average of the number of runs needed to use sufficient points (defaults to 0.7 * the number of experimental measurements)
             force_exp_err (`bool`): If true, likelihood calculations will use only experimental errors and ignore the computed model errors.
+            prob_bias (`float`): number from 0 to 0.5, fraction of PMF from previous step to mix into prior for this step (defaults to 0) - higher values will likely converge faster but possibly have larger errors, especially if min_num_pts is small
             verbose (`bool`): flag for verbosity, defaults to False
         """
         # read in options
@@ -568,6 +569,10 @@ class Model(object):
         min_num_pts = argv.get('min_num_pts', int(0.7*len(self.obs_data)))
         force_exp_err = argv.get('force_exp_err', False)
         verbose = argv.get('verbose', False)
+        bias = argv.get('prob_bias',0.0)
+        if bias < 0 or bias > 0.5:
+            print("Bias parameter must be between 0 and 0.5 - defaulting to 0.")
+            bias = 0
         if verbose:
             print('Running inference!')
 
@@ -592,18 +597,13 @@ class Model(object):
                 if not os.path.isdir(fp):
                     os.mkdir(fp)
 
-        # set error = deltas (might want to tweak this)
-        self.model_data['error'] = self.model_data['deltas']
-
-        # TESTING THIS
-        # rather than uniformizing, averaging the previous probs with a quasi-uniform to see if it fixes weird sampling things
+        # rather than uniformizing, averaging the previous probs with a quasi-uniform
         old_probs = deepcopy(self.probs)
         uni_probs = deepcopy(self.probs)
         uni_probs.uniformize()
-        mid_probs = deepcopy(self.probs)
-        mid_probs.points['prob'] = 0.8*old_probs.points['prob'] + 0.2*uni_probs.points['prob']
+        start_probs = deepcopy(self.probs)
+        start_probs.points['prob'] = bias*old_probs.points['prob'] + (1-bias)*uni_probs.points['prob']
         mid_probs.normalize()
-
 
         # randomize observation order
         self.obs_data = self.obs_data.sample(frac=1)
@@ -616,9 +616,7 @@ class Model(object):
             num_runs = num_runs + 1
             obs_indices = []
 
-            #self.probs.uniformize()
-            # TESTING
-            self.probs = mid_probs
+            self.probs = start_probs
 
             done=False
             while not done:
@@ -734,7 +732,7 @@ class Model(object):
         param_lengths = [p.length for p in self.params.fit_params]
 
         deltas = np.zeros(len(self.model_data))
-
+        count=0
         # for every set of conditions...
         for grp in self.model_data_ecgrps.groups:
             inds = self.model_data_ecgrps.groups[grp]
@@ -767,14 +765,16 @@ class Model(object):
             # for every dimension (fitting parameter)
             for i in range(len(mat.shape)):
                 # build delta matrix
-                deltas_here = np.absolute(np.diff(mat,axis=i))
+                # certain versions of numpy throw an "invalid value encountered" RuntimeError here but the function behaves correctly
+                with np.errstate(invalid='ignore'):
+                    deltas_here = np.absolute(np.diff(mat,axis=i))
                 pad_widths = [(0,0) for j in range(len(mat.shape))]
                 pad_widths[i] = (1,1)
                 deltas_here = np.pad(deltas_here, pad_widths, mode='constant', constant_values=0)
 
                 # build "winner" matrix in this direction (ignore nans)
                 # this is really ugly because we have to index in at variable positions...
-                # also certain versions of numpy throw an "invalid value encountered" RuntimeError here but the function behaves correctly
+                # likewise here with the error
                 with np.errstate(invalid='ignore'):
                     winners[i]=np.fmax(deltas_here[[Ellipsis]+[slice(None,mat.shape[i],None)]+[slice(None)]*(len(mat.shape)-i-1)],deltas_here[[Ellipsis]+[slice(1,mat.shape[i]+1,None)]+[slice(None)]*(len(mat.shape)-i-1)])
 
@@ -787,7 +787,7 @@ class Model(object):
             else:
                 # pick out only the boxes that exist
                 deltas[inds] = grad[[i for i in list([ind_lists[p] for p in self.fit_param_names()])]]
-            self.model_data['deltas'] = deltas
+            self.model_data['error'] = deltas
 
 
     def save_state(self,filename='bayesim_state.h5'): #rewrite this!

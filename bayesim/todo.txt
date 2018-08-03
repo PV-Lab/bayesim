@@ -11,7 +11,7 @@ TO DO LIST FOR BAYESIM
 
 * add functions to set parameter units
 
-* test what happens with calc_gradients if a box is subdivided only in one direction
+* test what happens with calc_model_errors if a box is subdivided only in one direction
 
 * fully updated documentation
 

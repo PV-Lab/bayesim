@@ -234,39 +234,37 @@ class Pmf(object):
 
         num_nbs = len(to_subdivide)-num_high_prob_boxes
 
+        # check if minimum width is already satisfied for any parameter
+        test_box = to_subdivide.iloc[0]
+        for p in self.params:
+            if p.spacing=='linear':
+                this_width = box[1][p.name+'_max']-box[1][p.name+'_min']
+            elif p.spacing=='log':
+                this_width = box[1][p.name+'_max']/box[1][p.name+'_min']
+            if this_width <= p.min_width:
+                # don't divide along this direction
+                num_divs[p.name] = 1
+                print('Minimum width/factor of %s already satisfied for parameter %s, not subdividing in that direction!'%(p.get_val_str(p.min_width), p.name))
+
         # create new boxes (and delete old ones)
         new_boxes = []
         #dropped_inds = []
         for box in to_subdivide.iterrows():
-            # check if minimum width is already satisfied
-            num_divs_here = num_divs
-            for p in self.params:
-                if p.spacing=='linear':
-                    this_width = box[1][p.name+'_max']-box[1][p.name+'_min']
-                elif p.spacing=='log':
-                    this_width = box[1][p.name+'_max']/box[1][p.name+'_min']
-                if this_width <= p.min_width:
-                    # don't divide along this direction
-                    num_divs_here[p.name] = 1
-                    print('Minimum width/factor of ' + str(p.min_width) + ' already satisfied for ' + p.name + ' at point: \n' + str(box[1]))
-
             # first, remove this box from DataFrame
             #dropped_inds.append(box[0])
-            self.points = self.points.drop([box[0]])
+            self.points.drop([box[0]], inplace=True)
 
             # create new DataFrame with subdivided boxes
             new_pl = pm.Param_list()
             for p in self.params:
                 # copy same params except for ranges
                 new_pl.add_fit_param(name=p.name,
-                val_range=[box[1][p.name+'_min'], box[1][p.name+'_max']], length=num_divs_here[p.name], min_width=p.min_width, spacing=p.spacing, units=p.units)
+                val_range=[box[1][p.name+'_min'], box[1][p.name+'_max']], length=num_divs[p.name], min_width=p.min_width, spacing=p.spacing, units=p.units)
             # make new df, spreading total prob from original box among new smaller ones
             new_boxes.append(self.make_points_list(new_pl.fit_params, total_prob=box[1]['prob']))
 
-        new_boxes = pd.concat(new_boxes)
-
         # put in the new points (and completely drop the old ones)
-        self.points = new_boxes
+        self.points = pd.concat(new_boxes)
 
         # make new lists of self.params (this way might be slow...)
         new_params = pm.Param_list()
