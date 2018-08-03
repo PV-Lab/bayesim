@@ -3,13 +3,11 @@ TO DO LIST FOR BAYESIM
 
 [* for necessary for paper, ~ for need to decide if it's necessary, - for future ideas]
 
-* add 'verbose' options for slow functions (calc_model_gradients, run, visualize_grid, list_model_pts_to_run, subdivide...) so CL version will be more talkative
+* update save_state and load_state
 
-* add more things for model.__init__ to (optionally) accept (model data, ec_x_var, etc.)
+* more 'verbose' options
 
 * add functions to set parameter units
-
-* test what happens with calc_model_errors if a box is subdivided only in one direction
 
 * fully updated documentation
 
@@ -28,7 +26,7 @@ TO DO LIST FOR BAYESIM
 * check 2.7 vs. 3.6 compatibility
 
 
-~ speed up visualize_grid somehow
+~ speed up visualize_grid somehow (parallelize?)
 
 ~ save model function somehow to at least theoretically close loop within CL interface
 
@@ -43,8 +41,6 @@ TO DO LIST FOR BAYESIM
 ~ be able to ignore extra points in model data file
 
 ~ plotting points from an inference run?
-
-~ parallelization? May be tricky within a class because of pickleability issues, but there are workarounds e.g. http://qingkaikong.blogspot.com/2016/12/python-parallel-method-in-class.html. Priority functions: calc_model_gradients, run, visualize_grid (unless I fix that another way)
 
 ~ figure out if list_model_pts_to_run can be made faster
 

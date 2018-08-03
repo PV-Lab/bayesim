@@ -58,14 +58,21 @@ class Pmf(object):
 
     def __init__(self, **argv):
         """
-        Provide one argument or the other.
+        Initialize a Pmf object. Provide one of the three input options, or else will initialize empty.
 
         Args:
             params (:obj:`Param_list`): Param_list object containing parameters to be fit and associated metadata
             param_points (`DataFrame`): DataFrame containing all parameter points to start with
+            prob_dict (`dict`): output of as_dict()
         """
 
-        if 'params' in argv.keys():
+        if 'prob_dict' in argv.keys():
+            prob_dict = argv['prob_dict']
+            self.is_empty = prob_dict['is_empty']
+            self.num_sub = prob_dict['num_sub']
+            self.points = prob_dict['points']
+            self.params = [pm.Fit_param(**p) for p in prob_dict['params']]
+        elif 'params' in argv.keys():
             # for now just copy in the param_list wholesale
             # eventually should probably scrub and/or update vals...
             self.num_sub = 0
@@ -76,14 +83,18 @@ class Pmf(object):
             else:
                 self.is_empty = False
         elif 'param_points' in argv.keys():
-            # need to implement
-            pass
+            raise NotImplementedError('Still need to implement initializing a Pmf from a list of points!')
         else: # empty arguments
             self.num_sub = 0
             self.params = []
             self.points = pd.DataFrame()
             self.is_empty = True
 
+    def as_dict(self):
+        """Return in (readable) dictionary form."""
+        d = self.__dict__
+        d['params'] = [p.__dict__ for p in self.params]
+        return d
 
     def normalize(self):
         """Normalize overall PMF."""

@@ -1,6 +1,8 @@
 import numpy as np
 import deepdish as dd
 from decimal import *
+import json
+from copy import deepcopy
 
 class Param(object):
     """
@@ -132,7 +134,7 @@ class Fit_param(Param):
                 self.edges[i] = round(self.edges[i], self.get_tol_digits(val=self.edges[i]))
 
     def get_tol_digits(self, **argv):
-        """Compute number of digits to round to."""
+        """Compute number of digits to round to. 'val' must be provided if logspaced."""
         if hasattr(self, 'tol_digits'): #linear spacing
             return self.tol_digits
         else: # should be log spacing
@@ -178,11 +180,27 @@ class Param_list(object):
     Small class to facilitate listing and comparison of bayesim parameters.
     """
 
-    def __init__(self):
+    def __init__(self, **argv):
+        """
+        Initialize an empty Param_list, or initialize from a dict if provided.
+
+        Args:
+            param_dict (`dict`): output of a call to as_dict()
+        """
         self.fit_params = []
         self.ecs = []
         self.output = []
         self.ec_x_name = None
+
+        if 'param_dict' in argv.keys():
+            param_dict = argv['param_dict']
+            for fp in param_dict['fit_params']:
+                self.fit_params.append(Fit_param(**fp))
+            for ec in param_dict['ecs']:
+                self.ecs.append(Measured_param(**ec))
+            for o_var in param_dict['output']:
+                self.output.append(Measured_param(**o_var))
+            self.ec_x_name = param_dict['ec_x_name']
 
     def add_fit_param(self, **argv):
         """
@@ -340,3 +358,11 @@ class Param_list(object):
         d['fit_params'] = [p.__dict__ for p in self.fit_params]
         d['output'] = [o.__dict__ for o in self.output]
         return d
+
+    def __str__(self):
+        d = deepcopy(self.as_dict())
+        for i in range(len(d['fit_params'])):
+            d['fit_params'][i]['edges'] = str(d['fit_params'][i]['edges'])[:70]+'...'
+            d['fit_params'][i]['vals'] = str(d['fit_params'][i]['vals'])[:70]+'...'
+            d['fit_params'][i]['val_range'] = str(d['fit_params'][i]['val_range'])
+        return json.dumps(d, indent=4)

@@ -93,20 +93,18 @@ class Model(object):
         state_file = argv.get('state_file', 'bayesim_state.h5')
         load_state = argv.get('load_state', False)
 
-        if load_state: #rewrite this!
+        if load_state:
             if verbose:
                 print('Loading bayesim state from %s...'%state_file)
             state = dd.io.load(state_file)
 
             # variables
-            self.ec_names = state['ec']
             self.ec_pts = state['ec_pts']
             self.output_var = state['output_var']
+            self.params = pm.Param_list(param_dict=state['params'])
 
             # probabilities
-            self.probs = Pmf(params=self.fit_params)
-            self.probs.points = state['probs_points']
-            self.probs.num_sub = state['num_sub']
+            self.probs = Pmf(prob_dict=state['probs'])
 
             # model
             self.model_data = state['model_data']
@@ -209,7 +207,7 @@ class Model(object):
                 args['units'] = unit_dict[name]
             self.params.add_ec(**args)
 
-    def attach_fit_params(self,params): #redo or eliminate
+    def attach_fit_params(self,params):
         """
         Attach list of parameters to fit.
 
@@ -815,13 +813,12 @@ class Model(object):
         state = {}
 
         # parameters
-        state['ec'] = self.ec_names
+        state['params'] = self.params.as_dict()
         state['ec_pts'] = self.ec_pts
         state['output_var'] = self.output_var
 
         # PMF
-        state['probs_points'] = self.probs.points
-        state['num_sub'] = self.probs.num_sub
+        state['probs'] = self.probs.as_dict()
 
         # model/data
         state['model_data'] = self.model_data
