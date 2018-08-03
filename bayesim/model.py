@@ -8,7 +8,60 @@ import matplotlib.pyplot as plt
 import random
 import os
 import sys
-import warnings
+from joblib import Parallel, delayed, cpu_count
+import time
+
+def calc_deltas(grp, inds, param_lengths, model_data, fit_param_names, probs, output_var):
+    # construct matrix of output_var({fit_params})
+    subset = deepcopy(model_data.loc[inds])
+    # sort and reset index of subset to match probs so we can use the find_neighbor_boxes function if needed
+    subset.drop_duplicates(subset=fit_param_names, inplace=True)
+    subset.sort_values(fit_param_names, inplace=True)
+    subset.reset_index(inplace=True)
+    if not all(subset[fit_param_names]==probs.points[fit_param_names]):
+        raise ValueError('Subset at %s does not match probability grid!'%grp)
+
+    # check if on a grid
+    if not len(subset)==np.product(param_lengths):
+        is_grid = False
+        # construct grid at the highest level of subdivision
+        dense_grid = probs.populate_dense_grid(df=subset, col_to_pull=output_var, make_ind_lists=True)
+        mat = dense_grid['mat']
+        ind_lists = dense_grid['ind_lists']
+
+    else:
+        is_grid = True
+        mat = np.reshape(list(subset[output_var]), param_lengths)
+
+    # given matrix, compute largest differences along any direction
+    winner_dim = [len(mat.shape)]
+    winner_dim.extend(mat.shape)
+    winners = np.zeros(winner_dim)
+
+    # for every dimension (fitting parameter)
+    for i in range(len(mat.shape)):
+        # build delta matrix
+        # certain versions of numpy throw an "invalid value encountered" RuntimeError here but the function behaves correctly
+        with np.errstate(invalid='ignore'):
+            deltas_here = np.absolute(np.diff(mat,axis=i))
+        pad_widths = [(0,0) for j in range(len(mat.shape))]
+        pad_widths[i] = (1,1)
+        deltas_here = np.pad(deltas_here, pad_widths, mode='constant', constant_values=0)
+
+        # build "winner" matrix in this direction (ignore nans)
+        # this is really ugly because we have to index in at variable positions...
+        # likewise here with the error
+        with np.errstate(invalid='ignore'):
+            winners[i]=np.fmax(deltas_here[[Ellipsis]+[slice(None,mat.shape[i],None)]+[slice(None)]*(len(mat.shape)-i-1)],deltas_here[[Ellipsis]+[slice(1,mat.shape[i]+1,None)]+[slice(None)]*(len(mat.shape)-i-1)])
+
+    grad = np.amax(winners,axis=0)
+
+    # save these values to the appropriate indices in the vector
+    if is_grid:
+        return (grp, grad.flatten())
+    else:
+        # pick out only the boxes that exist
+        return (grp, grad[[i for i in list([ind_lists[p] for p in fit_param_names])]])
 
 class Model(object):
     """
@@ -302,7 +355,7 @@ class Model(object):
             else:
                 print("Determining fitting parameters from modeled data...")
                 for c in cols:
-                    if not c=='error' or c=='deltas':
+                    if not c=='error':
                         vals = list(set(model_data[c]))
                         self.params.add_fit_param(name=c, vals=vals)
                 print("Found: %s"%self.fit_param_names())
@@ -355,12 +408,14 @@ class Model(object):
             func_name (callable): if mode='function', provide function here
             fpath (`str`): if mode=='file', provide path to file
             output_column (`str`): optional, header of column containing output data (required if different from self.output_var)
+            calc_errors (`bool`): whether to calculate model errors as well, defaults to False
             verbose (`bool`): flag for verbosity, defaults to False
         """
 
         mode = argv['mode']
         output_col = argv.get('output_column',self.output_var)
         verbose = argv.get('verbose', False)
+        calc_errors = argv.get('calc_errors', False)
 
         if verbose:
             print('Attaching simulated data...')
@@ -457,6 +512,9 @@ class Model(object):
         # update flag and indices
         self.needs_new_model_data = False
         self.calc_indices()
+
+        if calc_errors:
+            self.calc_model_errors()
 
     def comparison_plot(self,**argv):
         """
@@ -603,7 +661,7 @@ class Model(object):
         uni_probs.uniformize()
         start_probs = deepcopy(self.probs)
         start_probs.points['prob'] = bias*old_probs.points['prob'] + (1-bias)*uni_probs.points['prob']
-        mid_probs.normalize()
+        start_probs.normalize()
 
         # randomize observation order
         self.obs_data = self.obs_data.sample(frac=1)
@@ -725,70 +783,28 @@ class Model(object):
         Args:
             verbose (`bool`): flag for verbosity, defaults to False
         """
+
         verbose = argv.get('verbose', False)
         if verbose:
             print('Calculating model errors...')
 
         param_lengths = [p.length for p in self.params.fit_params]
 
+        start_time = time.time()
+
         deltas = np.zeros(len(self.model_data))
-        count=0
+
         # for every set of conditions...
-        for grp in self.model_data_ecgrps.groups:
-            inds = self.model_data_ecgrps.groups[grp]
-            # construct matrix of output_var({fit_params})
-            subset = deepcopy(self.model_data.loc[inds])
-            # sort and reset index of subset to match probs so we can use the find_neighbor_boxes function if needed
-            subset.drop_duplicates(subset=self.fit_param_names(), inplace=True)
-            subset.sort_values(self.fit_param_names(), inplace=True)
-            subset.reset_index(inplace=True)
-            if not all(subset[self.fit_param_names()]==self.probs.points[self.fit_param_names()]):
-                raise ValueError('Subset at %s does not match probability grid!'%grp)
+        deltas_list = Parallel(n_jobs=cpu_count())(delayed(calc_deltas)(grp, self.model_data_ecgrps.groups[grp], param_lengths, self.model_data, self.fit_param_names(), self.probs, self.output_var) for grp in self.model_data_ecgrps.groups)
 
-            # check if on a grid
-            if not len(subset)==np.product(param_lengths):
-                is_grid = False
-                # construct grid at the highest level of subdivision
-                dense_grid = self.probs.populate_dense_grid(df=subset,col_to_pull=self.output_var,make_ind_lists=True)
-                mat = dense_grid['mat']
-                ind_lists = dense_grid['ind_lists']
+        for entry in deltas_list:
+            inds = self.model_data_ecgrps.groups[entry[0]]
+            deltas[inds] = entry[1]
 
-            else:
-                is_grid = True
-                mat = np.reshape(list(subset[self.output_var]), param_lengths)
+        self.model_data['error'] = deltas
 
-            # given matrix, compute largest differences along any direction
-            winner_dim = [len(mat.shape)]
-            winner_dim.extend(mat.shape)
-            winners = np.zeros(winner_dim)
-
-            # for every dimension (fitting parameter)
-            for i in range(len(mat.shape)):
-                # build delta matrix
-                # certain versions of numpy throw an "invalid value encountered" RuntimeError here but the function behaves correctly
-                with np.errstate(invalid='ignore'):
-                    deltas_here = np.absolute(np.diff(mat,axis=i))
-                pad_widths = [(0,0) for j in range(len(mat.shape))]
-                pad_widths[i] = (1,1)
-                deltas_here = np.pad(deltas_here, pad_widths, mode='constant', constant_values=0)
-
-                # build "winner" matrix in this direction (ignore nans)
-                # this is really ugly because we have to index in at variable positions...
-                # likewise here with the error
-                with np.errstate(invalid='ignore'):
-                    winners[i]=np.fmax(deltas_here[[Ellipsis]+[slice(None,mat.shape[i],None)]+[slice(None)]*(len(mat.shape)-i-1)],deltas_here[[Ellipsis]+[slice(1,mat.shape[i]+1,None)]+[slice(None)]*(len(mat.shape)-i-1)])
-
-            # this line was indented by one before, but I think this is better...
-            grad = np.amax(winners,axis=0)
-
-            # save these values to the appropriate indices in the vector
-            if is_grid:
-                deltas[inds] = grad.flatten()
-            else:
-                # pick out only the boxes that exist
-                deltas[inds] = grad[[i for i in list([ind_lists[p] for p in self.fit_param_names()])]]
-            self.model_data['error'] = deltas
-
+        if verbose:
+            print('Calculating model errors took %.2f seconds.'%(time.time()-start_time))
 
     def save_state(self,filename='bayesim_state.h5'): #rewrite this!
         """

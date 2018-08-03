@@ -3,8 +3,6 @@ TO DO LIST FOR BAYESIM
 
 [* for necessary for paper, ~ for need to decide if it's necessary, - for future ideas]
 
-* try parallelizing calc_model_errors by using a non-class function (it gets reeeeally slow after a few subdivisions)
-
 * add 'verbose' options for slow functions (calc_model_gradients, run, visualize_grid, list_model_pts_to_run, subdivide...) so CL version will be more talkative
 
 * add more things for model.__init__ to (optionally) accept (model data, ec_x_var, etc.)
