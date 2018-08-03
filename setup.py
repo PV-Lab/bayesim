@@ -4,9 +4,9 @@ import os
 
 setup(name='bayesim',
       version='0.9.01',
-      description='Fast materials characterization via Bayesian inference',
+      description='Fast model fitting via Bayesian inference',
       author='Rachel Kurchin, Giuseppe Romano',
-      author_email='rkurchin@mit.edu,romanog@mit.edu',
+      author_email='rkurchin@mit.edu, romanog@mit.edu',
       classifiers=['Programming Language :: Python :: 2.7',\
                    'Programming Language :: Python :: 3.6'],
       long_description=open('README.rst').read(),
@@ -15,6 +15,7 @@ setup(name='bayesim',
                         'numpy',
                         'scipy',
                         'matplotlib',
+                        'joblib'
                          ],
       license='GPLv2',\
       packages = ['bayesim'],

@@ -26,6 +26,10 @@ class Param(object):
         else:
             self.tolerance = None
 
+    def set_units(self, units):
+        """Set the units for this parameter."""
+        self.units = units
+
     def set_tolerance(self, tol, islog=False):
         """Set the tolerance for this parameter."""
         if not islog:

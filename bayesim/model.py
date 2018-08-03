@@ -855,6 +855,21 @@ class Model(object):
         cols = ['prob'] + [c for cs in [[p.name, p.name+'_min', p.name+'_max'] for p in self.params.fit_params] for c in cs]
         return df[cols]
 
+    def set_param_units(self, param_name, units):
+        """Set units for parameter param_name (any type)."""
+        if param_name not in [p.name for p in self.params.all_params()]:
+            print("I can't set the units for a parameter (%s) that doesn't exist!"%param_name)
+        else:
+            for i in range(len(self.params.fit_params)):
+                if self.params.fit_params[i].name==param_name:
+                    self.params.fit_params[i].set_units(units)
+            for i in range(len(self.params.ecs)):
+                if self.params.ecs[i].name==param_name:
+                    self.params.ecs[i].set_units(units)
+            for i in range(len(self.params.output)):
+                if self.params.output[i].name==param_name:
+                    self.params.output[i].set_units(units)
+
     def ec_names(self):
         return self.params.param_names('ec')
 

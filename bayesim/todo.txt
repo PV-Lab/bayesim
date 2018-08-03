@@ -15,8 +15,6 @@ TO DO LIST FOR BAYESIM
 
 * fix log spacing on visualize() in CL version
 
-* some more sanity checks and error messages in pmf.populate_dense_grid
-
 * more examples - TIDLS, maybe PC1D, maybe non-ideal diode, etc.
 
 * fix save_step behavior in light of new run() protocol
