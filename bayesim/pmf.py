@@ -271,7 +271,11 @@ class Pmf(object):
         # make new lists of self.params (this way might be slow...)
         new_params = pm.Param_list()
         for p in self.params:
-            new_params.add_fit_param(name=p.name, vals=list(set(list(self.points[p.name]))), spacing=p.spacing)
+            p_args = p.__dict__
+            p_args['vals'] = vals=list(set(list(self.points[p.name])))
+            del p_args['val_range']
+            #new_params.add_fit_param(name=p.name, vals=list(set(list(self.points[p.name]))), spacing=p.spacing)
+            new_params.add_fit_param(**p_args)
         self.params = [p for p in new_params.fit_params]
 
         # sort values

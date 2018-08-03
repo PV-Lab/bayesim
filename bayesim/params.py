@@ -64,17 +64,7 @@ class Fit_param(Param):
         assert ('val_range' in argv or 'vals' in argv), "You must provide a range of values for this fitting parameter!"
 
         # compute edges and values
-        if 'val_range' in argv:
-            self.val_range = argv['val_range']
-            assert len(self.val_range)==2 and self.val_range[1]>self.val_range[0], "val_range must be of length 2 with second entry larger than first!"
-            if self.spacing == 'linear':
-                edges_vals = np.linspace(self.val_range[0],self.val_range[1],2*self.length+1)
-            elif self.spacing == 'log':
-                edges_vals = np.logspace(np.log10(self.val_range[0]),np.log10(self.val_range[1]),2*self.length+1)
-            self.edges = edges_vals[::2]
-            self.vals = edges_vals[1:-1:2]
-
-        elif 'vals' in argv:
+        if 'vals' in argv:
             vals = argv['vals']
             assert(len(vals)>=2), "vals should have at least two values"
             vals = sorted(vals)
@@ -102,8 +92,19 @@ class Fit_param(Param):
             self.val_range = [min(edges),max(edges)]
             self.edges = edges
 
+        elif 'val_range' in argv:
+            self.val_range = argv['val_range']
+            assert len(self.val_range)==2 and self.val_range[1]>self.val_range[0], "val_range must be of length 2 with second entry larger than first!"
+            if self.spacing == 'linear':
+                edges_vals = np.linspace(self.val_range[0],self.val_range[1],2*self.length+1)
+            elif self.spacing == 'log':
+                edges_vals = np.logspace(np.log10(self.val_range[0]),np.log10(self.val_range[1]),2*self.length+1)
+            self.edges = edges_vals[::2]
+            self.vals = edges_vals[1:-1:2]
+
         # set min_width
         if 'min_width' not in argv.keys():
+            print('Setting min_width automatically for %s.'%self.name)
             if self.spacing == 'linear':
                 min_width = (1./(10*self.length))*(self.val_range[1]-self.val_range[0])
             elif self.spacing == 'log':

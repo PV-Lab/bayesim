@@ -9,10 +9,6 @@ TO DO LIST FOR BAYESIM
 
 * add more things for model.__init__ to (optionally) accept (model data, ec_x_var, etc.)
 
-* check all value comparisons respect tolerances
-
-* add units to plotting
-
 * add functions to set parameter units
 
 * test what happens with calc_gradients if a box is subdivided only in one direction
@@ -34,8 +30,6 @@ TO DO LIST FOR BAYESIM
 * check 2.7 vs. 3.6 compatibility
 
 
-~ make sure that comparison_plot randomly chooses EC pts WITHOUT replacement
-
 ~ speed up visualize_grid somehow
 
 ~ save model function somehow to at least theoretically close loop within CL interface
@@ -45,6 +39,7 @@ TO DO LIST FOR BAYESIM
 ~ include all options in argparser for command line
 
 ~ change project_2D to use grid also (also maybe pass patch parameters rather than actual patch objects?) NOTE: tried this and it seemed to get slower, at least up to the scale I tried (~1000 grid points)
+
 ~ maybe do project_2D with imshow()?
 
 ~ be able to ignore extra points in model data file
