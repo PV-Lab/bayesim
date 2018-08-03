@@ -1,5 +1,5 @@
 from bayesim.pmf import Pmf
-import bayesim.param_list as pl
+import bayesim.params as pm
 import pandas as pd
 import deepdish as dd
 from copy import deepcopy
@@ -8,8 +8,9 @@ import matplotlib.pyplot as plt
 import random
 import os
 import sys
+import warnings
 
-class model(object):
+class Model(object):
     """
     The main workhorse class of bayesim. Stores the modeled and observed data as well as a Pmf object which maintains the current probability distribution and grid subdivisions.
 
@@ -22,34 +23,32 @@ class model(object):
         Initialize with a uniform PMF over the fitting parameters.
 
         Args:
-            output_var (`str`): name of experimental output measurements
             obs_data_path (`str`): path to HDF5 file containing measured data
-            fit_params (:obj:`param_list`): param_list object containing parameters to be fit and associated metadata
-            ec (:obj:`list` of :obj:`str`): names of experimental conditions
-            ec_tol_digits(`int`): number of digits to round off values of EC's (default 5)
             load_state (`bool`): flag for whether to load state from a file - if True, other inputs (apart from state_file) are ignored
             state_file (`str`): path to file saved by save_state() fcn
-            ec_x_var (`str`): EC to plot on x-axis and consider in trimming data
             verbose (`bool`): flag for verbosity, defaults to False
+            output_var (`str`): name of experimental output measurements
+            params (:obj:`param_list`): Param_list object containing parameters to be fit and associated metadata
+            ec_x_var (`str`): EC to plot on x-axis and consider in trimming data
+            ec_list (:obj:`list` of :obj:`str`): names of experimental conditions
+            ec_tols (`dict`): dict of form {ec_name_1:tolerance_1, ec_name_2:tolerance_2, ...}, will supersede ec_list
+            ec_units (`dict`): dict of form {ec_name_1:units_1, ec_name_2:units_2, ...}, optional
+            model_data_path (`str`): path to HDF5 file containing modeled data
+            model_data_func (callable): handle to function for computing model data
         """
         verbose = argv.get('verbose', False)
         state_file = argv.get('state_file', 'bayesim_state.h5')
-        ec_tol_digits = argv.get('ec_tol_digits', 5)
         load_state = argv.get('load_state', False)
 
-        if load_state:
+        if load_state: #rewrite this!
             if verbose:
                 print('Loading bayesim state from %s...'%state_file)
             state = dd.io.load(state_file)
 
             # variables
-            self.fit_params = state['fit_params']
-            self.param_names = [p['name'] for p in self.fit_params]
             self.ec_names = state['ec']
             self.ec_pts = state['ec_pts']
             self.output_var = state['output_var']
-            self.ec_tol_digits = state['ec_tol_digits']
-            self.ec_x_var = state['ec_x_var']
 
             # probabilities
             self.probs = Pmf(params=self.fit_params)
@@ -67,71 +66,112 @@ class model(object):
         else:
             if verbose:
                 print('Constructing bayesim model object...')
-            # read in inputs
-            self.output_var = argv['output_var']
+            # initialize empty parameter list
+            self.params = pm.Param_list()
 
-            if 'obs_data_path' in argv.keys():
-                self.attach_observations(**argv)
-
+            # if a param_list object has been provided, attach it
             if 'params' in argv.keys():
                 self.attach_params(argv['params'])
             else:
-                self.fit_params = []
-                self.param_names = []
                 self.probs = Pmf()
 
-            if 'ec' in argv.keys():
-                self.ec_names = argv['ec']
+            # check if output list is populated / attach output variable
+            output_list = self.params.output
+            if len(output_list)>0: # outputs are populated
+                if len(output_list)>1 or ('output_var' in argv.keys() and not output_list[0].name==argv['output_var']):
+                    raise ValueError('It seems you are trying to add more than one output variable. Sorry, the current version of bayesim supports only one type of output - this will be addressed in future versions!')
+                else:
+                    self.output_var = output_list[0].name # for now
+            elif 'output_var' in argv.keys():
+                self.params.add_output(name=argv['output_var'])
+                self.output_var = argv['output_var'] # for now...eventually need to be general to multiple potential outputs
             else:
-                self.ec_names = []
+                raise ValueError("You need to define your output variable!")
 
+            # attach EC's if provided
+            if len(set(['ec_list','ec_tols','ec_units']).intersection(set(argv.keys())))>0:
+                self.attach_ecs(**argv)
+
+            # set x-axis EC variable
             if 'ec_x_var' in argv.keys():
-                self.attach_ec_names(**argv)
-            else:
-                self.ec_x_var = ''
+                self.params.set_ec_x(argv['ec_x_var'])
+                del argv['ec_x_var'] # don't want to trigger next check
 
-            # placeholders and defaults
-            self.ec_tol_digits = ec_tol_digits # this will go away once param structure is improved
-            self.ec_pts = pd.DataFrame()
-            self.model_data = pd.DataFrame()
-            self.model_data_grps = []
-            self.model_data_ecgrps = []
-            self.needs_new_model_data = True
-            self.obs_data = pd.DataFrame()
+            # attach observed data if provided
+            if 'obs_data_path' in argv.keys():
+                self.attach_observations(**argv)
+            else:
+                self.ec_pts = pd.DataFrame()
+                self.obs_data = pd.DataFrame
+
+            # attach modeled data if provided
+            if 'model_data_path' in argv.keys():
+                self.attach_model(mode='file', fpath=argv['model_data_path'])
+            elif 'model_data_func' in argv.keys():
+                self.attach_model(mode='function', model_func=argv['model_data_func'])
+            else:
+                self.model_data = pd.DataFrame()
+                self.model_data_grps = []
+                self.model_data_ecgrps = []
+                self.needs_new_model_data = True
+
+            # run flag
             self.is_run = False
 
-    def attach_ec_names(self,ec_list):
+    def attach_params(self, params):
+        """Attach a param_list object."""
+        if not self.params.is_empty():
+            print('Overwriting preexiting parameter list with this new one.')
+        self.params = params
+        self.probs = Pmf(params=params)
+
+    def attach_ecs(self, **argv):
         """
-        Attach names of experimental conditions.
+        Define parameters for experimental conditions.
 
         Args:
             ec_list (:obj:`list` of :obj:`str`): names of experimental conditions
+            ec_tols (`dict`): dict of form {ec_name_1:tolerance_1, ec_name_2:tolerance_2, ...}, will supersede ec_list
+            ec_units (`dict`): dict of form {ec_name_1:units_1, ec_name_2:units_2, ...}, optional
         """
-        self.ec_names = ec_list
+        ec_names = []
+        tol_dict = {}
+        unit_dict = {}
+        if 'ec_tols' in argv.keys():
+            tol_dict = argv['ec_tols']
+            ec_names = tol_dict.keys()
+        if 'ec_units' in argv.keys():
+            unit_dict = argv['ec_units']
+            if ec_names==[]:
+                ec_names = unit_dict.keys()
+        if 'ec_list' in argv.keys():
+            if ec_names==[]:
+                ec_names = argv['ec_list']
 
-    def attach_params(self,params):
+        for name in ec_names:
+            args = {'name':name}
+            if name in tol_dict.keys():
+                args['tolerance'] = tol_dict[name]
+            if name in unit_dict.keys():
+                args['units'] = unit_dict[name]
+            self.params.add_ec(**args)
+
+    def attach_fit_params(self,params): #redo or eliminate
         """
         Attach list of parameters to fit.
 
         Args:
-            param_list: list of strings OR param_list object
+            param_list: list of Fit_param objects
         """
-
-        if isinstance(params, pl.param_list):
-            # then we can make the PMF now
-            self.fit_params = params.fit_params
-            self.param_names = [p['name'] for p in self.fit_params]
-            self.probs = Pmf(params=self.fit_params)
-
-        else: # it's just a list of names
-            self.param_names = params
+        for param in params:
+            self.params.add_fit_param(param=param)
 
     def attach_observations(self, **argv):
         """
         Attach measured dataset.
 
         Args:
-            fpath (`str`): path to HDF5 file containing observed data
+            obs_data_path (`str`): path to HDF5 file containing observed data
             keep_all (`bool`): whether to keep all the data in the file (longer simulation times) or to clip out data points that are close to each other (defaults to False)
             ec_x_var (`str`): required if keep_all is False, the experimental condition over which to measure differences (e.g. V for JV(Ti) curves in PV). It will also be used in plotting later.
             max_ec_x_step (`float`): used if keep_all is False, largest step to take in the ec_x_var before keeping a point even if curve if "flat" (defaults to 0.05 * range of ec_x_var)
@@ -146,14 +186,14 @@ class model(object):
         verbose = argv.get('verbose', False)
 
         if 'ec_x_var' in argv.keys():
-            self.ec_x_var = argv['ec_x_var']
-        elif not keep_all and self.ec_x_var=='':
+            self.params.set_ec_x(argv['ec_x_var'])
+        elif not keep_all and self.params.ec_x_name==None:
             raise NameError('You must specify ec_x_var if you want to throw out data points that are too close together.')
 
         if verbose:
             print('Attaching measured data...')
 
-        self.obs_data = dd.io.load(argv['fpath'])
+        self.obs_data = dd.io.load(argv['obs_data_path'])
         # get EC names if necessary
         cols = list(self.obs_data.columns)
         if output_col not in cols:
@@ -164,40 +204,51 @@ class model(object):
             return
         else:
             cols.remove(output_col)
-            if self.ec_names == []:
-                self.ec_names = [c for c in cols if not c=='error']
-                print('Identified experimental conditions as %s. If this is wrong, rerun and explicitly specify them with attach_ec (make sure they match data file columns) or remove extra columns from data file.' %(str(self.ec_names)))
+            if len(self.params.ecs)==0 or 'ec_x_var' in argv.keys() and len(self.params.ecs)==1:
+                for c in cols:
+                    if not c=='error':
+                        # 1% of the smallest difference between values
+                        tol=0.01*min(abs(np.diff(list(set(self.obs_data[c])))))
+                        if c==argv['ec_x_var']:
+                            self.params.set_tolerance(c, tol)
+                        else:
+                            self.params.add_ec(name=c, tolerance=tol)
+                print('Identified experimental conditions as %s. If this is wrong, rerun and explicitly specify them with attach_ec (make sure they match data file columns) or remove extra columns from data file.' %(str(self.params.param_names('ec'))))
             else:
                 if 'error' not in cols:
                     self.obs_data['error'] = argv['fixed_error']*np.ones(len(self.obs_data))
                     cols.extend('error')
-                if set(cols) == set(self.ec_names+['error']):
+                    self.params.set_tolerance(self.output_var, 0.01*argv['fixed_error'])
+                else: # set tolerance to 1% of minimum error
+                    self.params.set_tolerance(self.output_var, 0.01*min(self.obs_data['error']))
+                if set(cols) == set(self.ec_names()+['error']):
                     pass # all good
-                elif set(self.ec_names+['error']) <= set(cols):
-                    print('Ignoring extra columns in data file: %s'%(str(list(set(cols)-set(ec)))))
-                elif set(cols) <= set(self.ec_names+['error']):
+                elif set(self.ec_names()+['error']) <= set(cols):
+                    print('Ignoring extra columns in data file: %s'%(str(list(set(cols)-set(self.ec_names())))))
+                elif set(cols) <= set(self.ec_names()+['error']):
                     print('These experimental conditions were missing from your data file: %s\nProceeding assuming that %s is the full set of experimental conditions...'%(str(list(set(ec)-set(cols))), str(cols)))
-                    self.ec_names = cols
+                    for c in [c for c in cols if not c=='error']:
+                        self.params.add_ec(name=c)
 
         # pick out rows to keep - the way to do this thresholding should probably be tweaked
         if not keep_all:
             if verbose:
                 print('Choosing which measured data to keep...')
-            other_ecs = [ec for ec in self.ec_names if not ec==self.ec_x_var]
+            other_ecs = [ec for ec in self.ec_names() if not ec==self.params.ec_x_name]
             obs_data_grps = self.obs_data.groupby(by=other_ecs)
             for grp in obs_data_grps.groups.keys():
-                subset = deepcopy(self.obs_data.loc[obs_data_grps.groups[grp]]).sort_values(self.ec_x_var)
+                subset = deepcopy(self.obs_data.loc[obs_data_grps.groups[grp]]).sort_values(self.params.ec_x_name)
                 if 'max_ec_x_step' in argv.keys():
                     max_step = argv['max_ec_x_step']
                 else:
-                    max_step = 0.1 * max(subset[self.ec_x_var]-min(subset[self.ec_x_var]))
-                    print('Using %.2f as the maximum step size in %s when choosing observation points to keep.'%(max_step,self.ec_x_var))
+                    max_step = 0.1 * max(subset[self.params.ec_x_name]-min(subset[self.params.ec_x_name]))
+                    print('Using %.2f as the maximum step size in %s when choosing observation points to keep at %s=%s.'%(max_step, self.params.ec_x_name, other_ecs, grp))
                 thresh = thresh_dif_frac * (max(subset[self.output_var])-min(subset[self.output_var]))
                 i = 0
                 while i < len(subset)-1:
                     this_pt = subset.iloc[i]
                     next_pt = subset.iloc[i+1]
-                    if next_pt[self.ec_x_var]-this_pt[self.ec_x_var] >= max_step:
+                    if next_pt[self.params.ec_x_name]-this_pt[self.params.ec_x_name] >= max_step:
                         i = i+1
                     elif next_pt[self.output_var]-this_pt[self.output_var] < thresh:
                         subset.drop(next_pt.name,inplace=True)
@@ -206,14 +257,14 @@ class model(object):
                         i = i+1
 
         # round EC values
-        rd_dct = {n:self.ec_tol_digits for n in self.ec_names}
+        rd_dct = {c.name:c.tol_digits for c in self.params.ecs}
         self.obs_data = self.obs_data.round(rd_dct)
 
         # sort observed data
-        self.obs_data.sort_values(by=self.ec_names)
+        self.obs_data.sort_values(by=self.ec_names(), inplace=True)
 
         # populate list of EC points
-        self.ec_pts =  pd.DataFrame.from_records(data=[list(k) for k in self.obs_data.groupby(self.ec_names).groups.keys()],columns=self.ec_names).round(self.ec_tol_digits).sort_values(self.ec_names).reset_index(drop=True)
+        self.ec_pts =  pd.DataFrame.from_records(data=[list(k) for k in self.obs_data.groupby(self.ec_names()).groups.keys()],columns=self.ec_names()).sort_values(self.ec_names()).reset_index(drop=True)
 
     def check_data_columns(self,**argv):
         """
@@ -234,24 +285,27 @@ class model(object):
         else:
             cols.remove(output_col)
             # next, that all the experimental conditions are there
-            for c in self.ec_names:
+            for c in self.ec_names():
                 if c not in cols:
                     raise NameError('Experimental condition %s is not the name of a column in your model data!' %(c))
                     return
                 else:
                     cols.remove(c)
             # if param_names has been populated, check if they match
-            if not self.param_names == []:
-                if set(self.param_names)==set(cols):
+            if not self.fit_param_names() == []:
+                if set(self.fit_param_names())==set(cols):
                     pass # all good
-                elif set(self.param_names) <= set(cols):
-                    print('Ignoring extra columns in model data file: %s'%(str(list(set(cols)-set(self.param_names)))))
-                elif set(cols) <= set(self.param_names):
-                    print('These experimental conditions were missing from your model data file: %s\nProceeding assuming that %s is the full set of experimental conditions...'%(str(list(set(self.param_names)-set(cols))), str(cols)))
-                    self.param_names = cols
-            # if param_names wasn't populated, populate it
+                elif set(self.fit_param_names()) <= set(cols):
+                    print('Ignoring extra columns in model data file: %s'%(str(list(set(cols)-set(self.fit_param_names())))))
+                elif set(cols) <= set(self.fit_param_names()):
+                    print('These experimental conditions were missing from your model data file: %s\nProceeding assuming that %s is the full set of experimental conditions...'%(str(list(set(self.fit_param_names())-set(cols))), str(cols)))
             else:
-                self.param_names = cols
+                print("Determining fitting parameters from modeled data...")
+                for c in cols:
+                    if not c=='error' or c=='deltas':
+                        vals = list(set(model_data[c]))
+                        self.params.add_fit_param(name=c, vals=vals)
+                print("Found: %s"%self.fit_param_names())
 
     def check_ecs(self,**argv):
         """
@@ -268,8 +322,10 @@ class model(object):
         grps = argv['gb']
         # then check at each model point that they match
         for name,group in grps:
-            if not all(self.ec_pts==group[self.ec_names].round(self.ec_tol_digits).sort_values(self.ec_names).reset_index(drop=True)):
-                raise ValueError('The experimental conditions do not match to %d digits between the observed and modeled data at the modeled parameter space point %s!'%(self.ec_tol_digits,name))
+            if not all(self.ec_pts==group[self.ec_names()].sort_values(self.ec_names()).reset_index(drop=True)):
+                # FIX MEEEEE
+                #raise ValueError('The experimental conditions do not match to %d digits between the observed and modeled data at the modeled parameter space point %s!'%(self.ec_tol_digits,name))
+                print('there is a problem I need to fix the error message for!')
                 return
 
     def calc_indices(self):
@@ -278,9 +334,9 @@ class model(object):
         """
         start_indices = np.zeros(len(self.probs.points),dtype=int)
         end_indices = np.zeros(len(self.probs.points),dtype=int)
-        self.model_data_grps = self.model_data.groupby(by=self.param_names)
+        self.model_data_grps = self.model_data.groupby(by=self.fit_param_names())
         for pt in self.probs.points.iterrows():
-            subset_inds = self.model_data_grps.groups[tuple(pt[1][self.param_names].tolist())]
+            subset_inds = self.model_data_grps.groups[tuple(pt[1][self.fit_param_names()].tolist())]
             if len(subset_inds)==0:
                 print('Something went wrong calculating sim indices! Could not find any points in model data for params %s.'%pt)
             start_ind = int(min(subset_inds))
@@ -311,18 +367,18 @@ class model(object):
 
         if mode == 'file':
             # import and sort data on parameter values
-            self.model_data = dd.io.load(argv['fpath']).sort_values(self.param_names+self.ec_names).reset_index(drop=True)
+            self.model_data = dd.io.load(argv['fpath']).sort_values(self.fit_param_names()+self.ec_names()).reset_index(drop=True)
 
-            # Check that columns match EC's and parameter names
+            # Check that columns match EC's and parameter names (and populate fit_params if needed)
             self.check_data_columns(model_data=self.model_data,output_column=output_col)
 
             # next get list of parameter space points
-            param_points_grps = self.model_data.groupby(self.param_names)
-            param_points = pd.DataFrame.from_records(data=[list(k) for k in param_points_grps.groups.keys()],columns=self.param_names).sort_values(self.param_names).reset_index(drop=True)
+            param_points_grps = self.model_data.groupby(self.fit_param_names())
+            param_points = pd.DataFrame.from_records(data=[list(k) for k in param_points_grps.groups.keys()],columns=self.fit_param_names()).sort_values(self.fit_param_names()).reset_index(drop=True)
 
             # if PMF has been populated, check that points match
             if not self.probs.is_empty:
-                if not all(param_points==self.probs.points[self.param_names]):
+                if not all(param_points==self.probs.points[self.fit_param_names()]):
                     print('Your previously populated PMF does not have the same set of parameter space points as your model data. Proceeding using the points from the model data.')
                     self.probs = Pmf()
 
@@ -335,15 +391,15 @@ class model(object):
                 if verbose:
                     print('Initializing probability distribution...')
                 # check that points are on a grid (the quick but slightly less certain way)
-                param_lengths = [len(set(param_points[name])) for name in self.param_names]
+                param_lengths = [len(set(param_points[name])) for name in self.fit_param_names()]
                 if not np.product(param_lengths)==len(param_points):
                     raise ValueError('Your modeled parameter space does not appear to be on a grid; the current version of bayesim can only handle initially gridded spaces (unless using a previously saved subdivided state).')
                     return
                 else:
-                    param_vals = {name:list(set(param_points[name])) for name in self.param_names}
+                    param_vals = {name:list(set(param_points[name])) for name in self.fit_param_names()}
                     # try to guess spacing - this may need twiddling
                     param_spacing = {}
-                    for name in self.param_names:
+                    for name in self.fit_param_names():
                         vals = param_vals[name]
                         diffs = [vals[i+1]-vals[i] for i in range(len(vals)-1)]
                         ratios = [vals[i+1]/vals[i] for i in range(len(vals)-1)]
@@ -352,7 +408,7 @@ class model(object):
                         else:
                             param_spacing[name] = 'log'
 
-                    params = pl.param_list()
+                    params = pm.Param_list()
                     for name in param_vals.keys():
                         params.add_fit_param(name=name,vals=param_vals[name])
                     self.attach_params(params)
@@ -361,19 +417,23 @@ class model(object):
         elif mode=='function':
             # is there a way to save this (that could be saved to HDF5 too) so that subdivide can automatically call it?
             model_func = argv['func_name']
+
+            # check that probs.points is populated...
+
+
             # iterate over parameter space and measured conditions to compute output at every point
-            param_vecs = {p:[] for p in self.param_names}
-            ec_vecs = {c:[] for c in self.ec_names}
+            param_vecs = {p:[] for p in self.fit_param_names()}
+            ec_vecs = {c:[] for c in self.ec_names()}
             model_vals = []
 
             for pt in self.probs.points.iterrows():
-                param_vals = {p:pt[1][p] for p in self.param_names}
+                param_vals = {p:pt[1][p] for p in self.fit_param_names()}
                 for d in self.obs_data.iterrows():
-                    ec_vals = {c:d[1][c] for c in self.ec_names}
+                    ec_vals = {c:d[1][c] for c in self.ec_names()}
                     # add param and EC vals to the columns
-                    for p in self.param_names:
+                    for p in self.fit_param_names():
                         param_vecs[p].append(param_vals[p])
-                    for c in self.ec_names:
+                    for c in self.ec_names():
                         ec_vecs[c].append(d[1][c])
                     # compute/look up the model data
                     # need to make sure that model_func takes in params and EC in appropriate format
@@ -390,9 +450,9 @@ class model(object):
         self.model_data.reset_index(inplace=True,drop=True)
 
         # round EC's and generate groups
-        rd_dct = {n:self.ec_tol_digits for n in self.ec_names}
+        rd_dct = {c.name:c.tol_digits for c in self.params.ecs}
         self.model_data = self.model_data.round(rd_dct)
-        self.model_data_ecgrps = self.model_data.groupby(self.ec_names)
+        self.model_data_ecgrps = self.model_data.groupby(self.ec_names())
 
         # update flag and indices
         self.needs_new_model_data = False
@@ -403,69 +463,74 @@ class model(object):
         Plot observed data vs. highest-probability modeled data.
 
         Args:
-            ecs (`dict`): optional, dict of EC values at which to plot. If not provided, they will be chosen randomly. This can also be a list of dicts for multiple points.
+            ec_vals (`dict`): optional, dict of EC values at which to plot. If not provided, they will be chosen randomly. This can also be a list of dicts for multiple points.
             num_ecs (`int`): number of EC values to plot, defaults to 1 (ignored if ecs is provided)
             num_param_pts (`int`): number of the most probable parameter space points to plot (defaults to 1)
             ec_x_var (`str`): one of self.ec_names, will overwrite if this was provided before in attach_observations, required if it wasn't. If ec was provided, this will supercede that
             fpath (`str`): optional, path to save image to if desired (if num_plots>1, this will be used as a prefix)
         """
+        if 'ec_x_var' in argv.keys():
+            self.params.set_ec_x(argv['ec_x_var'])
+
+        if self.params.ec_x_name==None:
+            print('You have not provided an x-variable from your experimental conditions against which to plot. Choosing the first one in the list, %s.'%(self.ec_names()[0]))
+            self.params.set_ec_x(self.ec_names()[0])
+
+        other_ecs = [c for c in self.params.ecs if not c.name==self.params.ec_x_name]
+
         # read in options and do some sanity checks
         num_ecs = argv.get('num_ecs',1)
-        if 'ecs' in argv.keys():
-            ecs = argv['ecs']
-            if not (isinstance(ecs,list) or isinstance(ecs,np.ndarray)):
-                ecs = [ecs]
+        if 'ec_vals' in argv.keys():
+            ec_vals = argv['ec_vals']
+            if not (isinstance(ec_vals,list) or isinstance(ec_vals,np.ndarray)):
+                ec_vals = [ec_vals]
         else:
-            ecs = []
-            for i in range(num_ecs):
-                ec_tuple = random.choice(list(self.model_data_ecgrps.groups.keys()))
-                ecs.append({self.ec_names[i]:ec_tuple[i] for i in range(len(ec_tuple))})
+            ec_vals = []
+            #ec_pts = random.sample(list(self.model_data_ecgrps.groups.keys()), num_ecs)
+            ec_pts = random.sample(list(self.model_data.groupby([c.name for c in other_ecs]).groups.keys()), num_ecs)
+
+            for pt in ec_pts:
+                if len(other_ecs)==1: #pt will just be a float rather than a tuple
+                    ec_vals.append({other_ecs[0].name:pt})
+                else:
+                    ec_vals.append({self.ec_names()[i]:pt[i] for i in range(len(pt))})
 
         num_param_pts = argv.get('num_param_pts',1)
 
-        if 'ec_x_var' in argv.keys():
-            self.ec_x_var = argv['ec_x_var']
-
-        if not hasattr(self,'ec_x_var'):
-            print('You have not provided an x-variable from your experimental conditions against which to plot. Choosing the first one in the list, %s.'%(self.ec_names[0]))
-            self.ec_x_var = self.ec_names[0]
-
         # need to fix this check
-        #if self.ec_x_var in ecs.keys():
+        #if self.params.ec_x_name in ecs.keys():
             #print('You provided a fixed value for your x variable, ignoring that and plotting the full range.')
-            #del ecs[self.ec_x_var]
-
-        other_ecs = [n for n in self.ec_names if not n==self.ec_x_var]
+            #del ecs[self.params.ec_x_name]
 
         param_pts = self.probs.most_probable(num_param_pts)
 
-        fig, axs = plt.subplots(len(ecs),sharex=True,figsize=(6,4*len(ecs)))
+        fig, axs = plt.subplots(len(ec_vals), sharex=True, figsize=(6,4*len(ec_vals)))
 
-        for i in range(len(ecs)):
-            if len(ecs)>1:
+        for i in range(len(ec_vals)):
+            if len(ec_vals)>1:
                 ax = axs[i]
             else:
                 ax = axs
             ax.set_prop_cycle(None)
-            ec = ecs[i]
+            ecs_here = ec_vals[i]
             obs_data = self.obs_data
             plot_title = ''
             for c in other_ecs:
-                obs_data =  obs_data[abs(obs_data[c]-ec[c])<=10.**(-1.*self.ec_tol_digits)]
-                plot_title = plot_title + '%s=%f, '%(c,ec[c])
-            obs_data = obs_data.sort_values(by=[self.ec_x_var])
-            ax.plot(obs_data[self.ec_x_var],obs_data[self.output_var])
+                obs_data =  obs_data[abs(obs_data[c.name]-ecs_here[c.name])<=10.**(-1.*c.tol_digits)]
+                plot_title = plot_title + '%s=%s, '%(c.name,c.get_val_str(ecs_here[c.name]))
+            obs_data = obs_data.sort_values(by=[self.params.ec_x_name])
+            ax.plot(obs_data[self.params.ec_x_name], obs_data[self.output_var])
             j = 1
             legend_list = ['observed']
             for pt in param_pts.iterrows():
-                model_data = self.model_data.loc[self.model_data_grps.groups[tuple([pt[1][n] for n in self.param_names])]]
+                model_data = self.model_data.loc[self.model_data_grps.groups[tuple([pt[1][n] for n in self.fit_param_names()])]]
                 for c in other_ecs:
-                    model_data =  model_data[abs(model_data[c]-ec[c])<=10.**(-1.*self.ec_tol_digits)]
-                model_data.sort_values(by=[self.ec_x_var])
-                ax.plot(model_data[self.ec_x_var],model_data[self.output_var])
+                    model_data =  model_data[abs(model_data[c.name]-ecs_here[c.name])<=10.**(-1.*c.tol_digits)]
+                model_data.sort_values(by=[self.params.ec_x_name])
+                ax.plot(model_data[self.params.ec_x_name],model_data[self.output_var])
                 leg_label = 'modeled: '
-                for p in self.param_names:
-                    leg_label = leg_label + '%s=%f, '%(p,pt[1][p])
+                for p in self.params.fit_params:
+                    leg_label = leg_label + '%s=%s, '%(p.name, p.get_val_str(pt[1][p.name]))
                 leg_label = leg_label[:-2]
                 legend_list.append(leg_label)
                 j = j + 1
@@ -474,9 +539,11 @@ class model(object):
             obs_max = max(obs_data[self.output_var])
             obs_min = min(obs_data[self.output_var])
             obs_width = obs_max-obs_min
-            ax.set_ylim([obs_min-0.05*obs_width,obs_max+0.05*obs_width])
-            plt.xlabel(self.ec_x_var)
-            ax.set_ylabel(self.output_var)
+            ax.set_ylim([obs_min-0.05*obs_width, obs_max+0.05*obs_width])
+            xvar = self.params.get_ec_x()
+            plt.xlabel('%s [%s]' %(xvar.name, xvar.units))
+            yvar = self.params.find_param(self.output_var)
+            ax.set_ylabel('%s [%s]' %(yvar.name, yvar.units))
             ax.legend(legend_list)
             plot_title = plot_title[:-2]
             ax.set_title(plot_title)
@@ -490,7 +557,7 @@ class model(object):
             save_step (`int`): interval (number of data points) at which to save intermediate PMF's (defaults to 10, 0 to save only final, <0 to save none)
             th_pm (`float`): threshold quantity of probability mass to be concentrated in th_pv fraction of parameter space to trigger the run to stop (defaults to 0.8)
             th_pv (`float`): threshold fraction of parameter space volume for th_pm fraction of probability to be concentrated into to trigger the run to stop (defaults to 0.05)
-            min_num_pts (`int`): minimum number of observation points to use - if threshold is reached before this number of points has been used, it will start over and the final PMF will be the average of the number of runs needed to use sufficient points (defaults to 50)
+            min_num_pts (`int`): minimum number of observation points to use - if threshold is reached before this number of points has been used, it will start over and the final PMF will be the average of the number of runs needed to use sufficient points (defaults to 0.7 * the number of experimental measurements)
             force_exp_err (`bool`): If true, likelihood calculations will use only experimental errors and ignore the computed model errors.
             verbose (`bool`): flag for verbosity, defaults to False
         """
@@ -498,7 +565,7 @@ class model(object):
         save_step = argv.get('save_step', 10)
         th_pm = argv.get('th_pm', 0.8)
         th_pv = argv.get('th_pv', 0.05)
-        min_num_pts = argv.get('min_num_pts', 50)
+        min_num_pts = argv.get('min_num_pts', int(0.7*len(self.obs_data)))
         force_exp_err = argv.get('force_exp_err', False)
         verbose = argv.get('verbose', False)
         if verbose:
@@ -563,8 +630,8 @@ class model(object):
                     # get observed and modeled data
                     obs = self.obs_data.iloc[num_pts_used]
                     obs_indices.append(num_pts_used)
-                    ec = obs[self.ec_names]
-                    ecpt = tuple([ec[n] for n in self.ec_names])
+                    ec = obs[self.ec_names()]
+                    ecpt = tuple([ec[n] for n in self.ec_names()])
                     model_here = deepcopy(self.model_data.loc[self.model_data_ecgrps.groups[ecpt]])
 
                     # compute likelihood and do a Bayesian update
@@ -608,7 +675,9 @@ class model(object):
         threshold_prob = argv.get('threshold_prob',0.001)
         new_boxes = self.probs.subdivide(threshold_prob)
         #dropped_inds = list(dropped_boxes.index)
-        self.fit_params = [p for p in self.probs.params]
+
+        #self.fit_params = [p for p in self.probs.params]
+        self.attach_fit_params(self.probs.params)
 
         # remove old model data
         self.model_data = pd.DataFrame()
@@ -636,12 +705,12 @@ class model(object):
             print('Listing the sets of simulation parameters that need to be run...')
 
         # get just the columns with the parameters
-        param_pts = self.probs.points[self.param_names]
+        param_pts = self.probs.points[self.fit_param_names()]
 
         # Now at every point in that list, make a row for every EC point
         param_inds = range(len(param_pts))
         ec_inds = range(len(self.ec_pts))
-        columns = self.param_names + self.ec_names
+        columns = self.fit_param_names() + self.ec_names()
         pts = []
         for ppt in param_pts.iterrows():
             for ecpt in self.ec_pts.iterrows():
@@ -662,7 +731,7 @@ class model(object):
         if verbose:
             print('Calculating model errors...')
 
-        param_lengths = [p['length'] for p in self.fit_params]
+        param_lengths = [p.length for p in self.params.fit_params]
 
         deltas = np.zeros(len(self.model_data))
 
@@ -672,10 +741,10 @@ class model(object):
             # construct matrix of output_var({fit_params})
             subset = deepcopy(self.model_data.loc[inds])
             # sort and reset index of subset to match probs so we can use the find_neighbor_boxes function if needed
-            subset.drop_duplicates(subset=self.param_names, inplace=True)
-            subset.sort_values(self.param_names, inplace=True)
+            subset.drop_duplicates(subset=self.fit_param_names(), inplace=True)
+            subset.sort_values(self.fit_param_names(), inplace=True)
             subset.reset_index(inplace=True)
-            if not all(subset[self.param_names]==self.probs.points[self.param_names]):
+            if not all(subset[self.fit_param_names()]==self.probs.points[self.fit_param_names()]):
                 raise ValueError('Subset at %s does not match probability grid!'%grp)
 
             # check if on a grid
@@ -695,6 +764,7 @@ class model(object):
             winner_dim.extend(mat.shape)
             winners = np.zeros(winner_dim)
 
+            # for every dimension (fitting parameter)
             for i in range(len(mat.shape)):
                 # build delta matrix
                 deltas_here = np.absolute(np.diff(mat,axis=i))
@@ -702,21 +772,25 @@ class model(object):
                 pad_widths[i] = (1,1)
                 deltas_here = np.pad(deltas_here, pad_widths, mode='constant', constant_values=0)
 
-                # build "winner" matrix (ignore nans)
-                winners[i]=np.fmax(deltas_here[[Ellipsis]+[slice(None,mat.shape[i],None)]+[slice(None)]*(len(mat.shape)-i-1)],deltas_here[[Ellipsis]+[slice(1,mat.shape[i]+1,None)]+[slice(None)]*(len(mat.shape)-i-1)])
+                # build "winner" matrix in this direction (ignore nans)
+                # this is really ugly because we have to index in at variable positions...
+                # also certain versions of numpy throw an "invalid value encountered" RuntimeError here but the function behaves correctly
+                with np.errstate(invalid='ignore'):
+                    winners[i]=np.fmax(deltas_here[[Ellipsis]+[slice(None,mat.shape[i],None)]+[slice(None)]*(len(mat.shape)-i-1)],deltas_here[[Ellipsis]+[slice(1,mat.shape[i]+1,None)]+[slice(None)]*(len(mat.shape)-i-1)])
 
-                grad = np.amax(winners,axis=0)
+            # this line was indented by one before, but I think this is better...
+            grad = np.amax(winners,axis=0)
 
             # save these values to the appropriate indices in the vector
             if is_grid:
                 deltas[inds] = grad.flatten()
             else:
                 # pick out only the boxes that exist
-                deltas[inds] = grad[[i for i in list([ind_lists[p] for p in self.param_names])]]
+                deltas[inds] = grad[[i for i in list([ind_lists[p] for p in self.fit_param_names()])]]
             self.model_data['deltas'] = deltas
 
 
-    def save_state(self,filename='bayesim_state.h5'):
+    def save_state(self,filename='bayesim_state.h5'): #rewrite this!
         """
         Save the entire state of this model object to an HDF5 file so that work can be resumed later.
         """
@@ -725,11 +799,8 @@ class model(object):
         state = {}
 
         # parameters
-        state['fit_params'] = self.fit_params
         state['ec'] = self.ec_names
         state['ec_pts'] = self.ec_pts
-        state['ec_tol_digits'] = self.ec_tol_digits
-        state['ec_x_var'] = self.ec_x_var
         state['output_var'] = self.output_var
 
         # PMF
@@ -764,3 +835,9 @@ class model(object):
             same as pmf.visualize()
         """
         self.probs.visualize(**argv)
+
+    def ec_names(self):
+        return self.params.param_names('ec')
+
+    def fit_param_names(self):
+        return self.params.param_names('fit')

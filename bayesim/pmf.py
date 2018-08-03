@@ -6,7 +6,7 @@ from itertools import product
 from copy import deepcopy
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import bayesim.param_list as pl
+import bayesim.params as pm
 import timeit
 from itertools import product
 
@@ -34,7 +34,7 @@ class Pmf(object):
         """
 
         # generate the list of box center coordinates
-        param_indices = [range(len(p['vals'])) for p in params]
+        param_indices = [range(len(p.vals)) for p in params]
         points = [p for p in product(*param_indices)]
         # iterate through to get values and add columns for param ranges
         for i in range(len(points)): # for every point (read: combination of value indices) in parameter space...
@@ -42,14 +42,13 @@ class Pmf(object):
             for j in range(len(params)): # for each parameter...
                 # get value
                 val_index = points[i][j]
-                row.append(params[j]['vals'][val_index])
+                row.append(params[j].vals[val_index])
                 # get min and max of bounding box
-                row.extend([params[j]['edges'][val_index],params[j]['edges'][val_index+1]])
+                row.extend([params[j].edges[val_index],params[j].edges[val_index+1]])
             points[i] = row
 
         points = np.array(points)
-        param_names = [p['name'] for p in params]
-        columns = [c for l in [[n,n+'_min',n+'_max'] for n in param_names] for c in l] # there has to be a more readable way to do this
+        columns = [c for l in [[n,n+'_min',n+'_max'] for n in self.param_names()] for c in l] # there has to be a more readable way to do this
 
         df = pd.DataFrame(data=points, columns=columns)
         df['prob'] = [total_prob/len(df) for i in range(len(df))]
@@ -62,7 +61,7 @@ class Pmf(object):
         Provide one argument or the other.
 
         Args:
-            params (:obj:`param_list`): param_list object containing parameters to be fit and associated metadata
+            params (:obj:`Param_list`): Param_list object containing parameters to be fit and associated metadata
             param_points (`DataFrame`): DataFrame containing all parameter points to start with
         """
 
@@ -70,7 +69,7 @@ class Pmf(object):
             # for now just copy in the param_list wholesale
             # eventually should probably scrub and/or update vals...
             self.num_sub = 0
-            self.params = argv['params']
+            self.params = argv['params'].fit_params
             self.points = self.make_points_list(self.params)
             if len(self.params)==0:
                 self.is_empty = True
@@ -90,7 +89,7 @@ class Pmf(object):
         """Normalize overall PMF."""
         norm_const = self.points['prob'].sum()
         #print(norm_const,type(norm_const))
-        if self.equals_ish(float(norm_const),0):
+        if abs(norm_const)<1e-12:
             print("Somehow the normalization constant was zero! To play it safe, I won't do anything.")
         else:
             self.points['prob'] = [p/norm_const for p in self.points['prob']]
@@ -117,13 +116,13 @@ class Pmf(object):
         """
         Find and return all boxes neighboring the box at index.
         """
-        all_vals = {param['name']:self.all_current_values(param['name']) for param in self.params}
-        param_spacing = {param['name']:param['spacing'] for param in self.params}
+        all_vals = {name:self.all_current_values(name) for name in self.param_names()}
+        param_spacing = {param.name:param.spacing for param in self.params}
         this_point = self.points.iloc[index]
         indices_to_intersect=[]
         # get range of values of each param to consider "neighbors"
         for p in self.params:
-            param = p['name']
+            param = p.name
             this_param_val = this_point[param]
             this_param_index = all_vals[param].index(this_param_val)
 
@@ -158,8 +157,8 @@ class Pmf(object):
         inds_to_drop = []
         all_out_query = ''
         for p in self.params:
-            param = p['name']
-            other_params = [pm['name'] for pm in self.params if not pm['name']==param]
+            param = p.name
+            other_params = [pm.name for pm in self.params if not pm.name==param]
             # clunky brute-force search but it should be a smallish list so hopefully it won't kill us
             # first check that we're inside the box for all other params
             in_box_query = ''
@@ -211,7 +210,7 @@ class Pmf(object):
 
         Boxes with P < threshold_prob are deleted.
         """
-        num_divs = {p['name']:2 for p in self.params} #dummy for now
+        num_divs = {p.name:2 for p in self.params} #dummy for now
 
         # pick out the boxes that will be subdivided
         to_subdivide = self.points[self.points['prob']>threshold_prob]
@@ -242,26 +241,27 @@ class Pmf(object):
             # check if minimum width is already satisfied
             num_divs_here = num_divs
             for p in self.params:
-                if p['spacing']=='linear':
-                    this_width = box[1][p['name']+'_max']-box[1][p['name']+'_min']
-                elif p['spacing']=='log':
-                    this_width = box[1][p['name']+'_max']/box[1][p['name']+'_min']
-                if this_width <= p['min_width']:
+                if p.spacing=='linear':
+                    this_width = box[1][p.name+'_max']-box[1][p.name+'_min']
+                elif p.spacing=='log':
+                    this_width = box[1][p.name+'_max']/box[1][p.name+'_min']
+                if this_width <= p.min_width:
                     # don't divide along this direction
-                    num_divs_here[p['name']] = 1
-                    print('Minimum width/factor of ' + str(p['min_width']) + ' already satisfied for ' + p['name'] + ' at point: \n' + str(box[1]))
+                    num_divs_here[p.name] = 1
+                    print('Minimum width/factor of ' + str(p.min_width) + ' already satisfied for ' + p.name + ' at point: \n' + str(box[1]))
 
             # first, remove this box from DataFrame
             #dropped_inds.append(box[0])
             self.points = self.points.drop([box[0]])
 
             # create new DataFrame with subdivided boxes
-            new_pl = pl.param_list()
+            new_pl = pm.Param_list()
             for p in self.params:
                 # copy same params except for ranges
-                new_pl.add_fit_param(name=p['name'],val_range=[box[1][p['name']+'_min'],box[1][p['name']+'_max']],length=num_divs_here[p['name']],min_width=p['min_width'],spacing=p['spacing'],units=p['units'])
+                new_pl.add_fit_param(name=p.name,
+                val_range=[box[1][p.name+'_min'], box[1][p.name+'_max']], length=num_divs_here[p.name], min_width=p.min_width, spacing=p.spacing, units=p.units)
             # make new df, spreading total prob from original box among new smaller ones
-            new_boxes.append(self.make_points_list(new_pl.fit_params,total_prob=box[1]['prob']))
+            new_boxes.append(self.make_points_list(new_pl.fit_params, total_prob=box[1]['prob']))
 
         new_boxes = pd.concat(new_boxes)
 
@@ -269,14 +269,13 @@ class Pmf(object):
         self.points = new_boxes
 
         # make new lists of self.params (this way might be slow...)
-        new_params = pl.param_list()
-        param_names = [p['name'] for p in self.params]
+        new_params = pm.Param_list()
         for p in self.params:
-            new_params.add_fit_param(name=p['name'], vals=list(set(list(self.points[p['name']]))),spacing=p['spacing'])
+            new_params.add_fit_param(name=p.name, vals=list(set(list(self.points[p.name]))), spacing=p.spacing)
         self.params = [p for p in new_params.fit_params]
 
         # sort values
-        self.points = self.points.sort_values([p['name'] for p in self.params])
+        self.points = self.points.sort_values(self.param_names())
 
         # reindex DataFrame
         self.points = self.points.reset_index(drop=True)
@@ -306,15 +305,14 @@ class Pmf(object):
         these_probs = deepcopy(self.points)
         other_probs = deepcopy(other_pmf.points)
 
-        cols_for_sort = [p['name'] for p in self.params]
-        these_probs.sort_values(by=cols_for_sort)
-        other_probs.sort_values(by=cols_for_sort)
+        these_probs.sort_values(by=self.param_names())
+        other_probs.sort_values(by=self.param_names())
 
         # actually multiply
         new_probs = these_probs['prob'] * other_probs['prob']
 
         # check if there's any probability there...
-        if self.equals_ish(np.sum(new_probs),0):
+        if abs(np.sum(new_probs))<1e-12:
             print("You're gonna have a bad time...not multiplying")
         else:
             self.points['prob'] = new_probs
@@ -342,7 +340,7 @@ class Pmf(object):
         # read in and process inputs
         meas = argv['meas']
         model_data = argv['model_at_ec']
-        model_data.sort_values([p['name'] for p in self.params])
+        model_data.sort_values(self.param_names())
         model_data.reset_index(drop=True)
         output_col = argv['output_col']
         meas_val = meas[output_col]
@@ -378,7 +376,7 @@ class Pmf(object):
         lkl.points['prob'] = new_probs
 
         # make sure that the likelihood isn't zero everywhere...
-        if self.equals_ish(np.sum(new_probs),0):
+        if abs(np.sum(new_probs))<1e-12:
             print('likelihood has no probability! :(')
         if any(np.isnan(np.array(self.points['prob']))):
             raise ValueError('Uh-oh, some probability is NaN!')
@@ -391,13 +389,8 @@ class Pmf(object):
         sorted_probs = self.points.sort_values(by='prob',ascending=False)
         return sorted_probs.iloc[0:n]
 
-    def equals_ish(self, num1, num2, thresh = 1e-12):
-        """helper function to deal with machine error issues
-        """
-        if abs(num1-num2) < thresh:
-            return True
-        else:
-            return False
+    def param_names(self):
+        return [p.name for p in self.params]
 
     def populate_dense_grid(self,**argv):
         """
@@ -424,27 +417,26 @@ class Pmf(object):
         param_edges = {}
 
         for param in self.params:
-            mat_shape.append(param['length'])
-            pvals_indices[param['name']] = {param['vals'][i]:i for i in range(len(param['vals']))}
+            mat_shape.append(param.length)
+            pvals_indices[param.name] = {param.vals[i]:i for i in range(len(param.vals))}
             #indices_lists.append(range(len(param_vals[pname])))
 
         mat = np.full(mat_shape,np.nan)
 
         # initialize optional things
         if make_ind_lists:
-            ind_lists = {p['name']:[] for p in self.params}
+            ind_lists = {p.name:[] for p in self.params}
 
         for pt in df.iterrows():
             slices = []
             param_point = self.points.loc[pt[0]] # if df isn't self.points
             for p in self.params:
-                pname = p['name']
-                min_val = param_point[pname+'_min']
-                max_val = param_point[pname+'_max']
-                inds = [pvals_indices[pname][v] for v in p['vals'] if v>min_val and v<max_val]
+                min_val = param_point[p.name+'_min']
+                max_val = param_point[p.name+'_max']
+                inds = [pvals_indices[p.name][v] for v in p.vals if v>min_val and v<max_val]
                 slices.append(slice(min(inds),max(inds)+1,None))
                 if make_ind_lists:
-                    ind_lists[pname].append(inds[0])
+                    ind_lists[p.name].append(inds[0])
             if col_to_pull == 'prob':
                 #val = param_point['prob']/(2**(len(self.params)*(self.num_sub-param_point['num_sub'])))
                 val = param_point['prob']
@@ -473,15 +465,14 @@ class Pmf(object):
         """
         ## first find bin edges
         # pull all bounds, then flatten, remove duplicates, and sort
-        bins = sorted(list(set(list(self.points[param['name']+'_min'])+list(self.points[param['name']+'_max']))))
+        bins = sorted(list(set(list(self.points[param.name+'_min'])+list(self.points[param.name+'_max']))))
 
         # generate dense grid and populate with probabilities
         dense_grid = self.populate_dense_grid(df=self.points, col_to_pull='prob', make_ind_lists=False)
         mat = dense_grid['mat']
 
         # sum along all dimensions except the parameter of interest
-        param_names = [p['name'] for p in self.params]
-        param_ind = param_names.index(param['name'])
+        param_ind = self.param_names().index(param.name)
         inds_to_sum_along = tuple([i for i in range(len(mat.shape)) if not i==param_ind])
         probs = np.nansum(mat,axis=inds_to_sum_along)
 
@@ -500,8 +491,8 @@ class Pmf(object):
             (:obj:`list` of :obj:`matplotlib.patches.Rectangle`): patches for plotting the 2D joint probability distribution
         """
 
-        x_name = x_param['name']
-        y_name = y_param['name']
+        x_name = x_param.name
+        y_name = y_param.name
         max_prob = max(self.points['prob'])
         patches = []
 
@@ -574,11 +565,11 @@ class Pmf(object):
         if 'true_vals' in argv.keys():
             # check that all params are there
             true_vals = argv['true_vals']
-            if not set(true_vals.keys())==set([p['name'] for p in self.params]):
+            if not set(true_vals.keys())==set(self.param_names()):
                 print('Your true_vals do not have all the paramter names! Proceeding without them.')
                 plot_true_vals = False
             # check that values are within ranges
-            elif not all(true_vals[p['name']]>p['edges'][0] and true_vals[p['name']]<p['edges'][-1] for p in self.params):
+            elif not all(true_vals[p.name]>p.edges[0] and true_vals[p.name]<p.edges[-1] for p in self.params):
                 print('Your true_vals are not within the correct bounds. Proceeding without them.')
                 plot_true_vals = False
             else:
@@ -593,7 +584,7 @@ class Pmf(object):
         points_to_include = self.most_probable(int(frac_points*N))
         plot_ranges = {}
         for param in self.params:
-            plot_ranges[param['name']] = [min(points_to_include[param['name']+'_min']), max(points_to_include[param['name']+'_max'])]
+            plot_ranges[param.name] = [min(points_to_include[param.name+'_min']), max(points_to_include[param.name+'_max'])]
 
         fig, axes = plt.subplots(nrows=len(self.params), ncols=len(self.params), figsize=(10,9))
 
@@ -607,13 +598,13 @@ class Pmf(object):
                 y_param = self.params[rownum]
 
                 # pre-formatting
-                axes[rownum][colnum].set_xlim(plot_ranges[x_param['name']][0],plot_ranges[x_param['name']][1])
+                axes[rownum][colnum].set_xlim(plot_ranges[x_param.name][0],plot_ranges[x_param.name][1])
                 axes[rownum][colnum].set_axisbelow(True)
 
                 for item in ([axes[rownum][colnum].xaxis.label, axes[rownum][colnum].yaxis.label] +axes[rownum][colnum].get_xticklabels() + axes[rownum][colnum].get_yticklabels()):
                     item.set_fontsize(20)
 
-                if x_param['spacing']=='log':
+                if x_param.spacing=='log':
                     axes[rownum][colnum].set_xscale('log')
 
                 if rownum==colnum: #diagonal - single-variable histogram
@@ -622,12 +613,11 @@ class Pmf(object):
                     else:
                         diag_start = timeit.default_timer()
                         bins, probs = self.project_1D(x_param)
-                        print(bins,probs)
                         checkpoint = round(timeit.default_timer()-diag_start,2)
                         #print('project_1D took ' + str(checkpoint) + ' seconds')
-                        if x_param['spacing']=='log':
+                        if x_param.spacing=='log':
                             vals = [math.sqrt(bins[i]*bins[i+1]) for i in range(len(probs))]
-                        elif x_param['spacing']=='linear':
+                        elif x_param.spacing=='linear':
                             vals = [0.5*(bins[i]+bins[i+1]) for i in range(len(probs))]
                         axes[rownum][colnum].hist(vals, weights=probs, bins=bins, edgecolor='k', linewidth=1.0)
                         # formatting
@@ -635,7 +625,7 @@ class Pmf(object):
 
                         # add true value if desired
                         if plot_true_vals:
-                            true_x = [true_vals[x_param['name']]]
+                            true_x = [true_vals[x_param.name]]
                             axes[rownum][colnum].scatter(true_x,[min([max(probs)+0.05,0.95])],200,'r',marker='*')
 
                         diag_finish = timeit.default_timer()
@@ -658,13 +648,13 @@ class Pmf(object):
                         axes[rownum][colnum].add_patch(patch)
                         #axes[rownum][colnum].add_patch(mpl.patches.Rectangle(*patch['args'],**patch['kwargs']))
                     # formatting
-                    axes[rownum][colnum].set_ylim(plot_ranges[y_param['name']][0],plot_ranges[y_param['name']][1])
-                    if y_param['spacing']=='log':
+                    axes[rownum][colnum].set_ylim(plot_ranges[y_param.name][0],plot_ranges[y_param.name][1])
+                    if y_param.spacing=='log':
                         axes[rownum][colnum].set_yscale('log')
 
                     if plot_true_vals:
-                        true_x = [true_vals[x_param['name']]]
-                        true_y = [true_vals[y_param['name']]]
+                        true_x = [true_vals[x_param.name]]
+                        true_y = [true_vals[y_param.name]]
                         axes[rownum][colnum].scatter(true_x,true_y,200,c="None",marker='o',linewidths=3,edgecolors='r',zorder=20)
                     offdiag_finish = timeit.default_timer()
                     offdiag_time = round(offdiag_finish-offdiag_start,2)
@@ -675,8 +665,8 @@ class Pmf(object):
 
         # put the labels on the outside
         for i in range(0,len(self.params)):
-            xlabel = '%s [%s]' %(self.params[i]['name'],self.params[i]['units'])
-            ylabel = '%s [%s]' %(self.params[i]['name'],self.params[i]['units'])
+            xlabel = '%s [%s]' %(self.params[i].name,self.params[i].units)
+            ylabel = '%s [%s]' %(self.params[i].name,self.params[i].units)
             axes[len(self.params)-1][i].set_xlabel(xlabel)
             if i>0: # top one is actually a probability
                 axes[i][0].set_ylabel(ylabel)

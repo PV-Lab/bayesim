@@ -9,11 +9,17 @@ TO DO LIST FOR BAYESIM
 
 * add more things for model.__init__ to (optionally) accept (model data, ec_x_var, etc.)
 
-* add tol_digits (and units) as a property of any parameter and rewrite all float comparisons to use that (avoid issues with very tiny parameter values), also round to one past this many digits and maybe use as default min_width?
+* check all value comparisons respect tolerances
+
+* add units to plotting
+
+* add functions to set parameter units
 
 * test what happens with calc_gradients if a box is subdivided only in one direction
 
 * fully updated documentation
+
+* change model.attach_params to call attach_ecs and attach_fit_params
 
 * add more options to CL interface (e.g. invoking comparison plot/visualize_grid, other tweaks to behavior)
 
@@ -28,6 +34,8 @@ TO DO LIST FOR BAYESIM
 * check 2.7 vs. 3.6 compatibility
 
 
+~ make sure that comparison_plot randomly chooses EC pts WITHOUT replacement
+
 ~ speed up visualize_grid somehow
 
 ~ save model function somehow to at least theoretically close loop within CL interface
@@ -38,6 +46,8 @@ TO DO LIST FOR BAYESIM
 
 ~ change project_2D to use grid also (also maybe pass patch parameters rather than actual patch objects?) NOTE: tried this and it seemed to get slower, at least up to the scale I tried (~1000 grid points)
 ~ maybe do project_2D with imshow()?
+
+~ be able to ignore extra points in model data file
 
 ~ plotting points from an inference run?
 
