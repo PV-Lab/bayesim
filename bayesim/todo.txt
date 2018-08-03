@@ -3,8 +3,6 @@ TO DO LIST FOR BAYESIM
 
 [* for necessary for paper, ~ for need to decide if it's necessary, - for future ideas]
 
-* update save_state and load_state
-
 * more 'verbose' options
 
 * add functions to set parameter units

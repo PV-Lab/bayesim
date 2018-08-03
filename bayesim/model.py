@@ -849,6 +849,12 @@ class Model(object):
         """
         self.probs.visualize(**argv)
 
+    def top_probs(self, num):
+        """Return a DataFrame with the 'num' most probable points and some of the less interesting columns hidden."""
+        df = self.probs.most_probable(num)
+        cols = ['prob'] + [c for cs in [[p.name, p.name+'_min', p.name+'_max'] for p in self.params.fit_params] for c in cs]
+        return df[cols]
+
     def ec_names(self):
         return self.params.param_names('ec')
 

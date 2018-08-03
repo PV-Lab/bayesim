@@ -451,7 +451,6 @@ class Pmf(object):
                 if make_ind_lists:
                     ind_lists[p.name].append(inds[0])
             if col_to_pull == 'prob':
-                #val = param_point['prob']/(2**(len(self.params)*(self.num_sub-param_point['num_sub'])))
                 val = param_point['prob']
             else:
                 val = pt[1][col_to_pull]
