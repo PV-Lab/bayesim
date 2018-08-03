@@ -3,6 +3,12 @@ TO DO LIST FOR BAYESIM
 
 [* for necessary for paper, ~ for need to decide if it's necessary, - for future ideas]
 
+* add errors to comparison_plot()
+
+* either move true_vals star to x-axis or use a vertical line
+
+* figure out the weird conda and numpy errors Jerry was getting in Binder
+
 * more 'verbose' options
 
 * add functions to set parameter units
