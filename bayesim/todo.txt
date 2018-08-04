@@ -7,7 +7,9 @@ TO DO LIST FOR BAYESIM
 
 * either move true_vals star to x-axis or use a vertical line
 
-* figure out the weird conda and numpy errors Jerry was getting in Binder
+* figure out the weird conda and numpy errors in Binder
+
+* also why is tol_digits getting set on Bp?
 
 * more 'verbose' options
 
@@ -26,6 +28,8 @@ TO DO LIST FOR BAYESIM
 * fix save_step behavior in light of new run() protocol
 
 * check 2.7 vs. 3.6 compatibility
+
+* if parallelizing anything else, move external functions to utils
 
 
 ~ speed up visualize_grid somehow (parallelize?)
@@ -54,6 +58,8 @@ TO DO LIST FOR BAYESIM
 
 ~ play with code profiling to speed up slow steps (e.g. calc_model_gradients)
 
+
+- mpi4py?
 
 - allow multiple output variables
 

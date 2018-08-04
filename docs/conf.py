@@ -37,8 +37,12 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
-    'sphinx.ext.viewcode']
+    'sphinx.ext.viewcode',
+    'sphinx.ext.napoleon']
     #'sphinx.ext.githubpages']
+
+# Napoleon settings
+napoleon_include_init_with_doc = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['.templates']
@@ -53,9 +57,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'OpenBTE'
-copyright = u'2017, Giuseppe Romano'
-author = u'Giuseppe Romano'
+project = u'bayesim'
+copyright = u'2018, Rachel Kurchin'
+author = u'Rachel Kurchin'
 
 html_sidebars = {
     '**': [
@@ -121,7 +125,7 @@ html_static_path = ['.static']
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'OpenBTEdoc'
+htmlhelp_basename = 'bayesimdoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -148,8 +152,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'OpenBTE.tex', u'OpenBTE Documentation',
-     u'Giuseppe Romano', 'manual'),
+    (master_doc, 'bayesim.tex', u'bayesim Documentation',
+     u'Rachel C Kurchin', 'manual'),
 ]
 
 
@@ -158,7 +162,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'openbte', u'OpenBTE Documentation',
+    (master_doc, 'bayesim', u'bayesim Documentation',
      [author], 1)
 ]
 
@@ -169,8 +173,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'OpenBTE', u'OpenBTE Documentation',
-     author, 'OpenBTE', 'One line description of project.',
+    (master_doc, 'bayesim', u'bayesim Documentation',
+     author, 'bayesim', 'Bayesian fitting for science!',
      'Miscellaneous'),
 ]
 

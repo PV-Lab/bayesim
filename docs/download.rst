@@ -9,21 +9,14 @@ Download
 .. toctree::
    :hidden:
 
-To install OpenBTE simply type
- 
+To install bayesim simply type
+
 .. code-block:: shell
 
-  pip install openbte
+  pip install bayesim
 
 
 Prerequisites
 ----------------------------------
 
-OpenBTE runs with Python 2.7. 
-
-
-
-
-
-
-
+bayesim runs with Python 3.6 or 2.7.
