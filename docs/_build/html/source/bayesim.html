@@ -1,0 +1,320 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>bayesim package &#8212; bayesim 0.9.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="bayesim-package">
+<h1>bayesim package<a class="headerlink" href="#bayesim-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="bayesim-model-module">
+<h2>bayesim.model module<a class="headerlink" href="#bayesim-model-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-bayesim.params">
+<span id="bayesim-params-module"></span><h2>bayesim.params module<a class="headerlink" href="#module-bayesim.params" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="bayesim.params.Fit_param">
+<em class="property">class </em><code class="descclassname">bayesim.params.</code><code class="descname">Fit_param</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Fit_param"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Fit_param" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bayesim.params.Param" title="bayesim.params.Param"><code class="xref py py-class docutils literal notranslate"><span class="pre">bayesim.params.Param</span></code></a></p>
+<p>A bayesim fitting parameter. Because they will be initialized on a grid, each fitting parameter stores its full list of values as well as some other information such as the spacing between them and the minimum width of a box (used during grid subdivisions).</p>
+<dl class="method">
+<dt id="bayesim.params.Fit_param.get_tol_digits">
+<code class="descname">get_tol_digits</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Fit_param.get_tol_digits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Fit_param.get_tol_digits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute number of digits to round to. ‘val’ must be provided if logspaced.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.params.Fit_param.get_val_str">
+<code class="descname">get_val_str</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Fit_param.get_val_str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Fit_param.get_val_str" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a string with this parameter’s value, reasonably formatted.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bayesim.params.Measured_param">
+<em class="property">class </em><code class="descclassname">bayesim.params.</code><code class="descname">Measured_param</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Measured_param"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Measured_param" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bayesim.params.Param" title="bayesim.params.Param"><code class="xref py py-class docutils literal notranslate"><span class="pre">bayesim.params.Param</span></code></a></p>
+<p>A bayesim measured parameter. Can be experimental input or output.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="bayesim.params.Param">
+<em class="property">class </em><code class="descclassname">bayesim.params.</code><code class="descname">Param</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Param"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Param" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>A parameter in a bayesim analysis. Can be a fitting parameter or an experimental condition.</p>
+<dl class="method">
+<dt id="bayesim.params.Param.get_val_str">
+<code class="descname">get_val_str</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Param.get_val_str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Param.get_val_str" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bayesim.params.Param.set_tolerance">
+<code class="descname">set_tolerance</code><span class="sig-paren">(</span><em>tol</em>, <em>islog=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Param.set_tolerance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Param.set_tolerance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the tolerance for this parameter.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.params.Param.set_units">
+<code class="descname">set_units</code><span class="sig-paren">(</span><em>units</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Param.set_units"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Param.set_units" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the units for this parameter.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bayesim.params.Param_list">
+<em class="property">class </em><code class="descclassname">bayesim.params.</code><code class="descname">Param_list</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Param_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Param_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Small class to facilitate listing and comparison of bayesim parameters.</p>
+<dl class="method">
+<dt id="bayesim.params.Param_list.add_ec">
+<code class="descname">add_ec</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Param_list.add_ec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Param_list.add_ec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an experimental condition.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> (<cite>str</cite>) – name of the parameter, required</li>
+<li><strong>units</strong> (<cite>str</cite>) – units in which parameter is measured (defaults to ‘unitless’)</li>
+<li><strong>tolerance</strong> (<cite>float</cite>) – smallest difference between two values of this parameter to consider “real,” defaults to 1E-6</li>
+<li><strong>is_x</strong> (<cite>bool</cite>) – set this to be the x-axis variable when plotting data, defaults to False</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.params.Param_list.add_fit_param">
+<code class="descname">add_fit_param</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Param_list.add_fit_param"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Param_list.add_fit_param" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a fitting parameter to the list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>param</strong> (<cite>Fit_param</cite>) – A Fit_param object to add to the list</li>
+<li><strong>name</strong> (<cite>str</cite>) – name of the parameter, required if param object not passed</li>
+<li><strong>units</strong> (<cite>str</cite>) – units in which parameter is measured (defaults to ‘unitless’)</li>
+<li><strong>tolerance</strong> (<cite>float</cite>) – smallest difference between two values of this parameter to consider “real”</li>
+<li><strong>val_range</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code></a> of <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>) – [min, max] (either this or vals is required)</li>
+<li><strong>vals</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code></a> of <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>) – full list of vals for this param</li>
+<li><strong>length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – initial length of this parameter (defaults to 10)</li>
+<li><strong>min_width</strong> (<cite>float</cite>) – minimum box width for this parameter - subtractive if linear spacing and divisive if logarithmic (defaults to 0.01 of total range, required if providing val_range)</li>
+<li><strong>spacing</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – ‘linear’ or ‘log’ (defaults to linear)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.params.Param_list.add_output">
+<code class="descname">add_output</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Param_list.add_output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Param_list.add_output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an output variable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> (<cite>str</cite>) – name of the parameter, required</li>
+<li><strong>units</strong> (<cite>str</cite>) – units in which parameter is measured (defaults to ‘unitless’)</li>
+<li><strong>tolerance</strong> (<cite>float</cite>) – smallest difference between two values of this parameter to consider “real,” defaults to 1E-6</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.params.Param_list.all_params">
+<code class="descname">all_params</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Param_list.all_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Param_list.all_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a flat list of all parameters of any type.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.params.Param_list.as_dict">
+<code class="descname">as_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Param_list.as_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Param_list.as_dict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bayesim.params.Param_list.find_param">
+<code class="descname">find_param</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Param_list.find_param"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Param_list.find_param" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the Param object with the given name.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<cite>str</cite>) – name to search for</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.params.Param_list.get_ec_x">
+<code class="descname">get_ec_x</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Param_list.get_ec_x"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Param_list.get_ec_x" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bayesim.params.Param_list.is_empty">
+<code class="descname">is_empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Param_list.is_empty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Param_list.is_empty" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bayesim.params.Param_list.param_names">
+<code class="descname">param_names</code><span class="sig-paren">(</span><em>param_type=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Param_list.param_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Param_list.param_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of parameter names. If no arguments provided, output will be a dict, if a type is provided, output will be a list of just the parameter names of that type.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.params.Param_list.param_present">
+<code class="descname">param_present</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Param_list.param_present"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Param_list.param_present" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the param name isn’t already present in a list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<cite>str</cite>) – name to check for</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.params.Param_list.set_ec_x">
+<code class="descname">set_ec_x</code><span class="sig-paren">(</span><em>param_name</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Param_list.set_ec_x"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Param_list.set_ec_x" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the x-variable for experimental conditions.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.params.Param_list.set_tolerance">
+<code class="descname">set_tolerance</code><span class="sig-paren">(</span><em>param_name</em>, <em>tol</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Param_list.set_tolerance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Param_list.set_tolerance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the tolerance value for the given parameter.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.params.Param_list.vals_equal">
+<code class="descname">vals_equal</code><span class="sig-paren">(</span><em>param_name</em>, <em>val1</em>, <em>val2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Param_list.vals_equal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Param_list.vals_equal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare two values of a given param.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>param_name</strong> (<cite>str</cite>) – name of parameter, must be in one of the lists</li>
+<li><strong>val2</strong> (<em>val1</em><em>,</em>) – values to be compared</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">True if abs(val1-val2) &lt; tolerance of param_name</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="bayesim-pmf-module">
+<h2>bayesim.pmf module<a class="headerlink" href="#bayesim-pmf-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-bayesim">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-bayesim" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">bayesim</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Rachel C Kurchin and Giuseppe Romano.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="../_sources/source/bayesim.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
