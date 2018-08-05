@@ -36,52 +36,49 @@
             
   <div class="section" id="technical-background">
 <h1>Technical Background<a class="headerlink" href="#technical-background" title="Permalink to this headline">¶</a></h1>
+<p>This page includes some references about Bayes’ Theorem and Bayesian inference and discusses the particulars of the implementation of these ideas within <code class="docutils literal notranslate"><span class="pre">bayesim</span></code>.</p>
 <div class="section" id="bayes-theorem">
 <h2>Bayes’ Theorem<a class="headerlink" href="#bayes-theorem" title="Permalink to this headline">¶</a></h2>
-<p>brief basic explanation and links to other examples</p>
+<p>There are a <a class="reference external" href="https://brohrer.github.io/how_bayesian_inference_works.html">plethora</a> of <a class="reference external" href="https://brilliant.org/wiki/bayes-theorem/">great</a> <a class="reference external" href="https://betterexplained.com/articles/an-intuitive-and-short-explanation-of-bayes-theorem/">explanations</a> of Bayes’ Theorem out there already, so I won’t go through all the bayesics here but instead refer you to one of those linked above or any number of others you can find online or in a textbook.</p>
+<p>Assuming you understand Bayes’ Theorem to your own satisfaction at this point, let’s remind ourselves of some <strong>terminology</strong>.</p>
+<div class="math notranslate nohighlight">
+\[\color{firebrick} {P(H|E)} =
+\frac{\color{darkorange} {P(H)}
+\color{darkmagenta} {P(E|H)}}
+{\color{teal} {P(E)}}\]</div>
+<p>The <span class="math notranslate nohighlight">\(\color{firebrick}{\mathbf{\text{posterior probability}}}\)</span> of our hypothesis <span class="math notranslate nohighlight">\(H\)</span> given observed evidence <span class="math notranslate nohighlight">\(E\)</span> is the result of a Bayesian update to the <span class="math notranslate nohighlight">\(\color{darkorange}{\mathbf{\text{prior}}}\)</span> estimate of the probability of <span class="math notranslate nohighlight">\(H\)</span> given the <span class="math notranslate nohighlight">\(\color{darkmagenta}{\mathbf{\text{likelihood}}}\)</span> of observing <span class="math notranslate nohighlight">\(E\)</span> in a world where <span class="math notranslate nohighlight">\(H\)</span> is true and the probability of observing our <span class="math notranslate nohighlight">\(\color{teal}{\mathbf{\text{evidence}}}\)</span> in the first place.</p>
 </div>
-<div class="section" id="bayesian-inference-for-science">
-<h2>Bayesian Inference for Science<a class="headerlink" href="#bayesian-inference-for-science" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="bayesian-inference-and-parameter-estimation">
+<h2>Bayesian Inference and Parameter Estimation<a class="headerlink" href="#bayesian-inference-and-parameter-estimation" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">I haven’t found an online explanation of this material at a not-excessively-mathy level (I firmly believe that you don’t need a lot of knowledge of mathematical terminology to understand this; it can really be done in a very visual way) so I wrote my own. If you know of another, please <a class="reference external" href="mailto:rkurchin&#37;&#52;&#48;mit&#46;edu">send it to me</a> and I’d be happy to link to it here!</p>
+</div>
+<p>Most of the examples used to explain Bayes’ Theorem have two hypotheses to disginguish between (e.g. “is it raining?”: yes or no). However, to use Bayes’ Theorem for <em>parameter estimation</em>, which is the problem of interest here, we need to generalize to many more than two hypotheses, and those hypotheses may be about the values of multiple different parameters. This can make it confusing to conceptualize how to generalize the types of computations we do to estimate the probability of the answer to a yes-or-no question or a dice roll to a problem statement relevant to a more general scientific/modeling inquiry.</p>
+<p><strong>Example: Kinematics</strong></p>
+<p>To illustrate how we do this, let’s use a simple example. Suppose we want to estimate the value of <span class="math notranslate nohighlight">\(g\)</span>, the acceleration due to gravity near Earth’s surface, and <span class="math notranslate nohighlight">\(v_0\)</span>, the initial velocity of a vertically launched projectile (e.g. a ball tossed straight up), based on some measured data bout the trajectory of the ball. We know from basic kinematics that the height of the ball as a function of time should obey (assuming that the projectile’s initial height is defined as 0)</p>
+<div class="math notranslate nohighlight">
+\[y(t) = v_0t - \frac 12 gt^2\]</div>
+<p>This function represents our <strong>model</strong> of the data we will measure and we can equivalently write</p>
+<div class="math notranslate nohighlight">
+\[M(v_0, g; t) = v_0t - \frac 12 gt^2\]</div>
+<p>where we’ve now explicitly delineated our parameters <span class="math notranslate nohighlight">\(g\)</span> and <span class="math notranslate nohighlight">\(v_0\)</span> and our measurement condition <span class="math notranslate nohighlight">\(t\)</span>.</p>
+<p>Now let’s suppose we make a measurement after 2 seconds of flight and find that <span class="math notranslate nohighlight">\(y(2)=3\)</span>, with an uncertainty in the measurement of 0.2. What does this mean about the possible values of <span class="math notranslate nohighlight">\(g\)</span> and <span class="math notranslate nohighlight">\(v_0\)</span>? First, we need to interpret the uncertainty number, meaning we need to introduce an <strong>error model</strong>. We’ll use a Gaussian distribution, a very common pattern for experimental errors in all kinds of measurements:</p>
+<div class="math notranslate nohighlight">
+\[P(x) = \frac{1}{\sqrt{2\pi\sigma^2}}e^{-\frac{(x-\mu)^2}{2\sigma^2}}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\mu\)</span> is the <strong>mean</strong>, <span class="math notranslate nohighlight">\(\sigma\)</span> is the <strong>standard deviation</strong>, and the term in front of the exponential is just a normalizing constant (to make sure that the probability distribution integrates to 1). The distribution looks like this:</p>
+<img alt="img/Normal_Distribution_PDF.png" class="align-center" src="img/Normal_Distribution_PDF.png" />
+<p>(Image from <a class="reference external" href="https://en.wikipedia.org/wiki/Normal_distribution">Wikipedia</a>.)</p>
+<p>What this means for our example is that our measurement of <span class="math notranslate nohighlight">\(y(2)=3.0 \pm 0.2\)</span> is converted to a distribution of possible “true” values for <span class="math notranslate nohighlight">\(y(2)\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[P(y(2)) \propto \exp\left({-\frac{(y(2)-3)^2}{2*0.2^2}}\right)\]</div>
+<p>(I’m leaving off the normalization constant for convenience.) But what we <em>really</em> want is a probability distribution over our parameters, not over the measurement value itself. Fortunately, our model function lets us do just that! We can translate our distribution over possible measured values into one over possible parameter values using the model function:</p>
+<div class="math notranslate nohighlight">
+\[P(v_0, g | y(2)=3 \pm 0.2) \propto \exp\left(\right)\]</div>
 <p>how to generalize to multiple dimensions, incorporate uncertainty, etc.</p>
 </div>
 <div class="section" id="bayesim-s-implementation">
 <h2><code class="docutils literal notranslate"><span class="pre">bayesim</span></code>’s implementation<a class="headerlink" href="#bayesim-s-implementation" title="Permalink to this headline">¶</a></h2>
-<p>Let us assume we want to calculate the thermal conductivity of a bar with length L and cross-sectional area A, subjected to a difference of temperatue <span class="math notranslate nohighlight">\(\Delta T\)</span>. At the hot contact (HC), there will be outgoing thermal flux <span class="math notranslate nohighlight">\(\mathbf{J}(\mathbf{r})\)</span>, which is related to the effective thermal conductivity <span class="math notranslate nohighlight">\(\kappa_{eff}\)</span> via Fourier’s law, i.e.</p>
-<div class="math notranslate nohighlight" id="equation-kappa">
-<span class="eqno">(1)<a class="headerlink" href="#equation-kappa" title="Permalink to this equation">¶</a></span>\[\kappa_{eff} = -\frac{L}{\Delta T A}\int_{HC} dS \, \mathbf{J}(\mathbf{r}) \cdot \mathbf{\hat{n}}\]</div>
-<p>Due to the presence of classical phonon size effects, heat transport is not diffusive, and <span class="math notranslate nohighlight">\(\mathbf{J}(\mathbf{r})\)</span> needs to be calculated by the Boltzmann transport equation (BTE). OpenBTE is based on the mean-free-path formulation of the BTE. The starting point of its derivation is the standard steady-state BTE in the relaxation time approximation</p>
-<div class="math notranslate nohighlight" id="equation-bte">
-<span class="eqno">(2)<a class="headerlink" href="#equation-bte" title="Permalink to this equation">¶</a></span>\[\mathbf{v}_\lambda \cdot \nabla f_\lambda (\mathbf{r}) = \frac{1}{\tau_\lambda}\left[f^0_\lambda(T) - f_\lambda(\mathbf{r}) \right],\]</div>
-<p>where <span class="math notranslate nohighlight">\(\lambda\)</span> collectively describes phonon wave vector <span class="math notranslate nohighlight">\(\mathbf{q}\)</span> and polarization <span class="math notranslate nohighlight">\(p\)</span>, <span class="math notranslate nohighlight">\(\mathbf{v}_\lambda\)</span> is the group velocity, <span class="math notranslate nohighlight">\(f_\lambda(\mathbf{r})\)</span> is the non-equilibrium distribution function. The equilibrium function <span class="math notranslate nohighlight">\(f_\lambda^0(\mathbf{r})\)</span> is the Bose-Einstain distribution at the effective temperature <span class="math notranslate nohighlight">\(T(\mathbf{r})\)</span>, i.e.</p>
-<div class="math notranslate nohighlight" id="equation-equilibrium">
-<span class="eqno">(3)<a class="headerlink" href="#equation-equilibrium" title="Permalink to this equation">¶</a></span>\[f^0_\lambda(\mathbf{r})=\left(e^{\frac{\hbar \omega_\lambda}{k_B T(\mathbf{r})}} + 1 \right)^{-1},\]</div>
-<p>where <span class="math notranslate nohighlight">\(k_B\)</span> is the Boltzmann constant and <span class="math notranslate nohighlight">\(\hbar\omega_\lambda\)</span> is the phonon energy. Energy conservation requires <span class="math notranslate nohighlight">\(\nabla \cdot \mathbf{J}(\mathbf{r}) = 0\)</span>, where the total phonon flux <span class="math notranslate nohighlight">\(\mathbf{J}(\mathbf{r})\)</span> is defined by</p>
-<div class="math notranslate nohighlight" id="equation-thermal">
-<span class="eqno">(4)<a class="headerlink" href="#equation-thermal" title="Permalink to this equation">¶</a></span>\[\mathbf{J}(\mathbf{r}) = \int \hbar\omega_\lambda \mathbf{v}_\lambda f_\lambda(\mathbf{r})  \frac{d\mathbf{q}}{8\pi^3}.\]</div>
-<p>After multiplying both sides of Eq. <a class="reference internal" href="#equation-bte">(2)</a> by <span class="math notranslate nohighlight">\(\hbar \omega_\lambda\)</span> and integrating over the B. Z., we have</p>
-<div class="math notranslate nohighlight" id="equation-energy">
-<span class="eqno">(5)<a class="headerlink" href="#equation-energy" title="Permalink to this equation">¶</a></span>\[\int  \frac{d\mathbf{q}}{8\pi^3} \frac{\hbar\omega_\lambda}{\tau_\lambda} \left[f_\lambda^0(T) -f_\lambda(\mathbf{r})\right] = 0.\]</div>
-<p>In practice, one has to compute <span class="math notranslate nohighlight">\(T(\mathbf{r})\)</span> such as Eq. <a class="reference internal" href="#equation-energy">(5)</a> is satisfied. To simplify this task, we assume that the temperatures variation are small such that the equilibrium distribution can be approximated by its first-order Taylor expansion, i.e.</p>
-<div class="math notranslate nohighlight" id="equation-expansion">
-<span class="eqno">(6)<a class="headerlink" href="#equation-expansion" title="Permalink to this equation">¶</a></span>\[f_\lambda^0(T) \approx f_\lambda^0(T_0) + \frac{C_\lambda}{\hbar\omega_\lambda}\left([T(\mathbf{r})-T_0 \right],\]</div>
-<p>where <span class="math notranslate nohighlight">\(C_\lambda(T_0)\)</span> is the heat capacity at a reference temperature <span class="math notranslate nohighlight">\(T_0\)</span>. After including Eq. <a class="reference internal" href="#equation-expansion">(6)</a> into Eq. <a class="reference internal" href="#equation-energy">(5)</a>, we have</p>
-<div class="math notranslate nohighlight" id="equation-temperature">
-<span class="eqno">(7)<a class="headerlink" href="#equation-temperature" title="Permalink to this equation">¶</a></span>\[T(\mathbf{r}) -T_0 = \int  \frac{d\mathbf{q}}{8\pi^3} a_\lambda \frac{\hbar \omega_\lambda}{C_\lambda}\left[f_\lambda(\mathbf{r}) - f_\lambda^0(T_0)\right],\]</div>
-<p>where</p>
-<div class="math notranslate nohighlight" id="equation-coefficients">
-<span class="eqno">(8)<a class="headerlink" href="#equation-coefficients" title="Permalink to this equation">¶</a></span>\[a_\lambda = \frac{C_\lambda}{\tau_\lambda} \left[\int  \frac{d\mathbf{q}}{8\pi^3} \frac{C_\lambda}{\tau_\lambda} \right]^{-1}.\]</div>
-<p>The BTE under a small applied temperature gradients can be then derived after including Eqs. <a class="reference internal" href="#equation-temperature">(7)</a>-<a class="reference internal" href="#equation-expansion">(6)</a> into Eq. <a class="reference internal" href="#equation-bte">(2)</a></p>
-<div class="math notranslate nohighlight" id="equation-bte2">
-<span class="eqno">(9)<a class="headerlink" href="#equation-bte2" title="Permalink to this equation">¶</a></span>\[\tau_\lambda \mathbf{v}_\lambda \cdot \nabla f_\lambda (\mathbf{r}) +f_\lambda(\mathbf{r}) - f_\lambda^0(T_0) = \frac{C_\lambda}{\hbar \omega_\lambda}\int \frac{d\mathbf{q}'}{8\pi^3} a_\lambda' \frac{\hbar \omega_{\lambda'}}{C_{\lambda'}}\left[f_{\lambda'}(\mathbf{r}) - f_{\lambda'}^0(T_0)) \right].\]</div>
-<p>Upon the change of variable</p>
-<div class="math notranslate nohighlight" id="equation-variable">
-<span class="eqno">(10)<a class="headerlink" href="#equation-variable" title="Permalink to this equation">¶</a></span>\[T_\lambda(\mathbf{r}) = \frac{\hbar\omega_\lambda}{C_\lambda}\left[f_\lambda(\mathbf{r})- f_\lambda^0(T_0) \right],\]</div>
-<p>we obtain the temperature formulation of the BTE</p>
-<div class="math notranslate nohighlight" id="equation-bte3">
-<span class="eqno">(11)<a class="headerlink" href="#equation-bte3" title="Permalink to this equation">¶</a></span>\[\mathbf{F}_\lambda \cdot \nabla T_\lambda(\mathbf{r}) + T_\lambda(\mathbf{r}) - \int \frac{d\mathbf{q}'}{8\pi^3} a_{\lambda'}T_{\lambda'}(\mathbf{r}) = 0,\]</div>
-<p>where <span class="math notranslate nohighlight">\(\mathbf{F}_\lambda=\mathbf{v}_\lambda \tau_\lambda\)</span>. Within this formulation, the thermal flux becomes</p>
-<div class="math notranslate nohighlight" id="equation-thermal2">
-<span class="eqno">(12)<a class="headerlink" href="#equation-thermal2" title="Permalink to this equation">¶</a></span>\[\mathbf{J}(\mathbf{r}) = \int \frac{d\mathbf{q}}{8\pi^3} \frac{C_\lambda}{\tau_\lambda} T_\lambda(\mathbf{r})  \mathbf{F}_\lambda.\]</div>
 </div>
 </div>
 
@@ -102,7 +99,6 @@
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="download.html">Download</a></li>
 <li class="toctree-l1"><a class="reference internal" href="whybayes.html">Why Bayes?</a></li>
@@ -111,7 +107,7 @@
 <li class="toctree-l1"><a class="reference internal" href="manual.html">Manual</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Technical Background</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#bayes-theorem">Bayes’ Theorem</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#bayesian-inference-for-science">Bayesian Inference for Science</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bayesian-inference-and-parameter-estimation">Bayesian Inference and Parameter Estimation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#bayesim-s-implementation"><code class="docutils literal notranslate"><span class="pre">bayesim</span></code>’s implementation</a></li>
 </ul>
 </li>

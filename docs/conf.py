@@ -188,6 +188,10 @@ epub_exclude_files = ['search.html']
 
 # -- Extension configuration -------------------------------------------------
 
+mathjax_config = {
+    'extensions': ['color.js'],
+}
+
 # -- Options for intersphinx extension ---------------------------------------
 
 # Example configuration for intersphinx: refer to the Python standard library.
