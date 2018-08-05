@@ -7,8 +7,7 @@ Welcome to bayesim's documentation!
 ===================================
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :hidden:
 
    download
    whybayes
