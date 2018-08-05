@@ -1,5 +1,5 @@
 .. bayesim documentation master file, created by
-   sphinx-quickstart on Sun Aug  5 10:47:22 2018.
+   sphinx-quickstart on Sun Aug  5 11:10:19 2018.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
@@ -9,14 +9,6 @@ Welcome to bayesim's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
-   download
-   whybayes
-   gettingstarted
-   examples
-   manual
-   bayesics
-   citingbayesim
 
 
 
