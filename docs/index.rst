@@ -10,6 +10,15 @@ Welcome to bayesim's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   download
+   whybayes
+   gettingstarted
+   examples
+   manual
+   bayesics
+   citingbayesim
+
+there will be more text and stuff here...
 
 
 Indices and tables
