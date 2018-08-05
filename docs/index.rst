@@ -20,13 +20,13 @@ Welcome to bayesim's documentation!
 
 bayesim is writted in Python and ...
 
-.. image:: myfile.svg
-   :width: 80 %
-   :align: center
+.. .. image:: myfile.svg
+      :width: 80 %
+      :align: center
 
 
-Indices and tables
-==================
+Indices
+=======
 
 * :ref:`genindex`
 * :ref:`modindex`
