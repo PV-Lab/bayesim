@@ -67,15 +67,26 @@
 <div class="math notranslate nohighlight">
 \[P(x) = \frac{1}{\sqrt{2\pi\sigma^2}}e^{-\frac{(x-\mu)^2}{2\sigma^2}}\]</div>
 <p>where <span class="math notranslate nohighlight">\(\mu\)</span> is the <strong>mean</strong>, <span class="math notranslate nohighlight">\(\sigma\)</span> is the <strong>standard deviation</strong>, and the term in front of the exponential is just a normalizing constant (to make sure that the probability distribution integrates to 1). The distribution looks like this:</p>
-<img alt="img/Normal_Distribution_PDF.png" class="align-center" src="img/Normal_Distribution_PDF.png" />
-<p>(Image from <a class="reference external" href="https://en.wikipedia.org/wiki/Normal_distribution">Wikipedia</a>.)</p>
+<div class="figure align-center" id="id1">
+<img alt="_images/720px-Normal_Distribution_PDF.png" src="_images/720px-Normal_Distribution_PDF.png" />
+<p class="caption"><span class="caption-text">You can see the impact of the two parameters - a larger <span class="math notranslate nohighlight">\(\sigma\)</span> value makes the distribution wider, while <span class="math notranslate nohighlight">\(\mu\)</span> simply shifts the center. (Image from <a class="reference external" href="https://en.wikipedia.org/wiki/Normal_distribution">Wikipedia</a>.)</span></p>
+</div>
 <p>What this means for our example is that our measurement of <span class="math notranslate nohighlight">\(y(2)=3.0 \pm 0.2\)</span> is converted to a distribution of possible “true” values for <span class="math notranslate nohighlight">\(y(2)\)</span>:</p>
 <div class="math notranslate nohighlight">
 \[P(y(2)) \propto \exp\left({-\frac{(y(2)-3)^2}{2*0.2^2}}\right)\]</div>
 <p>(I’m leaving off the normalization constant for convenience.) But what we <em>really</em> want is a probability distribution over our parameters, not over the measurement value itself. Fortunately, our model function lets us do just that! We can translate our distribution over possible measured values into one over possible parameter values using the model function:</p>
 <div class="math notranslate nohighlight">
-\[P(v_0, g | y(2)=3 \pm 0.2) \propto \exp\left(\right)\]</div>
-<p>how to generalize to multiple dimensions, incorporate uncertainty, etc.</p>
+\[P(v_0, g | y(2)=3 \pm 0.2) \propto \exp\left({-\frac{(M(v_0,g;2)-3)^2}{2*0.2^2}}\right) = \exp\left({-\frac{(2v_0 - 2g - 3)^2}{0.08}}\right)\]</div>
+<p>Now we can visualize what that distribution looks like in “<span class="math notranslate nohighlight">\(v_0\)</span>-<span class="math notranslate nohighlight">\(g\)</span>” space:</p>
+<div class="figure align-center" id="id2">
+<img alt="_images/probs_1.png" src="_images/probs_1.png" />
+<p class="caption"><span class="caption-text">On the left, the probability distribution over a wide range of possible values. On the right, zoomed in to near the true value of <span class="math notranslate nohighlight">\(g\)</span> to show Gaussian spread.</span></p>
+</div>
+<p>Another way we might want to visualize would be in the space of what the actual trajectories look like:</p>
+<div class="figure align-center" id="id3">
+<img alt="_images/trajs.png" src="_images/trajs.png" />
+<p class="caption"><span class="caption-text">captioncaptioncaption</span></p>
+</div>
 </div>
 <div class="section" id="bayesim-s-implementation">
 <h2><code class="docutils literal notranslate"><span class="pre">bayesim</span></code>’s implementation<a class="headerlink" href="#bayesim-s-implementation" title="Permalink to this headline">¶</a></h2>

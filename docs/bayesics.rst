@@ -28,7 +28,7 @@ Most of the examples used to explain Bayes' Theorem have two hypotheses to disgi
 
 **Example: Kinematics**
 
-To illustrate how we do this, let's use a simple example. Suppose we want to estimate the value of :math:`g`, the acceleration due to gravity near Earth's surface, and :math:`v_0`, the initial velocity of a vertically launched projectile (e.g. a ball tossed straight up), based on some measured data bout the trajectory of the ball. We know from basic kinematics that the height of the ball as a function of time should obey (assuming that the projectile's initial height is defined as 0)
+To illustrate how we do this, let's use a simple example. Suppose we want to estimate the value of :math:`g`, the acceleration due to gravity near Earth's surface, and :math:`v_0`, the initial velocity of a vertically launched projectile (e.g. a ball tossed straight up), based on some measured data about the trajectory of the ball. We know from basic kinematics that the height of the ball as a function of time should obey (assuming that the projectile's initial height is defined as 0)
 
 .. math:: y(t) = v_0t - \frac 12 gt^2
 
@@ -44,10 +44,10 @@ Now let's suppose we make a measurement after 2 seconds of flight and find that 
 
 where :math:`\mu` is the **mean**, :math:`\sigma` is the **standard deviation**, and the term in front of the exponential is just a normalizing constant (to make sure that the probability distribution integrates to 1). The distribution looks like this:
 
-.. image:: img/Normal_Distribution_PDF.png
+.. figure:: img/720px-Normal_Distribution_PDF.png
    :align: center
 
-(Image from `Wikipedia <https://en.wikipedia.org/wiki/Normal_distribution>`_.)
+   You can see the impact of the two parameters - a larger :math:`\sigma` value makes the distribution wider, while :math:`\mu` simply shifts the center. (Image from `Wikipedia <https://en.wikipedia.org/wiki/Normal_distribution>`_.)
 
 What this means for our example is that our measurement of :math:`y(2)=3.0 \pm 0.2` is converted to a distribution of possible "true" values for :math:`y(2)`:
 
@@ -55,10 +55,21 @@ What this means for our example is that our measurement of :math:`y(2)=3.0 \pm 0
 
 (I'm leaving off the normalization constant for convenience.) But what we *really* want is a probability distribution over our parameters, not over the measurement value itself. Fortunately, our model function lets us do just that! We can translate our distribution over possible measured values into one over possible parameter values using the model function:
 
-.. math:: P(v_0, g | y(2)=3 \pm 0.2) \propto \exp\left(\right)
+.. math:: P(v_0, g | y(2)=3 \pm 0.2) \propto \exp\left({-\frac{(M(v_0,g;2)-3)^2}{2*0.2^2}}\right) = \exp\left({-\frac{(2v_0 - 2g - 3)^2}{0.08}}\right)
 
-how to generalize to multiple dimensions, incorporate uncertainty, etc.
+Now we can visualize what that distribution looks like in ":math:`v_0`-:math:`g`" space:
 
+.. figure:: img/probs_1.png
+   :align: center
+
+   On the left, the probability distribution over a wide range of possible values. On the right, zoomed in to near the true value of :math:`g` to show Gaussian spread.
+
+Another way we might want to visualize would be in the space of what the actual trajectories look like:
+
+.. figure:: img/trajs.png
+   :align: center
+
+   captioncaptioncaption
 
 
 ``bayesim``'s implementation
