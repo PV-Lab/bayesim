@@ -900,31 +900,44 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">visualize</span><span class="p">(</span><span class="o">**</span><span class="n">argv</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Model.visualize_model_unc"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.model.Model.visualize_model_unc">[docs]</a>    <span class="k">def</span> <span class="nf">visualize_model_unc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">argv</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Visualize model uncertainty.</span>
+<span class="c1"># maybe I&#39;ll finish this eventually</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    def visualize_model_unc(self,**argv):</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            ec_vals (`dict`): optional, dict of EC values at which to plot. If not provided, they will be chosen randomly. This can also be a list of dicts for multiple points.</span>
-<span class="sd">            num_ecs (`int`): number of EC values to plot, defaults to 1 (ignored if ecs is provided)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># read in options and do some sanity checks</span>
-        <span class="n">num_ecs</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;num_ecs&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
-        <span class="k">if</span> <span class="s1">&#39;ec_vals&#39;</span> <span class="ow">in</span> <span class="n">argv</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">ec_vals</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="s1">&#39;ec_vals&#39;</span><span class="p">]</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">ec_vals</span><span class="p">,</span><span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ec_vals</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
-                <span class="n">ec_vals</span> <span class="o">=</span> <span class="p">[</span><span class="n">ec_vals</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">ec_vals</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="n">ec_pts</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="n">c</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">other_ecs</span><span class="p">])</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="n">num_ecs</span><span class="p">)</span>
+<span class="sd">        #Visualize model uncertainty.</span>
 
-            <span class="k">for</span> <span class="n">pt</span> <span class="ow">in</span> <span class="n">ec_pts</span><span class="p">:</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">other_ecs</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span> <span class="c1">#pt will just be a float rather than a tuple</span>
-                    <span class="n">ec_vals</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="n">other_ecs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">:</span><span class="n">pt</span><span class="p">})</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">ec_vals</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="bp">self</span><span class="o">.</span><span class="n">ec_names</span><span class="p">()[</span><span class="n">i</span><span class="p">]:</span><span class="n">pt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pt</span><span class="p">))})</span></div>
+<span class="sd">        #Args:</span>
+<span class="sd">        #    ec_vals (`dict`): optional, dict of EC values at which to plot. If not provided, they will be chosen randomly. This can also be a list of dicts for multiple points.</span>
+<span class="sd">        #    num_ecs (`int`): number of EC values to plot, defaults to 1 (ignored if ecs is provided)</span>
 
+<span class="sd">        # read in options and do some sanity checks</span>
+<span class="sd">        num_ecs = argv.get(&#39;num_ecs&#39;,1)</span>
+<span class="sd">        if &#39;ec_vals&#39; in argv.keys():</span>
+<span class="sd">            ec_vals = argv[&#39;ec_vals&#39;]</span>
+<span class="sd">            if not (isinstance(ec_vals,list) or isinstance(ec_vals,np.ndarray)):</span>
+<span class="sd">                ec_vals = [ec_vals]</span>
+<span class="sd">        else:</span>
+<span class="sd">            ec_vals = []</span>
+<span class="sd">            ec_pts_df = self.ec_pts.sample(num_ecs)</span>
+<span class="sd">            ec_pts=[]</span>
+<span class="sd">            for pt in ec_pts_df.iterrows():</span>
+<span class="sd">                ec_vals.append({name:pt[1][name] for name in self.ec_names()})</span>
+<span class="sd">                ec_pts.append(tuple(pt[1][self.ec_names()]))</span>
 
+<span class="sd">        # set up subplots</span>
+<span class="sd">        fig, axs = plt.subplots(len(ec_vals), figsize=(13,4*len(ec_vals)), squeeze=False)</span>
+
+<span class="sd">        for i in range(len(ec_vals)):</span>
+<span class="sd">            ecs_here = ec_vals[i]</span>
+<span class="sd">            plot_title = &#39;&#39;</span>
+<span class="sd">            for c in self.params.ecs:</span>
+<span class="sd">                plot_title = plot_title + &#39;%s=%s, &#39;%(c.name,c.get_val_str(ecs_here[c.name]))</span>
+<span class="sd">            subset = self.model_data.loc[self.model_data_ecgrps[tuple([ecs_here[n] for n in self.ec_names()])]]</span>
+<span class="sd">            dense_grid = probs.populate_dense_grid(df=subset, col_to_pull=&#39;uncerainty&#39;, make_ind_lists=False)</span>
+<span class="sd">            mat = dense_grid[&#39;mat&#39;]</span>
+<span class="sd">            axs[i].imshow(mat)</span>
+<span class="sd">            axs[i].set_title(plot_title)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="Model.top_probs"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.model.Model.top_probs">[docs]</a>    <span class="k">def</span> <span class="nf">top_probs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a DataFrame with the &#39;num&#39; most probable points and some of the less interesting columns hidden.&quot;&quot;&quot;</span>
