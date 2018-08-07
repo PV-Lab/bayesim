@@ -3,7 +3,7 @@ TO DO LIST FOR BAYESIM
 
 [* for necessary for paper, ~ for need to decide if it's necessary, - for future ideas]
 
-* add "prerequisites" or something section to docs
+* add "prerequisites" or something section to docsgit
 
 * add probability axis labels
 
@@ -13,8 +13,6 @@ TO DO LIST FOR BAYESIM
 m = bym.Model(obs_data_path='obs_data.h5', output_var='J', ec_x_var='V', model_data_path='model_data.h5')
 m.set_param_units('J', 'mA/cm^2')
 might be something about automatic tolerance setting?
-
-* add errors to comparison_plot()
 
 * either move true_vals star to x-axis or use a vertical line (and add legend for them)
 

@@ -566,51 +566,64 @@ class Model(object):
             #print('You provided a fixed value for your x variable, ignoring that and plotting the full range.')
             #del ecs[self.params.ec_x_name]
 
+        # get parameter points for which to plot data
         param_pts = self.probs.most_probable(num_param_pts)
 
-        fig, axs = plt.subplots(len(ec_vals), sharex=True, figsize=(6,4*len(ec_vals)))
+        # set up subplots
+        fig, axs = plt.subplots(len(ec_vals), 2, figsize=(13,4*len(ec_vals)), squeeze=False)
 
+        # get color cycle
+        prop_cycle = plt.rcParams['axes.prop_cycle']
+        colors = prop_cycle.by_key()['color']
+
+        # at each set of conditions...
         for i in range(len(ec_vals)):
-            if len(ec_vals)>1:
-                ax = axs[i]
-            else:
-                ax = axs
-            ax.set_prop_cycle(None)
             ecs_here = ec_vals[i]
             obs_data = self.obs_data
             plot_title = ''
+            # get obs data for correct EC values
             for c in other_ecs:
                 obs_data =  obs_data[abs(obs_data[c.name]-ecs_here[c.name])<=10.**(-1.*c.tol_digits)]
                 plot_title = plot_title + '%s=%s, '%(c.name,c.get_val_str(ecs_here[c.name]))
             obs_data = obs_data.sort_values(by=[self.params.ec_x_name])
-            ax.plot(obs_data[self.params.ec_x_name], obs_data[self.output_var])
-            j = 1
+            # plot obs data
+            axs[i,0].plot(obs_data[self.params.ec_x_name], obs_data[self.output_var], color=colors[0])
+
             legend_list = ['observed']
+            c_ind = 1
+            # plot modeled data and errors
             for pt in param_pts.iterrows():
+                color = colors[c_ind]
                 model_data = self.model_data.loc[self.model_data_grps.groups[tuple([pt[1][n] for n in self.fit_param_names()])]]
                 for c in other_ecs:
                     model_data =  model_data[abs(model_data[c.name]-ecs_here[c.name])<=10.**(-1.*c.tol_digits)]
                 model_data.sort_values(by=[self.params.ec_x_name])
-                ax.plot(model_data[self.params.ec_x_name],model_data[self.output_var])
+                errors = np.subtract(model_data[self.output_var], obs_data[self.output_var])
+                axs[i,0].plot(model_data[self.params.ec_x_name], model_data[self.output_var], color=color)
+                axs[i,1].plot(model_data[self.params.ec_x_name], errors, color=color)
                 leg_label = 'modeled: '
                 for p in self.params.fit_params:
                     leg_label = leg_label + '%s=%s, '%(p.name, p.get_val_str(pt[1][p.name]))
                 leg_label = leg_label[:-2]
                 legend_list.append(leg_label)
-                j = j + 1
+                c_ind = c_ind+1
 
-            # set ylims to match observed data
+            # set ylims to match observed data and label axes
             obs_max = max(obs_data[self.output_var])
             obs_min = min(obs_data[self.output_var])
             obs_width = obs_max-obs_min
-            ax.set_ylim([obs_min-0.05*obs_width, obs_max+0.05*obs_width])
+            axs[i,0].set_ylim([obs_min-0.05*obs_width, obs_max+0.05*obs_width])
             xvar = self.params.get_ec_x()
-            plt.xlabel('%s [%s]' %(xvar.name, xvar.units))
+            axs[i,0].set_xlabel('%s [%s]' %(xvar.name, xvar.units))
+            axs[i,1].set_xlabel('%s [%s]' %(xvar.name, xvar.units))
             yvar = self.params.find_param(self.output_var)
-            ax.set_ylabel('%s [%s]' %(yvar.name, yvar.units))
-            ax.legend(legend_list)
+            axs[i,0].set_ylabel('%s [%s]' %(yvar.name, yvar.units))
+            axs[i,1].set_ylabel('%s [%s]' %('$\Delta$'+yvar.name, yvar.units))
+            axs[i,0].legend(legend_list)
             plot_title = plot_title[:-2]
-            ax.set_title(plot_title)
+            axs[i,0].set_title(plot_title)
+            axs[i,1].set_title(plot_title+': errors')
+            plt.tight_layout()
 
     def run(self, **argv):
         """
