@@ -3,9 +3,26 @@ TO DO LIST FOR BAYESIM
 
 [* for necessary for paper, ~ for need to decide if it's necessary, - for future ideas]
 
+* add a "how to use this notebook" and general introduction to what happens inside
+
+* figure out rounding inconsistencies when attaching from file, like
+m = bym.Model(obs_data_path='obs_data.h5', output_var='J', ec_x_var='V', model_data_path='model_data.h5')
+m.set_param_units('J', 'mA/cm^2')
+might be something about automatic tolerance setting?
+
+* explain what 'head' does and what the probability lines are
+
+* add calls to show lengths of data before plots to make that point clearer
+
+* add more optional commented out code to show other things to try in a given cell
+
+* also explain the cell generating the dataset
+
+* make clearer that the red stuff is the real values
+
 * add errors to comparison_plot()
 
-* either move true_vals star to x-axis or use a vertical line
+* either move true_vals star to x-axis or use a vertical line (and add legend for them)
 
 * figure out the weird conda and numpy errors in Binder
 
@@ -13,9 +30,9 @@ TO DO LIST FOR BAYESIM
 
 * more 'verbose' options
 
-* add functions to set parameter units
-
 * fully updated documentation
+
+* eventually, links in notebook examples to relevant bits of documentation...
 
 * change model.attach_params to call attach_ecs and attach_fit_params
 

@@ -76,7 +76,7 @@ class Pmf(object):
             # for now just copy in the param_list wholesale
             # eventually should probably scrub and/or update vals...
             self.num_sub = 0
-            self.params = argv['params'].fit_params
+            self.params = argv['params']
             self.points = self.make_points_list(self.params)
             if len(self.params)==0:
                 self.is_empty = True

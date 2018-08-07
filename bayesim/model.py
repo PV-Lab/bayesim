@@ -139,14 +139,13 @@ class Model(object):
             else:
                 raise ValueError("You need to define your output variable!")
 
-            # attach EC's if provided
+            # attach EC's if provided explicitly, or infer from obs_data
             if len(set(['ec_list','ec_tols','ec_units']).intersection(set(argv.keys())))>0:
                 self.attach_ecs(**argv)
 
             # set x-axis EC variable
             if 'ec_x_var' in argv.keys():
                 self.params.set_ec_x(argv['ec_x_var'])
-                del argv['ec_x_var'] # don't want to trigger next check
 
             # attach observed data if provided
             if 'obs_data_path' in argv.keys():
@@ -157,7 +156,7 @@ class Model(object):
 
             # attach modeled data if provided
             if 'model_data_path' in argv.keys():
-                self.attach_model(mode='file', fpath=argv['model_data_path'])
+                self.attach_model(mode='file', **argv)
             elif 'model_data_func' in argv.keys():
                 self.attach_model(mode='function', model_func=argv['model_data_func'])
             else:
@@ -174,7 +173,7 @@ class Model(object):
         if not self.params.is_empty():
             print('Overwriting preexiting parameter list with this new one.')
         self.params = params
-        self.probs = Pmf(params=params)
+        self.probs = Pmf(params=params.fit_params)
 
     def attach_ecs(self, **argv):
         """
@@ -255,7 +254,8 @@ class Model(object):
             return
         else:
             cols.remove(output_col)
-            if len(self.params.ecs)==0 or 'ec_x_var' in argv.keys() and len(self.params.ecs)==1:
+            if len(self.params.ecs)==0 or ('ec_x_var' in argv.keys() and len(self.params.ecs)==1):
+                print('Determining experimental conditions from observed data...')
                 for c in cols:
                     if not c=='error':
                         # 1% of the smallest difference between values
@@ -356,7 +356,7 @@ class Model(object):
                     if not c=='error':
                         vals = list(set(model_data[c]))
                         self.params.add_fit_param(name=c, vals=vals)
-                print("Found: %s"%self.fit_param_names())
+                print("Found fitting parameters: %s"%self.fit_param_names())
 
     def check_ecs(self,**argv):
         """
@@ -404,12 +404,11 @@ class Model(object):
         Args:
             mode (`str`): 'file' or 'function'
             func_name (callable): if mode='function', provide function here
-            fpath (`str`): if mode=='file', provide path to file
+            model_data_path (`str`): if mode=='file', provide path to file
             output_column (`str`): optional, header of column containing output data (required if different from self.output_var)
             calc_errors (`bool`): whether to calculate model errors as well, defaults to False
             verbose (`bool`): flag for verbosity, defaults to False
         """
-
         mode = argv['mode']
         output_col = argv.get('output_column',self.output_var)
         verbose = argv.get('verbose', False)
@@ -420,7 +419,7 @@ class Model(object):
 
         if mode == 'file':
             # import and sort data on parameter values
-            self.model_data = dd.io.load(argv['fpath']).sort_values(self.fit_param_names()+self.ec_names()).reset_index(drop=True)
+            self.model_data = dd.io.load(argv['model_data_path']).sort_values(self.fit_param_names()+self.ec_names()).reset_index(drop=True)
 
             # Check that columns match EC's and parameter names (and populate fit_params if needed)
             self.check_data_columns(model_data=self.model_data,output_column=output_col)
@@ -449,6 +448,7 @@ class Model(object):
                     raise ValueError('Your modeled parameter space does not appear to be on a grid; the current version of bayesim can only handle initially gridded spaces (unless using a previously saved subdivided state).')
                     return
                 else:
+
                     param_vals = {name:list(set(param_points[name])) for name in self.fit_param_names()}
                     # try to guess spacing - this may need twiddling
                     param_spacing = {}
@@ -465,7 +465,8 @@ class Model(object):
                     for name in param_vals.keys():
                         params.add_fit_param(name=name,vals=param_vals[name])
                     self.attach_params(params)
-                    self.probs = Pmf(params=params.fit_params)
+
+                    self.probs = Pmf(params=self.params.fit_params)
 
         elif mode=='function':
             # is there a way to save this (that could be saved to HDF5 too) so that subdivide can automatically call it?
@@ -502,10 +503,17 @@ class Model(object):
         # reset index to avoid duplication
         self.model_data.reset_index(inplace=True,drop=True)
 
+        #print('before rounding')
+        #print(self.model_data.head())
+
         # round EC's and generate groups
         rd_dct = {c.name:c.tol_digits for c in self.params.ecs}
+        #print(rd_dct)
         self.model_data = self.model_data.round(rd_dct)
         self.model_data_ecgrps = self.model_data.groupby(self.ec_names())
+
+        #print('before index calc')
+        #print(self.model_data.head())
 
         # update flag and indices
         self.needs_new_model_data = False
