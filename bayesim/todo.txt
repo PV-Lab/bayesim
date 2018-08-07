@@ -3,22 +3,16 @@ TO DO LIST FOR BAYESIM
 
 [* for necessary for paper, ~ for need to decide if it's necessary, - for future ideas]
 
-* add a "how to use this notebook" and general introduction to what happens inside
+* add "prerequisites" or something section to docs
+
+* add probability axis labels
+
+* maybe visualize model uncertainties somehow?
 
 * figure out rounding inconsistencies when attaching from file, like
 m = bym.Model(obs_data_path='obs_data.h5', output_var='J', ec_x_var='V', model_data_path='model_data.h5')
 m.set_param_units('J', 'mA/cm^2')
 might be something about automatic tolerance setting?
-
-* explain what 'head' does and what the probability lines are
-
-* add calls to show lengths of data before plots to make that point clearer
-
-* add more optional commented out code to show other things to try in a given cell
-
-* also explain the cell generating the dataset
-
-* make clearer that the red stuff is the real values
 
 * add errors to comparison_plot()
 

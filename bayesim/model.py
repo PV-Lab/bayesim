@@ -226,7 +226,7 @@ class Model(object):
             ec_x_var (`str`): required if keep_all is False, the experimental condition over which to measure differences (e.g. V for JV(Ti) curves in PV). It will also be used in plotting later.
             max_ec_x_step (`float`): used if keep_all is False, largest step to take in the ec_x_var before keeping a point even if curve if "flat" (defaults to 0.05 * range of ec_x_var)
             thresh_dif_frac (`float`): used if keep_all is False, threshold (as a percentage of the maximum value, defaults to 0.03)
-            fixed_error (`float`): required if running in function mode or if file doesn't have an 'error' column, value to use as uncertainty in measurement
+            fixed_unc (`float`): required if running in function mode or if file doesn't have an 'uncertainty' column, value to use as uncertainty in measurement
             output_column (`str`): optional, header of column containing output data (required if different from self.output_var)
             verbose (`bool`): flag for verbosity, defaults to False
         """
@@ -249,15 +249,15 @@ class Model(object):
         if output_col not in cols:
             raise NameError('Your output variable name, %s, is not the name of a column in your input data!' %(output_col))
             return
-        elif 'fixed_error' not in argv.keys() and 'error' not in cols:
-            raise NameError('You need to either provide a value for fixed_error or your measurement data needs to have an error column!')
+        elif 'fixed_unc' not in argv.keys() and 'uncertainty' not in cols:
+            raise NameError('You need to either provide a value for fixed_unc or your measurement data needs to have an uncertainty column!')
             return
         else:
             cols.remove(output_col)
             if len(self.params.ecs)==0 or ('ec_x_var' in argv.keys() and len(self.params.ecs)==1):
                 print('Determining experimental conditions from observed data...')
                 for c in cols:
-                    if not c=='error':
+                    if not c=='uncertainty':
                         # 1% of the smallest difference between values
                         tol=0.01*min(abs(np.diff(list(set(self.obs_data[c])))))
                         if c==argv['ec_x_var']:
@@ -266,19 +266,19 @@ class Model(object):
                             self.params.add_ec(name=c, tolerance=tol)
                 print('Identified experimental conditions as %s. If this is wrong, rerun and explicitly specify them with attach_ec (make sure they match data file columns) or remove extra columns from data file.' %(str(self.params.param_names('ec'))))
             else:
-                if 'error' not in cols:
-                    self.obs_data['error'] = argv['fixed_error']*np.ones(len(self.obs_data))
-                    cols.extend('error')
-                    self.params.set_tolerance(self.output_var, 0.01*argv['fixed_error'])
-                else: # set tolerance to 1% of minimum error
-                    self.params.set_tolerance(self.output_var, 0.01*min(self.obs_data['error']))
-                if set(cols) == set(self.ec_names()+['error']):
+                if 'uncertainty' not in cols:
+                    self.obs_data['uncertainty'] = argv['fixed_unc']*np.ones(len(self.obs_data))
+                    cols.extend('uncertainty')
+                    self.params.set_tolerance(self.output_var, 0.01*argv['fixed_unc'])
+                else: # set tolerance to 1% of minimum uncertainty
+                    self.params.set_tolerance(self.output_var, 0.01*min(self.obs_data['uncertainty']))
+                if set(cols) == set(self.ec_names()+['uncertainty']):
                     pass # all good
-                elif set(self.ec_names()+['error']) <= set(cols):
+                elif set(self.ec_names()+['uncertainty']) <= set(cols):
                     print('Ignoring extra columns in data file: %s'%(str(list(set(cols)-set(self.ec_names())))))
-                elif set(cols) <= set(self.ec_names()+['error']):
+                elif set(cols) <= set(self.ec_names()+['uncertainty']):
                     print('These experimental conditions were missing from your data file: %s\nProceeding assuming that %s is the full set of experimental conditions...'%(str(list(set(ec)-set(cols))), str(cols)))
-                    for c in [c for c in cols if not c=='error']:
+                    for c in [c for c in cols if not c=='uncertainty']:
                         self.params.add_ec(name=c)
 
         # pick out rows to keep - the way to do this thresholding should probably be tweaked
@@ -353,7 +353,7 @@ class Model(object):
             else:
                 print("Determining fitting parameters from modeled data...")
                 for c in cols:
-                    if not c=='error':
+                    if not c=='uncertainty':
                         vals = list(set(model_data[c]))
                         self.params.add_fit_param(name=c, vals=vals)
                 print("Found fitting parameters: %s"%self.fit_param_names())
@@ -406,13 +406,13 @@ class Model(object):
             func_name (callable): if mode='function', provide function here
             model_data_path (`str`): if mode=='file', provide path to file
             output_column (`str`): optional, header of column containing output data (required if different from self.output_var)
-            calc_errors (`bool`): whether to calculate model errors as well, defaults to False
+            calc_unc (`bool`): whether to calculate model uncertainties as well, defaults to False
             verbose (`bool`): flag for verbosity, defaults to False
         """
         mode = argv['mode']
         output_col = argv.get('output_column',self.output_var)
         verbose = argv.get('verbose', False)
-        calc_errors = argv.get('calc_errors', False)
+        calc_unc = argv.get('calc_unc', False)
 
         if verbose:
             print('Attaching simulated data...')
@@ -519,8 +519,8 @@ class Model(object):
         self.needs_new_model_data = False
         self.calc_indices()
 
-        if calc_errors:
-            self.calc_model_errors()
+        if calc_unc:
+            self.calc_model_unc()
 
     def comparison_plot(self,**argv):
         """
@@ -622,7 +622,6 @@ class Model(object):
             th_pm (`float`): threshold quantity of probability mass to be concentrated in th_pv fraction of parameter space to trigger the run to stop (defaults to 0.8)
             th_pv (`float`): threshold fraction of parameter space volume for th_pm fraction of probability to be concentrated into to trigger the run to stop (defaults to 0.05)
             min_num_pts (`int`): minimum number of observation points to use - if threshold is reached before this number of points has been used, it will start over and the final PMF will be the average of the number of runs needed to use sufficient points (defaults to 0.7 * the number of experimental measurements)
-            force_exp_err (`bool`): If true, likelihood calculations will use only experimental errors and ignore the computed model errors.
             prob_bias (`float`): number from 0 to 0.5, fraction of PMF from previous step to mix into prior for this step (defaults to 0) - higher values will likely converge faster but possibly have larger errors, especially if min_num_pts is small
             verbose (`bool`): flag for verbosity, defaults to False
         """
@@ -631,7 +630,6 @@ class Model(object):
         th_pm = argv.get('th_pm', 0.8)
         th_pv = argv.get('th_pv', 0.05)
         min_num_pts = argv.get('min_num_pts', int(0.7*len(self.obs_data)))
-        force_exp_err = argv.get('force_exp_err', False)
         verbose = argv.get('verbose', False)
         bias = argv.get('prob_bias',0.0)
         if bias < 0 or bias > 0.5:
@@ -697,7 +695,7 @@ class Model(object):
                     model_here = deepcopy(self.model_data.loc[self.model_data_ecgrps.groups[ecpt]])
 
                     # compute likelihood and do a Bayesian update
-                    lkl, delta_count = self.probs.likelihood(meas=obs, model_at_ec=model_here,output_col=self.output_var,force_exp_err=force_exp_err)
+                    lkl, delta_count = self.probs.likelihood(meas=obs, model_at_ec=model_here,output_col=self.output_var)
                     self.probs.multiply(lkl)
                     num_pts_used = num_pts_used + 1
                     delta_count_list.append(delta_count)
@@ -721,7 +719,7 @@ class Model(object):
         self.probs.points['prob'] = probs
         print('Did a total of %d runs to use a total of %d observations.'%(num_runs,num_pts_used))
 
-        print('\nAn average of %d / %d probability points used model errors (rather than experimental errors) during this run.'%(int(round(np.mean(delta_count_list))),len(self.probs.points)))
+        print('\nAn average of %d / %d probability points used model uncertainty (rather than experimental uncertainty) during this run.'%(int(round(np.mean(delta_count_list))),len(self.probs.points)))
 
         if save_step >=0:
             dd.io.save(pmf_folder+'sub%d_PMF_final.h5'%(self.probs.num_sub),self.probs.points)
@@ -780,9 +778,9 @@ class Model(object):
         sim_pts = pd.DataFrame(data=pts,columns=columns)
         dd.io.save(fpath,sim_pts)
 
-    def calc_model_errors(self, **argv):
+    def calc_model_unc(self, **argv):
         """
-        Calculates largest difference in modeled output along any parameter direction for each experimental condition, to be used for error in calculating likelihoods. Currently only works if data is on a grid.
+        Calculates largest difference in modeled output along any parameter direction for each experimental condition, to be used for uncertainty in calculating likelihoods. Currently only works if data is on a grid.
 
         (also assumes it's sorted by param names and then EC's)
 
@@ -792,7 +790,7 @@ class Model(object):
 
         verbose = argv.get('verbose', False)
         if verbose:
-            print('Calculating model errors...')
+            print('Calculating model uncertainty...')
 
         param_lengths = [p.length for p in self.params.fit_params]
 
@@ -807,10 +805,10 @@ class Model(object):
             inds = self.model_data_ecgrps.groups[entry[0]]
             deltas[inds] = entry[1]
 
-        self.model_data['error'] = deltas
+        self.model_data['uncertainty'] = deltas
 
         if verbose:
-            print('Calculating model errors took %.2f seconds.'%(time.time()-start_time))
+            print('Calculating model uncertainty took %.2f seconds.'%(time.time()-start_time))
 
     def save_state(self,filename='bayesim_state.h5'): #rewrite this!
         """

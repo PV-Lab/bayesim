@@ -339,15 +339,13 @@ class Pmf(object):
 
         Args:
             meas (`float`): one output value
-            model_at_ec (`DataFrame`): DataFrame containing model data at the experimental condition of the measurement and error values in a column called 'error' for every point in parameter space
+            model_at_ec (`DataFrame`): DataFrame containing model data at the experimental condition of the measurement and uncertainty values in a column called 'uncertainty' for every point in parameter space
             output_col (`str`): name of column with output variable
 
             ec: dict with keys of condition names and values
             meas: one output value e.g. J
-            error: error in measured value (stdev of a Gaussian)
+            unc: uncertainty in measured value (stdev of a Gaussian)
             model_func: should accept one dict of params and one of conditions and output measurement (might deprecate)
-
-            force_exp_err (`bool`): If true, likelihood calculations will use only experimental errors and ignore the computed model errors.
         """
 
         # read in and process inputs
@@ -357,8 +355,7 @@ class Pmf(object):
         model_data.reset_index(drop=True)
         output_col = argv['output_col']
         meas_val = meas[output_col]
-        meas_err = meas['error']
-        force_exp_err = argv.get('force_exp_err',False)
+        meas_err = meas['uncertainty']
 
         # set up likelihood DF
         lkl = deepcopy(self)
@@ -373,11 +370,8 @@ class Pmf(object):
             #model_val = model_func(ec, dict(point[1]))
             model_pt = model_data.iloc[point[0]]
             model_val = float(model_pt[output_col])
-            model_err = float(model_pt['error'])
-            if force_exp_err:
-                err = meas_err
-            else:
-                err = max(model_err,meas_err)
+            model_err = float(model_pt['uncertainty'])
+            err = max(model_err,meas_err)
 
             # tally how many times deltas were used
             if err==model_err:
