@@ -6,6 +6,7 @@ from itertools import product
 from copy import deepcopy
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import bayesim.params as pm
 import timeit
 from itertools import product
@@ -333,9 +334,7 @@ class Pmf(object):
 
     def likelihood(self, **argv):
         """
-        Compute likelihood over this Pmf's parameter space assuming model_func() represents the true physical behavior of the system.
-
-        Obviously, model_func() needs to be a callable in the working namespace and has to accept conditions in the format that they're fed into this function.
+        Compute likelihood over this Pmf's parameter space given modeled data at the given EC's for every parameter space point and a measurement at the same EC's.
 
         Args:
             meas (`float`): one output value
@@ -558,15 +557,14 @@ class Pmf(object):
         Args:
             frac_points (`float`): number >0 and <=1 indicating fraction of total points to visualize (will take the most probable, defaults to 1.0)
             just_grid (`bool`): whether to show only the grid (i.e. visualize subdivisions) or the whole PMF (defaults to False)
-            save_file (`bool`): whether to save a file
-            fpath (`str`): optional, path to save image to, defaults to False
+            fpath (`str`): optional, path to save image to
             true_vals (`dict`): optional, set of param values to highlight on PMF
         """
         # read in options
         frac_points = argv.get('frac_points', 1.0)
         just_grid = argv.get('just_grid', False)
-        save_file = argv.get('save_file', False)
-        fpath = argv.get('fpath', 'probs_%d.png'%(self.num_sub))
+        if 'fpath' in argv.keys():
+            fpath = argv['fpath']
 
         if 'true_vals' in argv.keys():
             # check that all params are there
@@ -604,8 +602,16 @@ class Pmf(object):
                 y_param = self.params[rownum]
 
                 # pre-formatting
-                axes[rownum][colnum].set_xlim(plot_ranges[x_param.name][0],plot_ranges[x_param.name][1])
+                x_min = plot_ranges[x_param.name][0]
+                x_max = plot_ranges[x_param.name][1]
+                axes[rownum][colnum].set_xlim(x_min, x_max)
                 axes[rownum][colnum].set_axisbelow(True)
+                # force four x-ticks to avoid numbers overlapping...hopefully
+                round_digits = -1*(int(math.floor(np.log10(x_max-x_min)))) + 1
+                if round((x_max-x_min)/5.0, round_digits) == 0:
+                    round_digits = round_digits + 1
+                tick_spacing = round((x_max-x_min)/5., )
+                axes[rownum][colnum].xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
 
                 for item in ([axes[rownum][colnum].xaxis.label, axes[rownum][colnum].yaxis.label] +axes[rownum][colnum].get_xticklabels() + axes[rownum][colnum].get_yticklabels()):
                     item.set_fontsize(20)
@@ -626,8 +632,12 @@ class Pmf(object):
                         elif x_param.spacing=='linear':
                             vals = [0.5*(bins[i]+bins[i+1]) for i in range(len(probs))]
                         axes[rownum][colnum].hist(vals, weights=probs, bins=bins, edgecolor='k', linewidth=1.0)
+
                         # formatting
                         axes[rownum][colnum].set_ylim(0,1)
+                        axes[rownum][colnum].yaxis.set_label_position("right")
+                        axes[rownum][colnum].set_ylabel('P(%s)'%x_param.name, rotation=270, labelpad=20) #labelpad is kind of a brute-force way to do this and might break if we change the figure size, but va='bottom' wasn't working
+                        #axes[rownum][colnum].`grid`(axis='y')
 
                         # add true value if desired
                         if plot_true_vals:
@@ -662,6 +672,7 @@ class Pmf(object):
                         true_x = [true_vals[x_param.name]]
                         true_y = [true_vals[y_param.name]]
                         axes[rownum][colnum].scatter(true_x,true_y,200,c="None",marker='o',linewidths=3,edgecolors='r',zorder=20)
+                    #axes[rownum][colnum].grid(False)
                     offdiag_finish = timeit.default_timer()
                     offdiag_time = round(offdiag_finish-offdiag_start,2)
                     #print('off-diagonal plot finished in ' + str(offdiag_time) + ' seconds')
@@ -678,5 +689,6 @@ class Pmf(object):
                 axes[i][0].set_ylabel(ylabel)
 
         plt.tight_layout()
-        if save_file:
+
+        if 'fpath' in argv.keys():
             plt.savefig(fpath)

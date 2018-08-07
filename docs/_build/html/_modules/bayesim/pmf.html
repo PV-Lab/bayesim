@@ -9,7 +9,7 @@
     <title>bayesim.pmf &#8212; bayesim 0.9.1 documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
@@ -39,6 +39,7 @@
 <span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
 <span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib.ticker</span> <span class="k">as</span> <span class="nn">ticker</span>
 <span class="kn">import</span> <span class="nn">bayesim.params</span> <span class="k">as</span> <span class="nn">pm</span>
 <span class="kn">import</span> <span class="nn">timeit</span>
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">product</span>
@@ -85,8 +86,8 @@
 
         <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">points</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span>
         <span class="n">df</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">total_prob</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))]</span>
-
-        <span class="k">return</span> <span class="n">df</span></div>
+</div>
+        <span class="k">return</span> <span class="n">df</span>
 
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
@@ -126,8 +127,8 @@
 <div class="viewcode-block" id="Pmf.as_dict"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.as_dict">[docs]</a>    <span class="k">def</span> <span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return in (readable) dictionary form.&quot;&quot;&quot;</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>
-        <span class="n">d</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="vm">__dict__</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">d</span></div>
+        <span class="n">d</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="vm">__dict__</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">]</span></div>
+        <span class="k">return</span> <span class="n">d</span>
 
 <div class="viewcode-block" id="Pmf.normalize"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.normalize">[docs]</a>    <span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Normalize overall PMF.&quot;&quot;&quot;</span>
@@ -135,8 +136,8 @@
         <span class="c1">#print(norm_const,type(norm_const))</span>
         <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">norm_const</span><span class="p">)</span><span class="o">&lt;</span><span class="mf">1e-12</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Somehow the normalization constant was zero! To play it safe, I won&#39;t do anything.&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">/</span><span class="n">norm_const</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]]</span></div>
+        <span class="k">else</span><span class="p">:</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">/</span><span class="n">norm_const</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]]</span>
 
 <div class="viewcode-block" id="Pmf.uniformize"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.uniformize">[docs]</a>    <span class="k">def</span> <span class="nf">uniformize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -145,16 +146,16 @@
 
 <span class="sd">        Note that because subdivisions are not uniform that this is NOT a uniform prior anymore.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">norm_const</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="o">/</span><span class="n">norm_const</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">norm_const</span><span class="p">)]</span></div>
+        <span class="n">norm_const</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="o">/</span><span class="n">norm_const</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">norm_const</span><span class="p">)]</span>
 
 <div class="viewcode-block" id="Pmf.all_current_values"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.all_current_values">[docs]</a>    <span class="k">def</span> <span class="nf">all_current_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        List all values currently being considered for param.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ls</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">param</span><span class="p">])))</span>
-        <span class="n">ls</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">ls</span></div>
+        <span class="n">ls</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span></div>
+        <span class="k">return</span> <span class="n">ls</span>
 
 <div class="viewcode-block" id="Pmf.find_neighbor_boxes"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.find_neighbor_boxes">[docs]</a>    <span class="k">def</span> <span class="nf">find_neighbor_boxes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -245,8 +246,8 @@
         <span class="c1"># for now, drop all of them - should keep closest corner really</span>
         <span class="n">all_out_query</span> <span class="o">=</span> <span class="n">all_out_query</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
         <span class="n">all_out_check</span> <span class="o">=</span> <span class="n">neighbor_points</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">all_out_query</span><span class="p">)</span>
-        <span class="n">inds_to_drop</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">all_out_check</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">neighbor_points</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="n">inds_to_drop</span><span class="p">)</span></div>
+        <span class="n">inds_to_drop</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">all_out_check</span><span class="o">.</span><span class="n">index</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">neighbor_points</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="n">inds_to_drop</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Pmf.subdivide"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.subdivide">[docs]</a>    <span class="k">def</span> <span class="nf">subdivide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold_prob</span><span class="p">,</span> <span class="n">include_neighbors</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -333,8 +334,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">num_sub</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_sub</span> <span class="o">+</span> <span class="mi">1</span>
 
         <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">num_high_prob_boxes</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; box(es) with probability &gt; &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">threshold_prob</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; and &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">num_nbs</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; neighboring boxes subdivided!&#39;</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">new_boxes</span></div>
+</div>
+        <span class="k">return</span> <span class="n">new_boxes</span>
 
 <div class="viewcode-block" id="Pmf.multiply"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.multiply">[docs]</a>    <span class="k">def</span> <span class="nf">multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other_pmf</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -361,14 +362,12 @@
         <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">new_probs</span><span class="p">))</span><span class="o">&lt;</span><span class="mf">1e-12</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;You&#39;re gonna have a bad time...not multiplying&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_probs</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_probs</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
 
 <div class="viewcode-block" id="Pmf.likelihood"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.likelihood">[docs]</a>    <span class="k">def</span> <span class="nf">likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Compute likelihood over this Pmf&#39;s parameter space assuming model_func() represents the true physical behavior of the system.</span>
-
-<span class="sd">        Obviously, model_func() needs to be a callable in the working namespace and has to accept conditions in the format that they&#39;re fed into this function.</span>
+<span class="sd">        Compute likelihood over this Pmf&#39;s parameter space given modeled data at the given EC&#39;s for every parameter space point and a measurement at the same EC&#39;s.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            meas (`float`): one output value</span>
@@ -420,17 +419,17 @@
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;likelihood has no probability! :(&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]))):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Uh-oh, some probability is NaN!&#39;</span><span class="p">)</span>
-        <span class="n">lkl</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">lkl</span><span class="p">,</span> <span class="n">delta_count</span></div>
+        <span class="n">lkl</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span></div>
+        <span class="k">return</span> <span class="n">lkl</span><span class="p">,</span> <span class="n">delta_count</span>
 
 <div class="viewcode-block" id="Pmf.most_probable"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.most_probable">[docs]</a>    <span class="k">def</span> <span class="nf">most_probable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return the n largest probabilities in a new DataFrame.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">sorted_probs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">&#39;prob&#39;</span><span class="p">,</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">sorted_probs</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">n</span><span class="p">]</span></div>
+        <span class="n">sorted_probs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">&#39;prob&#39;</span><span class="p">,</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">sorted_probs</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">n</span><span class="p">]</span>
 
-<div class="viewcode-block" id="Pmf.param_names"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.param_names">[docs]</a>    <span class="k">def</span> <span class="nf">param_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">]</span></div>
+<div class="viewcode-block" id="Pmf.param_names"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.param_names">[docs]</a>    <span class="k">def</span> <span class="nf">param_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span></div>
+        <span class="k">return</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">]</span>
 
 <div class="viewcode-block" id="Pmf.populate_dense_grid"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.populate_dense_grid">[docs]</a>    <span class="k">def</span> <span class="nf">populate_dense_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -487,8 +486,8 @@
         <span class="k">if</span> <span class="n">make_ind_lists</span><span class="p">:</span>
             <span class="n">return_dict</span><span class="p">[</span><span class="s1">&#39;ind_lists&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ind_lists</span>
         <span class="k">if</span> <span class="n">return_edges</span><span class="p">:</span>
-            <span class="n">return_dict</span><span class="p">[</span><span class="s1">&#39;param_edges&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_edges</span>
-        <span class="k">return</span> <span class="n">return_dict</span></div>
+            <span class="n">return_dict</span><span class="p">[</span><span class="s1">&#39;param_edges&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_edges</span></div>
+        <span class="k">return</span> <span class="n">return_dict</span>
 
 <div class="viewcode-block" id="Pmf.project_1D"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.project_1D">[docs]</a>    <span class="k">def</span> <span class="nf">project_1D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
 
@@ -514,8 +513,8 @@
         <span class="n">param_ind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
         <span class="n">inds_to_sum_along</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mat</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">i</span><span class="o">==</span><span class="n">param_ind</span><span class="p">])</span>
         <span class="n">probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="n">inds_to_sum_along</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">bins</span><span class="p">,</span> <span class="n">probs</span></div>
+</div>
+        <span class="k">return</span> <span class="n">bins</span><span class="p">,</span> <span class="n">probs</span>
 
 <div class="viewcode-block" id="Pmf.project_2D"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.project_2D">[docs]</a>    <span class="k">def</span> <span class="nf">project_2D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_param</span><span class="p">,</span> <span class="n">y_param</span><span class="p">,</span> <span class="n">no_probs</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
@@ -581,8 +580,8 @@
 <span class="sd">            patch_params.append({&#39;args&#39;:[(x_min,y_min),x_width,y_width],&#39;kwargs&#39;:{&#39;fill&#39;:fill,&#39;ec&#39;:ec,&#39;alpha&#39;:alpha}})</span>
 
 <span class="sd">        return patch_params</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">patches</span></div>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="n">patches</span>
 
 <div class="viewcode-block" id="Pmf.visualize"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.visualize">[docs]</a>    <span class="k">def</span> <span class="nf">visualize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -591,15 +590,14 @@
 <span class="sd">        Args:</span>
 <span class="sd">            frac_points (`float`): number &gt;0 and &lt;=1 indicating fraction of total points to visualize (will take the most probable, defaults to 1.0)</span>
 <span class="sd">            just_grid (`bool`): whether to show only the grid (i.e. visualize subdivisions) or the whole PMF (defaults to False)</span>
-<span class="sd">            save_file (`bool`): whether to save a file</span>
-<span class="sd">            fpath (`str`): optional, path to save image to, defaults to False</span>
+<span class="sd">            fpath (`str`): optional, path to save image to</span>
 <span class="sd">            true_vals (`dict`): optional, set of param values to highlight on PMF</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># read in options</span>
         <span class="n">frac_points</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;frac_points&#39;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
         <span class="n">just_grid</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;just_grid&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-        <span class="n">save_file</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;save_file&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-        <span class="n">fpath</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;fpath&#39;</span><span class="p">,</span> <span class="s1">&#39;probs_</span><span class="si">%d</span><span class="s1">.png&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_sub</span><span class="p">))</span>
+        <span class="k">if</span> <span class="s1">&#39;fpath&#39;</span> <span class="ow">in</span> <span class="n">argv</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">fpath</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="s1">&#39;fpath&#39;</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="s1">&#39;true_vals&#39;</span> <span class="ow">in</span> <span class="n">argv</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="c1"># check that all params are there</span>
@@ -637,8 +635,16 @@
                 <span class="n">y_param</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">rownum</span><span class="p">]</span>
 
                 <span class="c1"># pre-formatting</span>
-                <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">plot_ranges</span><span class="p">[</span><span class="n">x_param</span><span class="o">.</span><span class="n">name</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="n">plot_ranges</span><span class="p">[</span><span class="n">x_param</span><span class="o">.</span><span class="n">name</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">x_min</span> <span class="o">=</span> <span class="n">plot_ranges</span><span class="p">[</span><span class="n">x_param</span><span class="o">.</span><span class="n">name</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">x_max</span> <span class="o">=</span> <span class="n">plot_ranges</span><span class="p">[</span><span class="n">x_param</span><span class="o">.</span><span class="n">name</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">)</span>
                 <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">set_axisbelow</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                <span class="c1"># force four x-ticks to avoid numbers overlapping...hopefully</span>
+                <span class="n">round_digits</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">x_max</span><span class="o">-</span><span class="n">x_min</span><span class="p">))))</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="nb">round</span><span class="p">((</span><span class="n">x_max</span><span class="o">-</span><span class="n">x_min</span><span class="p">)</span><span class="o">/</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">round_digits</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">round_digits</span> <span class="o">=</span> <span class="n">round_digits</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="n">tick_spacing</span> <span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="n">x_max</span><span class="o">-</span><span class="n">x_min</span><span class="p">)</span><span class="o">/</span><span class="mf">5.</span><span class="p">,</span> <span class="p">)</span>
+                <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span class="n">ticker</span><span class="o">.</span><span class="n">MultipleLocator</span><span class="p">(</span><span class="n">tick_spacing</span><span class="p">))</span>
 
                 <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="p">([</span><span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">label</span><span class="p">]</span> <span class="o">+</span><span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">()</span> <span class="o">+</span> <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">get_yticklabels</span><span class="p">()):</span>
                     <span class="n">item</span><span class="o">.</span><span class="n">set_fontsize</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
@@ -659,10 +665,12 @@
                         <span class="k">elif</span> <span class="n">x_param</span><span class="o">.</span><span class="n">spacing</span><span class="o">==</span><span class="s1">&#39;linear&#39;</span><span class="p">:</span>
                             <span class="n">vals</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">bins</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="n">bins</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">probs</span><span class="p">))]</span>
                         <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">probs</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">bins</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+
                         <span class="c1"># formatting</span>
                         <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
                         <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_label_position</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
                         <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;P(</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="n">x_param</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">270</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span> <span class="c1">#labelpad is kind of a brute-force way to do this and might break if we change the figure size, but va=&#39;bottom&#39; wasn&#39;t working</span>
+                        <span class="c1">#axes[rownum][colnum].`grid`(axis=&#39;y&#39;)</span>
 
                         <span class="c1"># add true value if desired</span>
                         <span class="k">if</span> <span class="n">plot_true_vals</span><span class="p">:</span>
@@ -697,6 +705,7 @@
                         <span class="n">true_x</span> <span class="o">=</span> <span class="p">[</span><span class="n">true_vals</span><span class="p">[</span><span class="n">x_param</span><span class="o">.</span><span class="n">name</span><span class="p">]]</span>
                         <span class="n">true_y</span> <span class="o">=</span> <span class="p">[</span><span class="n">true_vals</span><span class="p">[</span><span class="n">y_param</span><span class="o">.</span><span class="n">name</span><span class="p">]]</span>
                         <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">true_x</span><span class="p">,</span><span class="n">true_y</span><span class="p">,</span><span class="mi">200</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="s2">&quot;None&quot;</span><span class="p">,</span><span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span><span class="n">linewidths</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">zorder</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+                    <span class="c1">#axes[rownum][colnum].grid(False)</span>
                     <span class="n">offdiag_finish</span> <span class="o">=</span> <span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
                     <span class="n">offdiag_time</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">offdiag_finish</span><span class="o">-</span><span class="n">offdiag_start</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
                     <span class="c1">#print(&#39;off-diagonal plot finished in &#39; + str(offdiag_time) + &#39; seconds&#39;)</span>
@@ -713,36 +722,16 @@
                 <span class="n">axes</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">ylabel</span><span class="p">)</span>
 
         <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">save_file</span><span class="p">:</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span></div></div>
+
+        <span class="k">if</span> <span class="s1">&#39;fpath&#39;</span> <span class="ow">in</span> <span class="n">argv</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span></div></div>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span>
 </pre></div>
 
           </div>
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">bayesim</a></h1>
-
-
-
-
-
-
-
-
-<h3>Navigation</h3>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../download.html">Download</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../whybayes.html">Why Bayes?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../gettingstarted.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../manual.html">Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../bayesics.html">Technical Background</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../citingbayesim.html">Citing bayesim</a></li>
-</ul>
-
-<div class="relations">
+        <div class="sphinxsidebarwrapper"><div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../../index.html">Documentation overview</a><ul>
@@ -771,7 +760,7 @@
       &copy;2018, Rachel C Kurchin and Giuseppe Romano.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.6</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
     </div>

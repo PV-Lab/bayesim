@@ -102,3 +102,38 @@ As expected, we've further winnowed down the possible trajectories. If we contin
 Of course, when our model function isn't a simple analytical equation but rather a numerical solver of some sort, we can't evaluate it on a continuous parameter space but we instead have to discretize the space into a grid and choose points on that grid at which to simulate. This introduces a so-called "model uncertainty" proportional to the magnitude of the variation in the model output as one moves around the fitting parameter space.
 
 This model uncertainty is calculated in ``bayesim`` at each experimental condition for each point in the parameter space as the largest change in model output from that point to any of the immediately adjacent points.
+
+Let's look at what the example described above looks like in ``bayesim`` (this code is also accessible via the :doc:`examples` page). If we initialize a 10x10 grid in :math:`v_0`-:math:`g` space, after feeding in just those two observations, we have a probability distribution that looks like:
+
+.. figure:: img/two_obs_probs.png
+   :align: center
+
+   Not super well constrained...
+
+``bayesim`` also informs us that model uncertainty was used for likelihood calculation at every point. If instead we generate a full "observed" trajectory every 0.1 seconds for 3 seconds (assuming the larger uncertainty of :math:`\pm` 0.5 m for every observation) and feed these observations in, we find...
+
+.. figure:: img/disc_probs_1.png
+   :align: center
+
+   Looking better!
+
+We can also compare the trajectory from the highest-probability simulated point in parameter space with the "observations":
+
+.. figure:: img/comp_1.png
+   :align: center
+
+   Looking better!
+
+If we subdivide our grid and repeat the inference, then we can do even better...
+
+.. figure:: img/disc_probs_2.png
+   :align: center
+
+   (Note that the axis limits have changed as we zoomed in)
+
+Because this time there are two points of quite high probability, we'll look at trajectories for both of them...
+
+   .. figure:: img/comp_2.png
+      :align: center
+
+      Look Ma, smaller errors!

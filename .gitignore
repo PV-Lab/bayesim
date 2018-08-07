@@ -100,7 +100,7 @@ ENV/
 
 # other stuff
 examples/diode/PMF_*.h5
-examples/diode/new_sim_*.h5
+examples/*/new_sim_*.h5
 examples/diode/bayesim_state.h5
 examples/TE/*
 examples/*/PMFs/*

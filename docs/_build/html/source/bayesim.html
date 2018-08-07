@@ -9,7 +9,7 @@
     <title>bayesim package &#8212; bayesim 0.9.1 documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
@@ -87,10 +87,10 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>mode</strong> (<cite>str</cite>) – ‘file’ or ‘function’</li>
-<li><strong>func_name</strong> (<em>callable</em>) – if mode=’function’, provide function here</li>
+<li><strong>model_data_func</strong> (<em>callable</em>) – if mode=’function’, provide function here</li>
 <li><strong>model_data_path</strong> (<cite>str</cite>) – if mode==’file’, provide path to file</li>
 <li><strong>output_column</strong> (<cite>str</cite>) – optional, header of column containing output data (required if different from self.output_var)</li>
-<li><strong>calc_unc</strong> (<cite>bool</cite>) – whether to calculate model uncertainties as well, defaults to False</li>
+<li><strong>calc_model_unc</strong> (<cite>bool</cite>) – whether to calculate model uncertainties as well, defaults to False</li>
 <li><strong>verbose</strong> (<cite>bool</cite>) – flag for verbosity, defaults to False</li>
 </ul>
 </td>
@@ -199,7 +199,7 @@
 <li><strong>num_ecs</strong> (<cite>int</cite>) – number of EC values to plot, defaults to 1 (ignored if ecs is provided)</li>
 <li><strong>num_param_pts</strong> (<cite>int</cite>) – number of the most probable parameter space points to plot (defaults to 1)</li>
 <li><strong>ec_x_var</strong> (<cite>str</cite>) – one of self.ec_names, will overwrite if this was provided before in attach_observations, required if it wasn’t. If ec was provided, this will supercede that</li>
-<li><strong>fpath</strong> (<cite>str</cite>) – optional, path to save image to if desired (if num_plots&gt;1, this will be used as a prefix)</li>
+<li><strong>fpath</strong> (<cite>str</cite>) – optional, path to save image to if desired</li>
 </ul>
 </td>
 </tr>
@@ -570,8 +570,7 @@ Will stop iterating through observations if/when &gt;= th_pm of probability mass
 <dl class="method">
 <dt id="bayesim.pmf.Pmf.likelihood">
 <code class="descname">likelihood</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/pmf.html#Pmf.likelihood"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.pmf.Pmf.likelihood" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute likelihood over this Pmf’s parameter space assuming model_func() represents the true physical behavior of the system.</p>
-<p>Obviously, model_func() needs to be a callable in the working namespace and has to accept conditions in the format that they’re fed into this function.</p>
+<dd><p>Compute likelihood over this Pmf’s parameter space given modeled data at the given EC’s for every parameter space point and a measurement at the same EC’s.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -731,8 +730,7 @@ Useful for rerunning whole inference after subdividing.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>frac_points</strong> (<cite>float</cite>) – number &gt;0 and &lt;=1 indicating fraction of total points to visualize (will take the most probable, defaults to 1.0)</li>
 <li><strong>just_grid</strong> (<cite>bool</cite>) – whether to show only the grid (i.e. visualize subdivisions) or the whole PMF (defaults to False)</li>
-<li><strong>save_file</strong> (<cite>bool</cite>) – whether to save a file</li>
-<li><strong>fpath</strong> (<cite>str</cite>) – optional, path to save image to, defaults to False</li>
+<li><strong>fpath</strong> (<cite>str</cite>) – optional, path to save image to</li>
 <li><strong>true_vals</strong> (<cite>dict</cite>) – optional, set of param values to highlight on PMF</li>
 </ul>
 </td>
@@ -755,26 +753,17 @@ Useful for rerunning whole inference after subdividing.</p>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../index.html">bayesim</a></h1>
-
-
-
-
-
-
-
-
-<h3>Navigation</h3>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../download.html">Download</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../whybayes.html">Why Bayes?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../gettingstarted.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../manual.html">Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../bayesics.html">Technical Background</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../citingbayesim.html">Citing bayesim</a></li>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">bayesim package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-bayesim.model">bayesim.model module</a></li>
+<li><a class="reference internal" href="#module-bayesim.params">bayesim.params module</a></li>
+<li><a class="reference internal" href="#module-bayesim.pmf">bayesim.pmf module</a></li>
+<li><a class="reference internal" href="#module-bayesim">Module contents</a></li>
 </ul>
-
+</li>
+</ul>
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
@@ -782,6 +771,13 @@ Useful for rerunning whole inference after subdividing.</p>
   </ul></li>
 </ul>
 </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/source/bayesim.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <div class="searchformwrapper">
@@ -802,7 +798,7 @@ Useful for rerunning whole inference after subdividing.</p>
       &copy;2018, Rachel C Kurchin and Giuseppe Romano.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.6</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
       |

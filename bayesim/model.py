@@ -158,7 +158,7 @@ class Model(object):
             if 'model_data_path' in argv.keys():
                 self.attach_model(mode='file', **argv)
             elif 'model_data_func' in argv.keys():
-                self.attach_model(mode='function', model_func=argv['model_data_func'])
+                self.attach_model(mode='function', **argv)
             else:
                 self.model_data = pd.DataFrame()
                 self.model_data_grps = []
@@ -315,7 +315,13 @@ class Model(object):
         self.obs_data.sort_values(by=self.ec_names(), inplace=True)
 
         # populate list of EC points
-        self.ec_pts =  pd.DataFrame.from_records(data=[list(k) for k in self.obs_data.groupby(self.ec_names()).groups.keys()],columns=self.ec_names()).sort_values(self.ec_names()).reset_index(drop=True)
+        if len(self.params.ecs)==1: # it's finicky in this case
+            self.ec_pts = pd.DataFrame()
+            self.ec_pts[self.ec_names()[0]] = self.obs_data.groupby(self.ec_names()).groups.keys()
+        else:
+            self.ec_pts = pd.DataFrame.from_records(data=[list(k) for k in self.obs_data.groupby(self.ec_names()).groups.keys()], columns=self.ec_names())
+
+        self.ec_pts = self.ec_pts.sort_values(self.ec_names()).reset_index(drop=True)
 
     def check_data_columns(self,**argv):
         """
@@ -403,16 +409,16 @@ class Model(object):
 
         Args:
             mode (`str`): 'file' or 'function'
-            func_name (callable): if mode='function', provide function here
+            model_data_func (callable): if mode='function', provide function here
             model_data_path (`str`): if mode=='file', provide path to file
             output_column (`str`): optional, header of column containing output data (required if different from self.output_var)
-            calc_unc (`bool`): whether to calculate model uncertainties as well, defaults to False
+            calc_model_unc (`bool`): whether to calculate model uncertainties as well, defaults to False
             verbose (`bool`): flag for verbosity, defaults to False
         """
         mode = argv['mode']
         output_col = argv.get('output_column',self.output_var)
         verbose = argv.get('verbose', False)
-        calc_unc = argv.get('calc_unc', False)
+        calc_model_unc = argv.get('calc_model_unc', False)
 
         if verbose:
             print('Attaching simulated data...')
@@ -470,7 +476,7 @@ class Model(object):
 
         elif mode=='function':
             # is there a way to save this (that could be saved to HDF5 too) so that subdivide can automatically call it?
-            model_func = argv['func_name']
+            model_func = argv['model_data_func']
 
             # check that probs.points is populated...
 
@@ -519,7 +525,7 @@ class Model(object):
         self.needs_new_model_data = False
         self.calc_indices()
 
-        if calc_unc:
+        if calc_model_unc:
             self.calc_model_unc()
 
     def comparison_plot(self,**argv):
@@ -531,7 +537,7 @@ class Model(object):
             num_ecs (`int`): number of EC values to plot, defaults to 1 (ignored if ecs is provided)
             num_param_pts (`int`): number of the most probable parameter space points to plot (defaults to 1)
             ec_x_var (`str`): one of self.ec_names, will overwrite if this was provided before in attach_observations, required if it wasn't. If ec was provided, this will supercede that
-            fpath (`str`): optional, path to save image to if desired (if num_plots>1, this will be used as a prefix)
+            fpath (`str`): optional, path to save image to if desired
         """
         if 'ec_x_var' in argv.keys():
             self.params.set_ec_x(argv['ec_x_var'])
@@ -544,20 +550,25 @@ class Model(object):
 
         # read in options and do some sanity checks
         num_ecs = argv.get('num_ecs',1)
-        if 'ec_vals' in argv.keys():
-            ec_vals = argv['ec_vals']
-            if not (isinstance(ec_vals,list) or isinstance(ec_vals,np.ndarray)):
-                ec_vals = [ec_vals]
-        else:
-            ec_vals = []
-            #ec_pts = random.sample(list(self.model_data_ecgrps.groups.keys()), num_ecs)
-            ec_pts = random.sample(list(self.model_data.groupby([c.name for c in other_ecs]).groups.keys()), num_ecs)
 
-            for pt in ec_pts:
-                if len(other_ecs)==1: #pt will just be a float rather than a tuple
-                    ec_vals.append({other_ecs[0].name:pt})
-                else:
-                    ec_vals.append({self.ec_names()[i]:pt[i] for i in range(len(pt))})
+        if len(other_ecs)==0: #only one experimental condition...
+            one_ec = True
+            ec_vals = [0] #placeholder, basically - this is klunky
+        else: # more than one
+            one_ec = False
+            if 'ec_vals' in argv.keys():
+                ec_vals = argv['ec_vals']
+                if not (isinstance(ec_vals,list) or isinstance(ec_vals,np.ndarray)):
+                    ec_vals = [ec_vals]
+            else:
+                ec_vals = []
+                ec_pts = random.sample(list(self.model_data.groupby([c.name for c in other_ecs]).groups.keys()), num_ecs)
+
+                for pt in ec_pts:
+                    if len(other_ecs)==1: #pt will just be a float rather than a tuple
+                        ec_vals.append({other_ecs[0].name:pt})
+                    else:
+                        ec_vals.append({self.ec_names()[i]:pt[i] for i in range(len(pt))})
 
         num_param_pts = argv.get('num_param_pts',1)
 
@@ -578,13 +589,15 @@ class Model(object):
 
         # at each set of conditions...
         for i in range(len(ec_vals)):
-            ecs_here = ec_vals[i]
             obs_data = self.obs_data
-            plot_title = ''
-            # get obs data for correct EC values
-            for c in other_ecs:
-                obs_data =  obs_data[abs(obs_data[c.name]-ecs_here[c.name])<=10.**(-1.*c.tol_digits)]
-                plot_title = plot_title + '%s=%s, '%(c.name,c.get_val_str(ecs_here[c.name]))
+            plot_title = 'Comparison  '
+            if not one_ec:
+                plot_title = plot_title[:-1] + 'at '
+                ecs_here = ec_vals[i]
+                # get obs data for correct EC values
+                for c in other_ecs:
+                    obs_data =  obs_data[abs(obs_data[c.name]-ecs_here[c.name])<=10.**(-1.*c.tol_digits)]
+                    plot_title = plot_title + '%s=%s, '%(c.name,c.get_val_str(ecs_here[c.name]))
             obs_data = obs_data.sort_values(by=[self.params.ec_x_name])
             # plot obs data
             axs[i,0].plot(obs_data[self.params.ec_x_name], obs_data[self.output_var], color=colors[0])
@@ -595,8 +608,9 @@ class Model(object):
             for pt in param_pts.iterrows():
                 color = colors[c_ind]
                 model_data = self.model_data.loc[self.model_data_grps.groups[tuple([pt[1][n] for n in self.fit_param_names()])]]
-                for c in other_ecs:
-                    model_data =  model_data[abs(model_data[c.name]-ecs_here[c.name])<=10.**(-1.*c.tol_digits)]
+                if not one_ec:
+                    for c in other_ecs:
+                        model_data =  model_data[abs(model_data[c.name]-ecs_here[c.name])<=10.**(-1.*c.tol_digits)]
                 model_data.sort_values(by=[self.params.ec_x_name])
                 errors = np.subtract(model_data[self.output_var], obs_data[self.output_var])
                 axs[i,0].plot(model_data[self.params.ec_x_name], model_data[self.output_var], color=color)
@@ -619,11 +633,22 @@ class Model(object):
             yvar = self.params.find_param(self.output_var)
             axs[i,0].set_ylabel('%s [%s]' %(yvar.name, yvar.units))
             axs[i,1].set_ylabel('%s [%s]' %('$\Delta$'+yvar.name, yvar.units))
-            axs[i,0].legend(legend_list)
+            axs[i,0].legend(legend_list, fontsize=16)
             plot_title = plot_title[:-2]
-            axs[i,0].set_title(plot_title)
-            axs[i,1].set_title(plot_title+': errors')
-            plt.tight_layout()
+            axs[i,0].set_title(plot_title, fontsize=20)
+            if one_ec:
+                err_title = 'Errors'
+            else:
+                err_title = plot_title + ': errors'
+            axs[i,1].set_title(err_title, fontsize=20)
+
+            for j in [0,1]:
+                for item in ([axs[i][j].xaxis.label, axs[i][j].yaxis.label] + axs[i][j].get_xticklabels() + axs[i][j].get_yticklabels()):
+                    item.set_fontsize(18)
+
+        plt.tight_layout()
+        if 'fpath' in argv.keys():
+            plt.savefig(argv['fpath'])
 
     def run(self, **argv):
         """
@@ -704,7 +729,10 @@ class Model(object):
                     obs = self.obs_data.iloc[num_pts_used]
                     obs_indices.append(num_pts_used)
                     ec = obs[self.ec_names()]
-                    ecpt = tuple([ec[n] for n in self.ec_names()])
+                    if len(self.ec_names())>1:
+                        ecpt = tuple([ec[n] for n in self.ec_names()])
+                    else:
+                        ecpt = float(ec)
                     model_here = deepcopy(self.model_data.loc[self.model_data_ecgrps.groups[ecpt]])
 
                     # compute likelihood and do a Bayesian update
@@ -868,6 +896,45 @@ class Model(object):
         """
         self.probs.visualize(**argv)
 
+# maybe I'll finish this eventually
+    """
+    def visualize_model_unc(self,**argv):
+
+        #Visualize model uncertainty.
+
+        #Args:
+        #    ec_vals (`dict`): optional, dict of EC values at which to plot. If not provided, they will be chosen randomly. This can also be a list of dicts for multiple points.
+        #    num_ecs (`int`): number of EC values to plot, defaults to 1 (ignored if ecs is provided)
+
+        # read in options and do some sanity checks
+        num_ecs = argv.get('num_ecs',1)
+        if 'ec_vals' in argv.keys():
+            ec_vals = argv['ec_vals']
+            if not (isinstance(ec_vals,list) or isinstance(ec_vals,np.ndarray)):
+                ec_vals = [ec_vals]
+        else:
+            ec_vals = []
+            ec_pts_df = self.ec_pts.sample(num_ecs)
+            ec_pts=[]
+            for pt in ec_pts_df.iterrows():
+                ec_vals.append({name:pt[1][name] for name in self.ec_names()})
+                ec_pts.append(tuple(pt[1][self.ec_names()]))
+
+        # set up subplots
+        fig, axs = plt.subplots(len(ec_vals), figsize=(13,4*len(ec_vals)), squeeze=False)
+
+        for i in range(len(ec_vals)):
+            ecs_here = ec_vals[i]
+            plot_title = ''
+            for c in self.params.ecs:
+                plot_title = plot_title + '%s=%s, '%(c.name,c.get_val_str(ecs_here[c.name]))
+            subset = self.model_data.loc[self.model_data_ecgrps[tuple([ecs_here[n] for n in self.ec_names()])]]
+            dense_grid = probs.populate_dense_grid(df=subset, col_to_pull='uncerainty', make_ind_lists=False)
+            mat = dense_grid['mat']
+            axs[i].imshow(mat)
+            axs[i].set_title(plot_title)
+    """
+
     def top_probs(self, num):
         """Return a DataFrame with the 'num' most probable points and some of the less interesting columns hidden."""
         df = self.probs.most_probable(num)
@@ -890,7 +957,9 @@ class Model(object):
                     self.params.output[i].set_units(units)
 
     def ec_names(self):
+        """Return list of experimental condition names."""
         return self.params.param_names('ec')
 
     def fit_param_names(self):
+        """Return list of fitting parameter names."""
         return self.params.param_names('fit')
