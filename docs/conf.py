@@ -13,8 +13,8 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 # import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import sys
+sys.path.insert(0, '../')
 
 
 # -- Project information -----------------------------------------------------
@@ -191,6 +191,7 @@ epub_exclude_files = ['search.html']
 mathjax_config = {
     'extensions': ['color.js'],
 }
+math_number_all = True
 
 # -- Options for intersphinx extension ---------------------------------------
 

@@ -30,8 +30,6 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <div class="section" id="technical-background">
@@ -41,8 +39,8 @@
 <h2>Bayes’ Theorem<a class="headerlink" href="#bayes-theorem" title="Permalink to this headline">¶</a></h2>
 <p>There are a <a class="reference external" href="https://brohrer.github.io/how_bayesian_inference_works.html">plethora</a> of <a class="reference external" href="https://brilliant.org/wiki/bayes-theorem/">great</a> <a class="reference external" href="https://betterexplained.com/articles/an-intuitive-and-short-explanation-of-bayes-theorem/">explanations</a> of Bayes’ Theorem out there already, so I won’t go through all the bayesics here but instead refer you to one of those linked above or any number of others you can find online or in a textbook.</p>
 <p>Assuming you understand Bayes’ Theorem to your own satisfaction at this point, let’s remind ourselves of some <strong>terminology</strong>.</p>
-<div class="math notranslate nohighlight">
-\[\color{firebrick} {P(H|E)} =
+<div class="math notranslate nohighlight" id="equation-bayesics-0">
+<span class="eqno">(1)<a class="headerlink" href="#equation-bayesics-0" title="Permalink to this equation">¶</a></span>\[\color{firebrick} {P(H|E)} =
 \frac{\color{darkorange} {P(H)}
 \color{darkmagenta} {P(E|H)}}
 {\color{teal} {P(E)}}\]</div>
@@ -56,27 +54,30 @@
 </div>
 <p>Most of the examples used to explain Bayes’ Theorem have two hypotheses to disginguish between (e.g. “is it raining?”: yes or no). However, to use Bayes’ Theorem for <em>parameter estimation</em>, which is the problem of interest here, we need to generalize to many more than two hypotheses, and those hypotheses may be about the values of multiple different parameters. This can make it confusing to conceptualize how to generalize the types of computations we do to estimate the probability of the answer to a yes-or-no question or a dice roll to a problem statement relevant to a more general scientific/modeling inquiry.</p>
 <p><strong>Example: Kinematics</strong></p>
-<p>To illustrate how we do this, let’s use a simple example. Suppose we want to estimate the value of <span class="math notranslate nohighlight">\(g\)</span>, the acceleration due to gravity near Earth’s surface, and <span class="math notranslate nohighlight">\(v_0\)</span>, the initial velocity of a vertically launched projectile (e.g. a ball tossed straight up), based on some measured data bout the trajectory of the ball. We know from basic kinematics that the height of the ball as a function of time should obey (assuming that the projectile’s initial height is defined as 0)</p>
-<div class="math notranslate nohighlight">
-\[y(t) = v_0t - \frac 12 gt^2\]</div>
+<p>To illustrate how we do this, let’s use a simple example. Suppose we want to estimate the value of <span class="math notranslate nohighlight">\(g\)</span>, the acceleration due to gravity near Earth’s surface, and <span class="math notranslate nohighlight">\(v_0\)</span>, the initial velocity of a vertically launched projectile (e.g. a ball tossed straight up), based on some measured data about the trajectory of the ball. We know from basic kinematics that the height of the ball as a function of time should obey (assuming that the projectile’s initial height is defined as 0)</p>
+<div class="math notranslate nohighlight" id="equation-bayesics-1">
+<span class="eqno">(2)<a class="headerlink" href="#equation-bayesics-1" title="Permalink to this equation">¶</a></span>\[y(t) = v_0t - \frac 12 gt^2\]</div>
 <p>This function represents our <strong>model</strong> of the data we will measure and we can equivalently write</p>
-<div class="math notranslate nohighlight">
-\[M(v_0, g; t) = v_0t - \frac 12 gt^2\]</div>
+<div class="math notranslate nohighlight" id="equation-bayesics-2">
+<span class="eqno">(3)<a class="headerlink" href="#equation-bayesics-2" title="Permalink to this equation">¶</a></span>\[M(v_0, g; t) = v_0t - \frac 12 gt^2\]</div>
 <p>where we’ve now explicitly delineated our parameters <span class="math notranslate nohighlight">\(g\)</span> and <span class="math notranslate nohighlight">\(v_0\)</span> and our measurement condition <span class="math notranslate nohighlight">\(t\)</span>.</p>
 <p>Now let’s suppose we make a measurement after 2 seconds of flight and find that <span class="math notranslate nohighlight">\(y(2)=3\)</span>, with an uncertainty in the measurement of 0.2. What does this mean about the possible values of <span class="math notranslate nohighlight">\(g\)</span> and <span class="math notranslate nohighlight">\(v_0\)</span>? First, we need to interpret the uncertainty number, meaning we need to introduce an <strong>error model</strong>. We’ll use a Gaussian distribution, a very common pattern for experimental errors in all kinds of measurements:</p>
-<div class="math notranslate nohighlight">
-\[P(x) = \frac{1}{\sqrt{2\pi\sigma^2}}e^{-\frac{(x-\mu)^2}{2\sigma^2}}\]</div>
+<div class="math notranslate nohighlight" id="equation-bayesics-3">
+<span class="eqno">(4)<a class="headerlink" href="#equation-bayesics-3" title="Permalink to this equation">¶</a></span>\[P(x) = \frac{1}{\sqrt{2\pi\sigma^2}}e^{-\frac{(x-\mu)^2}{2\sigma^2}}\]</div>
 <p>where <span class="math notranslate nohighlight">\(\mu\)</span> is the <strong>mean</strong>, <span class="math notranslate nohighlight">\(\sigma\)</span> is the <strong>standard deviation</strong>, and the term in front of the exponential is just a normalizing constant (to make sure that the probability distribution integrates to 1). The distribution looks like this:</p>
 <div class="figure align-center" id="id1">
 <img alt="_images/720px-Normal_Distribution_PDF.png" src="_images/720px-Normal_Distribution_PDF.png" />
 <p class="caption"><span class="caption-text">You can see the impact of the two parameters - a larger <span class="math notranslate nohighlight">\(\sigma\)</span> value makes the distribution wider, while <span class="math notranslate nohighlight">\(\mu\)</span> simply shifts the center. (Image from <a class="reference external" href="https://en.wikipedia.org/wiki/Normal_distribution">Wikipedia</a>.)</span></p>
 </div>
 <p>What this means for our example is that our measurement of <span class="math notranslate nohighlight">\(y(2)=3.0 \pm 0.2\)</span> is converted to a distribution of possible “true” values for <span class="math notranslate nohighlight">\(y(2)\)</span>:</p>
-<div class="math notranslate nohighlight">
-\[P(y(2)) \propto \exp\left({-\frac{(y(2)-3)^2}{2*0.2^2}}\right)\]</div>
+<div class="math notranslate nohighlight" id="equation-bayesics-4">
+<span class="eqno">(5)<a class="headerlink" href="#equation-bayesics-4" title="Permalink to this equation">¶</a></span>\[P(y(2)) \propto \exp\left({-\frac{(y(2)-3)^2}{2*0.2^2}}\right)\]</div>
 <p>(I’m leaving off the normalization constant for convenience.) But what we <em>really</em> want is a probability distribution over our parameters, not over the measurement value itself. Fortunately, our model function lets us do just that! We can translate our distribution over possible measured values into one over possible parameter values using the model function:</p>
-<div class="math notranslate nohighlight">
-\[P(v_0, g | y(2)=3 \pm 0.2) \propto \exp\left({-\frac{(M(v_0,g;2)-3)^2}{2*0.2^2}}\right) = \exp\left({-\frac{(2v_0 - 2g - 3)^2}{0.08}}\right)\]</div>
+<div class="math notranslate nohighlight" id="equation-condprob">
+<span class="eqno">(6)<a class="headerlink" href="#equation-condprob" title="Permalink to this equation">¶</a></span>\[\begin{split}\begin{eqnarray}
+P(v_0, g | y(2)=3 \pm 0.2) &amp; \propto &amp; \exp\left({-\frac{(M(v_0,g;2)-3)^2}{2*0.2^2}}\right) \\
+&amp; \propto &amp; \exp\left({-\frac{(2v_0 - 2g - 3)^2}{0.08}}\right)
+\end{eqnarray}\end{split}\]</div>
 <p>Now we can visualize what that distribution looks like in “<span class="math notranslate nohighlight">\(v_0\)</span>-<span class="math notranslate nohighlight">\(g\)</span>” space:</p>
 <div class="figure align-center" id="id2">
 <img alt="_images/probs_1.png" src="_images/probs_1.png" />
@@ -85,17 +86,30 @@
 <p>Another way we might want to visualize would be in the space of what the actual trajectories look like:</p>
 <div class="figure align-center" id="id3">
 <img alt="_images/trajs.png" src="_images/trajs.png" />
-<p class="caption"><span class="caption-text">captioncaptioncaption</span></p>
+<p class="caption"><span class="caption-text">On the left, <span class="math notranslate nohighlight">\(y(t)\)</span> trajectories from <span class="math notranslate nohighlight">\(t=0\)</span> to <span class="math notranslate nohighlight">\(t=3\)</span>. On the right, zooming in on the region indicated to see spread around <cite>y(2)=3</cite>.</span></p>
 </div>
+<p>So we can see that what the inference step did was essentially “pin” the trajectories to go through (or close to) the measured point at (<em>t</em>,*y*)=(2.0,3.0).</p>
+<p>Now let’s suppose we take another measurement, a short time later: <em>y(2.3)=0.1</em>, but with a larger uncertainty, this time of 0.5. Now we return to Bayes’ Theorem - our prior distribution will be the conditional distribution from Equation <a class="reference internal" href="#equation-condprob">(6)</a> above, and the likelihood will be a new conditional distribution generated in exactly the same way but for this new data point. What does the posterior look like?</p>
+<div class="figure align-center" id="id4">
+<img alt="_images/probs_2.png" src="_images/probs_2.png" />
+<p class="caption"><span class="caption-text">(Note that the axis limits are smaller than above)</span></p>
+</div>
+<p>As we would expect, we’re starting to zero in on a smaller region. And how about the trajectories?</p>
+<div class="figure align-center" id="id5">
+<img alt="_images/trajs_2.png" src="_images/trajs_2.png" />
+<p class="caption"><span class="caption-text">Newly refined set of trajectories shown in red, overlaid on (paler) larger set from the previous step.</span></p>
+</div>
+<p>As expected, we’ve further winnowed down the possible trajectories. If we continued this process for more and more measurements, eventually zeroing in on the correct values with greater and greater precision.</p>
 </div>
 <div class="section" id="bayesim-s-implementation">
 <h2><code class="docutils literal notranslate"><span class="pre">bayesim</span></code>’s implementation<a class="headerlink" href="#bayesim-s-implementation" title="Permalink to this headline">¶</a></h2>
+<p>Of course, when our model function isn’t a simple analytical equation but rather a numerical solver of some sort, we can’t evaluate it on a continuous parameter space but we instead have to discretize the space into a grid and choose points on that grid at which to simulate. This introduces a so-called “model uncertainty” proportional to the magnitude of the variation in the model output as one moves around the fitting parameter space.</p>
+<p>This model uncertainty is calculated in <code class="docutils literal notranslate"><span class="pre">bayesim</span></code> at each experimental condition for each point in the parameter space as the largest change in model output from that point to any of the immediately adjacent points.</p>
 </div>
 </div>
 
 
           </div>
-          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -155,7 +169,7 @@
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
       |
       <a href="_sources/bayesics.rst.txt"

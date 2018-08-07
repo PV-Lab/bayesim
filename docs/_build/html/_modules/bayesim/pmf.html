@@ -28,8 +28,6 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <h1>Source code for bayesim.pmf</h1><div class="highlight"><pre>
@@ -111,7 +109,7 @@
             <span class="c1"># for now just copy in the param_list wholesale</span>
             <span class="c1"># eventually should probably scrub and/or update vals...</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">num_sub</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">fit_params</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_points_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">is_empty</span> <span class="o">=</span> <span class="kc">True</span>
@@ -374,15 +372,13 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            meas (`float`): one output value</span>
-<span class="sd">            model_at_ec (`DataFrame`): DataFrame containing model data at the experimental condition of the measurement and error values in a column called &#39;error&#39; for every point in parameter space</span>
+<span class="sd">            model_at_ec (`DataFrame`): DataFrame containing model data at the experimental condition of the measurement and uncertainty values in a column called &#39;uncertainty&#39; for every point in parameter space</span>
 <span class="sd">            output_col (`str`): name of column with output variable</span>
 
 <span class="sd">            ec: dict with keys of condition names and values</span>
 <span class="sd">            meas: one output value e.g. J</span>
-<span class="sd">            error: error in measured value (stdev of a Gaussian)</span>
+<span class="sd">            unc: uncertainty in measured value (stdev of a Gaussian)</span>
 <span class="sd">            model_func: should accept one dict of params and one of conditions and output measurement (might deprecate)</span>
-
-<span class="sd">            force_exp_err (`bool`): If true, likelihood calculations will use only experimental errors and ignore the computed model errors.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># read in and process inputs</span>
@@ -392,8 +388,7 @@
         <span class="n">model_data</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">output_col</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="s1">&#39;output_col&#39;</span><span class="p">]</span>
         <span class="n">meas_val</span> <span class="o">=</span> <span class="n">meas</span><span class="p">[</span><span class="n">output_col</span><span class="p">]</span>
-        <span class="n">meas_err</span> <span class="o">=</span> <span class="n">meas</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span>
-        <span class="n">force_exp_err</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;force_exp_err&#39;</span><span class="p">,</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">meas_err</span> <span class="o">=</span> <span class="n">meas</span><span class="p">[</span><span class="s1">&#39;uncertainty&#39;</span><span class="p">]</span>
 
         <span class="c1"># set up likelihood DF</span>
         <span class="n">lkl</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
@@ -408,11 +403,8 @@
             <span class="c1">#model_val = model_func(ec, dict(point[1]))</span>
             <span class="n">model_pt</span> <span class="o">=</span> <span class="n">model_data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
             <span class="n">model_val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">model_pt</span><span class="p">[</span><span class="n">output_col</span><span class="p">])</span>
-            <span class="n">model_err</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">model_pt</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">])</span>
-            <span class="k">if</span> <span class="n">force_exp_err</span><span class="p">:</span>
-                <span class="n">err</span> <span class="o">=</span> <span class="n">meas_err</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">err</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">model_err</span><span class="p">,</span><span class="n">meas_err</span><span class="p">)</span>
+            <span class="n">model_err</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">model_pt</span><span class="p">[</span><span class="s1">&#39;uncertainty&#39;</span><span class="p">])</span>
+            <span class="n">err</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">model_err</span><span class="p">,</span><span class="n">meas_err</span><span class="p">)</span>
 
             <span class="c1"># tally how many times deltas were used</span>
             <span class="k">if</span> <span class="n">err</span><span class="o">==</span><span class="n">model_err</span><span class="p">:</span>
@@ -724,7 +716,6 @@
 </pre></div>
 
           </div>
-          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -779,7 +770,7 @@
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
     </div>
 

@@ -28,8 +28,6 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <div class="section" id="bayesim-package">
@@ -90,9 +88,9 @@
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>mode</strong> (<cite>str</cite>) – ‘file’ or ‘function’</li>
 <li><strong>func_name</strong> (<em>callable</em>) – if mode=’function’, provide function here</li>
-<li><strong>fpath</strong> (<cite>str</cite>) – if mode==’file’, provide path to file</li>
+<li><strong>model_data_path</strong> (<cite>str</cite>) – if mode==’file’, provide path to file</li>
 <li><strong>output_column</strong> (<cite>str</cite>) – optional, header of column containing output data (required if different from self.output_var)</li>
-<li><strong>calc_errors</strong> (<cite>bool</cite>) – whether to calculate model errors as well, defaults to False</li>
+<li><strong>calc_unc</strong> (<cite>bool</cite>) – whether to calculate model uncertainties as well, defaults to False</li>
 <li><strong>verbose</strong> (<cite>bool</cite>) – flag for verbosity, defaults to False</li>
 </ul>
 </td>
@@ -115,7 +113,7 @@
 <li><strong>ec_x_var</strong> (<cite>str</cite>) – required if keep_all is False, the experimental condition over which to measure differences (e.g. V for JV(Ti) curves in PV). It will also be used in plotting later.</li>
 <li><strong>max_ec_x_step</strong> (<cite>float</cite>) – used if keep_all is False, largest step to take in the ec_x_var before keeping a point even if curve if “flat” (defaults to 0.05 * range of ec_x_var)</li>
 <li><strong>thresh_dif_frac</strong> (<cite>float</cite>) – used if keep_all is False, threshold (as a percentage of the maximum value, defaults to 0.03)</li>
-<li><strong>fixed_error</strong> (<cite>float</cite>) – required if running in function mode or if file doesn’t have an ‘error’ column, value to use as uncertainty in measurement</li>
+<li><strong>fixed_unc</strong> (<cite>float</cite>) – required if running in function mode or if file doesn’t have an ‘uncertainty’ column, value to use as uncertainty in measurement</li>
 <li><strong>output_column</strong> (<cite>str</cite>) – optional, header of column containing output data (required if different from self.output_var)</li>
 <li><strong>verbose</strong> (<cite>bool</cite>) – flag for verbosity, defaults to False</li>
 </ul>
@@ -138,9 +136,9 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="bayesim.model.Model.calc_model_errors">
-<code class="descname">calc_model_errors</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/model.html#Model.calc_model_errors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.calc_model_errors" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates largest difference in modeled output along any parameter direction for each experimental condition, to be used for error in calculating likelihoods. Currently only works if data is on a grid.</p>
+<dt id="bayesim.model.Model.calc_model_unc">
+<code class="descname">calc_model_unc</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/model.html#Model.calc_model_unc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.calc_model_unc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates largest difference in modeled output along any parameter direction for each experimental condition, to be used for uncertainty in calculating likelihoods. Currently only works if data is on a grid.</p>
 <p>(also assumes it’s sorted by param names and then EC’s)</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -212,12 +210,14 @@
 <dl class="method">
 <dt id="bayesim.model.Model.ec_names">
 <code class="descname">ec_names</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/model.html#Model.ec_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.ec_names" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return list of experimental condition names.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="bayesim.model.Model.fit_param_names">
 <code class="descname">fit_param_names</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/model.html#Model.fit_param_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.fit_param_names" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return list of fitting parameter names.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="bayesim.model.Model.list_model_pts_to_run">
@@ -252,7 +252,6 @@ Will stop iterating through observations if/when &gt;= th_pm of probability mass
 <li><strong>th_pm</strong> (<cite>float</cite>) – threshold quantity of probability mass to be concentrated in th_pv fraction of parameter space to trigger the run to stop (defaults to 0.8)</li>
 <li><strong>th_pv</strong> (<cite>float</cite>) – threshold fraction of parameter space volume for th_pm fraction of probability to be concentrated into to trigger the run to stop (defaults to 0.05)</li>
 <li><strong>min_num_pts</strong> (<cite>int</cite>) – minimum number of observation points to use - if threshold is reached before this number of points has been used, it will start over and the final PMF will be the average of the number of runs needed to use sufficient points (defaults to 0.7 * the number of experimental measurements)</li>
-<li><strong>force_exp_err</strong> (<cite>bool</cite>) – If true, likelihood calculations will use only experimental errors and ignore the computed model errors.</li>
 <li><strong>prob_bias</strong> (<cite>float</cite>) – number from 0 to 0.5, fraction of PMF from previous step to mix into prior for this step (defaults to 0) - higher values will likely converge faster but possibly have larger errors, especially if min_num_pts is small</li>
 <li><strong>verbose</strong> (<cite>bool</cite>) – flag for verbosity, defaults to False</li>
 </ul>
@@ -303,6 +302,24 @@ Will stop iterating through observations if/when &gt;= th_pm of probability mass
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>as pmf.visualize</strong><strong>(</strong><strong>)</strong> (<em>same</em>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.model.Model.visualize_model_unc">
+<code class="descname">visualize_model_unc</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/model.html#Model.visualize_model_unc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.visualize_model_unc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualize model uncertainty.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>ec_vals</strong> (<cite>dict</cite>) – optional, dict of EC values at which to plot. If not provided, they will be chosen randomly. This can also be a list of dicts for multiple points.</li>
+<li><strong>num_ecs</strong> (<cite>int</cite>) – number of EC values to plot, defaults to 1 (ignored if ecs is provided)</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
@@ -579,13 +596,12 @@ Will stop iterating through observations if/when &gt;= th_pm of probability mass
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>meas</strong> (<cite>float</cite>) – one output value</li>
-<li><strong>model_at_ec</strong> (<cite>DataFrame</cite>) – DataFrame containing model data at the experimental condition of the measurement and error values in a column called ‘error’ for every point in parameter space</li>
+<li><strong>model_at_ec</strong> (<cite>DataFrame</cite>) – DataFrame containing model data at the experimental condition of the measurement and uncertainty values in a column called ‘uncertainty’ for every point in parameter space</li>
 <li><strong>output_col</strong> (<cite>str</cite>) – name of column with output variable</li>
 <li><strong>ec</strong> – dict with keys of condition names and values</li>
 <li><strong>meas</strong> – one output value e.g. J</li>
-<li><strong>error</strong> – error in measured value (stdev of a Gaussian)</li>
+<li><strong>unc</strong> – uncertainty in measured value (stdev of a Gaussian)</li>
 <li><strong>model_func</strong> – should accept one dict of params and one of conditions and output measurement (might deprecate)</li>
-<li><strong>force_exp_err</strong> (<cite>bool</cite>) – If true, likelihood calculations will use only experimental errors and ignore the computed model errors.</li>
 </ul>
 </td>
 </tr>
@@ -753,7 +769,6 @@ Useful for rerunning whole inference after subdividing.</p>
 
 
           </div>
-          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -806,7 +821,7 @@ Useful for rerunning whole inference after subdividing.</p>
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
       |
       <a href="../_sources/source/bayesim.rst.txt"
