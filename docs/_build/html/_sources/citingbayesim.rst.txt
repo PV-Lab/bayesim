@@ -2,6 +2,6 @@
 Citing bayesim
 ==============
 
-If you use the code, please considering citing
+If you use the code, please consider citing
 
 [placeholder]
