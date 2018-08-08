@@ -760,7 +760,7 @@ class Model(object):
         self.probs.points['prob'] = probs
         print('Did a total of %d runs to use a total of %d observations.'%(num_runs,num_pts_used))
 
-        print('\nAn average of %d / %d probability points used model uncertainty (rather than experimental uncertainty) during this run.'%(int(round(np.mean(delta_count_list))),len(self.probs.points)))
+        print('\nAn average of %d / %d probability points had larger model uncertainty than experimental uncertainty during this run.'%(int(round(np.mean(delta_count_list))),len(self.probs.points)))
 
         if save_step >=0:
             dd.io.save(pmf_folder+'sub%d_PMF_final.h5'%(self.probs.num_sub),self.probs.points)

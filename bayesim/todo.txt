@@ -3,9 +3,13 @@ TO DO LIST FOR BAYESIM
 
 [* for necessary for paper, ~ for need to decide if it's necessary, - for future ideas]
 
-* add "prerequisites" or something section to docs
+* add explanation of "loop" to Technical Background page (maybe flowchart figure too)
 
-* add probability axis labels
+* make coarser set of SnS data and try repeating analysis and subdividing on that...
+
+* pare down bayesim implementation part of TB page to just discussion of model uncertainty and move kinematics example (maybe to manual page?)
+
+* add "prerequisites" or something section to docs
 
 * maybe visualize model uncertainties?
 

@@ -370,10 +370,10 @@ class Pmf(object):
             model_pt = model_data.iloc[point[0]]
             model_val = float(model_pt[output_col])
             model_err = float(model_pt['uncertainty'])
-            err = max(model_err,meas_err)
+            err = model_err + meas_err
 
-            # tally how many times deltas were used
-            if err==model_err:
+            # tally how many times deltas were bigger
+            if model_err > meas_err:
                 delta_count = delta_count + 1
 
             new_probs[point[0]] = norm.pdf(meas_val, loc=model_val, scale=abs(err))
