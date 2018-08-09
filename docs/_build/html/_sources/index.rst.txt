@@ -17,7 +17,7 @@ Welcome to bayesim's documentation!
    examples
    citingbayesim
 
-there will be more text and stuff here...
+.. image:: img/overview_figure.png
 
 
 Indices and tables

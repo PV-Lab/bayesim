@@ -105,3 +105,5 @@ examples/diode/bayesim_state.h5
 examples/TE/*
 examples/*/PMFs/*
 examples/*/obs_lists/*
+docs/img/*.pptx
+examples/SnS/SCAPS_sims_sorted.h5

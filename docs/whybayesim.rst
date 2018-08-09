@@ -7,7 +7,7 @@ Why bayesim?
 
 There are plenty of tools already out there for Bayesian parameter estimation. What's special/useful about ``bayesim``? What is it good for? What *isn't* it good for?
 
-I won't reinvent the wheel of the Bayesian/frequentist debate here because many smarter people have written a lot about it in other places. Instead, I'll just emphasize a couple important points, the first of which is general to the approach, and the second of is specific to how ``bayesim`` implements it.
+I won't reinvent the wheel of the Bayesian/frequentist debate here because many smarter people have written a lot about it in other places. Instead, I'll just emphasize a couple important points, the first of which is general to the approach, and the second of which is specific to how ``bayesim`` implements it.
 
 Probability distributions are nice
 ----------------------------------
@@ -32,6 +32,6 @@ A very common approach to multidimensional Bayesian parameter estimation involve
 
 2) There is significantly less uncertainty that all regions of non-negligible probability are quickly detected, since the coarsest iteration tends to identify all “hotspots” immediately, provided the :ref:`model uncertainty <model-uncertainty>` associated with the sampling density is incorporated.
 
-The take-home message here is that ``bayesim``'s approach **shines in situations where the computational effort required to evaluate the likelihood is large, as when the data models are sophisticated numerical solvers, and the number of fitting parameters is (relatively) small.**
+The take-home message here is that ``bayesim``'s **approach shines in situations where the computational effort required to evaluate the likelihood is large, as when the data models are sophisticated numerical solvers, and the number of fitting parameters is (relatively) small.**
 
 Many of the :doc:`examples` we show here involve analytical models, however. This is done only to create examples that are tractable to run in a few seconds on a typical personal computer. In reality, while ``bayesim`` certainly works with these models, it is unlikely to be the most efficient approach to fitting their parameters. In addition, with an analytical model, tradeoffs such as the one between :math:`\mu` and :math:`\tau` described above are generally already apparent from the mathematical form of the model and hence the final probability distribution isn't necessarily required for such insights.
