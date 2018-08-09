@@ -9,7 +9,6 @@ Welcome to bayesim's documentation!
 .. toctree::
    :hidden:
 
-   download
    gettingstarted
    whybayesim
    bayesics
