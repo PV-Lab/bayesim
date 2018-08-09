@@ -1,10 +1,17 @@
-.. OpenBTE documentation master file, created by
-   sphinx-quickstart on Mon Dec  4 16:00:38 2017.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
 
 Manual
-===================================
+======
 
 .. toctree::
    :hidden:
+
+
+template text for documenting commandline stuff:
+
+-a            command-line option "a"
+-b file       options can have arguments
+              and long descriptions
+--long        options can be long also
+--input=file  long options can also have
+              arguments
+/V            DOS/VMS-style options too

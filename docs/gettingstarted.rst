@@ -1,13 +1,8 @@
-.. OpenBTE documentation master file, created by
-   sphinx-quickstart on Mon Dec  4 16:00:38 2017.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Getting Started
 ===============
 
 .. toctree::
-   :hidden:
+    :hidden:
 
 Prerequisites
 -------------
@@ -25,6 +20,7 @@ To install bayesim simply type
 
 Usage
 -----
+For more details on both usage methods described below, see the :doc:`manual`.
 
 Python / Jupyter
 ^^^^^^^^^^^^^^^^
@@ -36,28 +32,8 @@ If you are comfortable coding in Python, these examples will also make it clear 
 Command line
 ^^^^^^^^^^^^
 
-We have also developed a command line interface...
+We have also developed a command line interface which can be invoked as follows:
 
+.. code-block:: shell
 
-.. In case you are familiar with Python, you can setup a simulation with a script, i.e.
-
- .. code-block:: python
-
-   from openbte.material import *
-   from openbte.geometry import *
-   from openbte.solver import *
-   from openbte.plot import *
-
-   mat = Material(matfile='Si-300K',n_mfp=10,n_theta=6,n_phi=32)
-
-   geo = Geometry(type='porous/aligned',lx=10,ly=10,
-                 porosity = 0.25,
-                 step = 1.0,
-                 shape = 'square')
-
-   sol = Solver()
-
-   Plot(variable='map/flux_bte/magnitude')
-
-
- .. _ShengBTE: http://www.shengbte.com
+  bayesim yadda yadda yadda...

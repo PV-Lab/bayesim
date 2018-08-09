@@ -3,7 +3,7 @@ TO DO LIST FOR BAYESIM
 
 [* for necessary for paper, ~ for need to decide if it's necessary, - for future ideas]
 
-* add explanation of "loop" to Technical Background page (maybe flowchart figure too)
+* add caveat that it's all subject to the model being "true"
 
 * make coarser set of SnS data and try repeating analysis and subdividing on that...
 
