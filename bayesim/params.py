@@ -211,14 +211,14 @@ class Param_list(object):
         Add a fitting parameter to the list.
 
         Args:
-            param (`Fit_param`): A Fit_param object to add to the list
-            name (`str`): name of the parameter, required if param object not passed
-            units (`str`): units in which parameter is measured (defaults to 'unitless')
-            tolerance (`float`): smallest difference between two values of this parameter to consider "real"
-            val_range (:obj:`list` of :obj:`float`): [min, max] (either this or vals is required)
+            param (:class:`Fit_param`): A Fit_param object to add to the list
+            name (str): name of the parameter, required if param object not passed
+            units (str): units in which parameter is measured (defaults to 'unitless')
+            tolerance (float): smallest difference between two values of this parameter to consider "real"
+            val_range (`:obj:`list`` of :obj:`float`): [min, max] (either this or vals is required)
             vals (:obj:`list` of :obj:`float`): full list of vals for this param
             length (int): initial length of this parameter (defaults to 10)
-            min_width(`float`): minimum box width for this parameter - subtractive if linear spacing and divisive if logarithmic (defaults to 0.01 of total range, required if providing val_range)
+            min_width(float): minimum box width for this parameter - subtractive if linear spacing and divisive if logarithmic (defaults to 0.01 of total range, required if providing val_range)
             spacing (str): 'linear' or 'log' (defaults to linear)
         """
         if 'name' in argv.keys():
@@ -243,10 +243,10 @@ class Param_list(object):
         Add an experimental condition.
 
         Args:
-            name (`str`): name of the parameter, required
-            units (`str`): units in which parameter is measured (defaults to 'unitless')
-            tolerance (`float`): smallest difference between two values of this parameter to consider "real," defaults to 1E-6
-            is_x (`bool`): set this to be the x-axis variable when plotting data, defaults to False
+            name (str): name of the parameter, required
+            units (str): units in which parameter is measured (defaults to 'unitless')
+            tolerance (float): smallest difference between two values of this parameter to consider "real," defaults to 1E-6
+            is_x (bool): set this to be the x-axis variable when plotting data, defaults to False
         """
         if not self.param_present(argv['name']):
             args = dict(argv)
@@ -277,9 +277,9 @@ class Param_list(object):
         Add an output variable.
 
         Args:
-            name (`str`): name of the parameter, required
-            units (`str`): units in which parameter is measured (defaults to 'unitless')
-            tolerance (`float`): smallest difference between two values of this parameter to consider "real," defaults to 1E-6
+            name (str): name of the parameter, required
+            units (str): units in which parameter is measured (defaults to 'unitless')
+            tolerance (float): smallest difference between two values of this parameter to consider "real," defaults to 1E-6
         """
         if not self.param_present(argv['name']):
             args = dict(argv)
@@ -312,7 +312,7 @@ class Param_list(object):
         Check that the param name isn't already present in a list.
 
         Args:
-            name (`str`): name to check for
+            name (str): name to check for
         """
         all_names = [p.name for p in self.all_params()]
         if name in all_names:
@@ -325,7 +325,7 @@ class Param_list(object):
         Return the Param object with the given name.
 
         Args:
-            name (`str`): name to search for
+            name (str): name to search for
         """
         return [p for p in self.all_params() if p.name==name][0]
 
@@ -334,8 +334,8 @@ class Param_list(object):
         Compare two values of a given param.
 
         Args:
-            param_name (`str`): name of parameter, must be in one of the lists
-            val1, val2 (`float`): values to be compared
+            param_name (str): name of parameter, must be in one of the lists
+            val1, val2 (float): values to be compared
 
         Returns:
             True if abs(val1-val2) < tolerance of param_name

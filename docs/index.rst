@@ -17,11 +17,3 @@ Welcome to bayesim's documentation!
    citingbayesim
 
 .. image:: img/overview_figure.png
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

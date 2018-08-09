@@ -25,11 +25,11 @@ class Pmf(object):
         values, bounds, and probabilities.
 
         Args:
-            params (:obj:`param_list`):
-            total_prob (`float`): total probability to divide among points in parameter space - for an initialization, this is 1.0, for a subdivide call will be less.
+            params (:class:`.Param_list`):
+            total_prob (float): total probability to divide among points in parameter space - for an initialization, this is 1.0, for a subdivide call will be less.
 
         Returns:
-            DataFrame with columns for each parameter's value, min, and max
+            :obj:DataFrame with columns for each parameter's value, min, and max
             as well as a probability associated with that point in parameter
             space
         """
@@ -63,8 +63,8 @@ class Pmf(object):
 
         Args:
             params (:obj:`Param_list`): Param_list object containing parameters to be fit and associated metadata
-            param_points (`DataFrame`): DataFrame containing all parameter points to start with
-            prob_dict (`dict`): output of as_dict()
+            param_points (:obj:`DataFrame`): DataFrame containing all parameter points to start with
+            prob_dict (:obj:`dict`): output of as_dict()
         """
 
         if 'prob_dict' in argv.keys():
@@ -92,7 +92,7 @@ class Pmf(object):
             self.is_empty = True
 
     def as_dict(self):
-        """Return in (readable) dictionary form."""
+        """Return this Pmf object in (readable) dictionary form."""
         d = self.__dict__
         d['params'] = [p.__dict__ for p in self.params]
         return d
@@ -118,7 +118,7 @@ class Pmf(object):
 
     def all_current_values(self, param):
         """
-        List all values currently being considered for param.
+        List all values currently being considered for `param`.
         """
         ls = list(set(list(self.points[param])))
         ls.sort()
@@ -126,7 +126,7 @@ class Pmf(object):
 
     def find_neighbor_boxes(self, index):
         """
-        Find and return all boxes neighboring the box at index.
+        Find and return all boxes neighboring the box at `index`.
         """
         all_vals = {name:self.all_current_values(name) for name in self.param_names()}
         param_spacing = {param.name:param.spacing for param in self.params}
@@ -221,6 +221,10 @@ class Pmf(object):
         Subdivide all boxes with P > threshold_prob and assign "locally uniform" probabilities within each box. If include_neighbors is true, also subdivide all boxes neighboring those boxes.
 
         Boxes with P < threshold_prob are deleted.
+
+        Args:
+            threshold_prob (`float`): probability above which a box should be retained
+            include_neighbors (`bool`): whether to also subdivide all immediate neighbors to boxes meeting the threshold
         """
         num_divs = {p.name:2 for p in self.params} #dummy for now
 
@@ -307,6 +311,9 @@ class Pmf(object):
     def multiply(self, other_pmf):
         """
         Compute and store renormalized product of this Pmf with other_pmf.
+
+        Args:
+            other_pmf (:class:`.Pmf`): PMF to multiply by
         """
 
         # check for silliness
@@ -338,7 +345,7 @@ class Pmf(object):
 
         Args:
             meas (`float`): one output value
-            model_at_ec (`DataFrame`): DataFrame containing model data at the experimental condition of the measurement and uncertainty values in a column called 'uncertainty' for every point in parameter space
+            model_at_ec (:py:class:`DataFrame`): DataFrame containing model data at the experimental condition of the measurement and uncertainty values in a column called 'uncertainty' for every point in parameter space
             output_col (`str`): name of column with output variable
 
             ec: dict with keys of condition names and values

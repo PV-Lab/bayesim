@@ -43,6 +43,8 @@
           <ul class="nav">
             <li class="divider-vertical"></li>
             
+                <li><a href="../../genindex.html">Index</a></li>
+            
             
               <li class="dropdown globaltoc-container">
   <a role="button"
@@ -134,11 +136,11 @@
 <span class="sd">        values, bounds, and probabilities.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            params (:obj:`param_list`):</span>
-<span class="sd">            total_prob (`float`): total probability to divide among points in parameter space - for an initialization, this is 1.0, for a subdivide call will be less.</span>
+<span class="sd">            params (:class:`.Param_list`):</span>
+<span class="sd">            total_prob (float): total probability to divide among points in parameter space - for an initialization, this is 1.0, for a subdivide call will be less.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            DataFrame with columns for each parameter&#39;s value, min, and max</span>
+<span class="sd">            :obj:DataFrame with columns for each parameter&#39;s value, min, and max</span>
 <span class="sd">            as well as a probability associated with that point in parameter</span>
 <span class="sd">            space</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -172,8 +174,8 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            params (:obj:`Param_list`): Param_list object containing parameters to be fit and associated metadata</span>
-<span class="sd">            param_points (`DataFrame`): DataFrame containing all parameter points to start with</span>
-<span class="sd">            prob_dict (`dict`): output of as_dict()</span>
+<span class="sd">            param_points (:obj:`DataFrame`): DataFrame containing all parameter points to start with</span>
+<span class="sd">            prob_dict (:obj:`dict`): output of as_dict()</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="s1">&#39;prob_dict&#39;</span> <span class="ow">in</span> <span class="n">argv</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
@@ -201,7 +203,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">is_empty</span> <span class="o">=</span> <span class="kc">True</span>
 
 <div class="viewcode-block" id="Pmf.as_dict"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.as_dict">[docs]</a>    <span class="k">def</span> <span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return in (readable) dictionary form.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Return this Pmf object in (readable) dictionary form.&quot;&quot;&quot;</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>
         <span class="n">d</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="vm">__dict__</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">d</span></div>
@@ -227,7 +229,7 @@
 
 <div class="viewcode-block" id="Pmf.all_current_values"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.all_current_values">[docs]</a>    <span class="k">def</span> <span class="nf">all_current_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        List all values currently being considered for param.</span>
+<span class="sd">        List all values currently being considered for `param`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ls</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">param</span><span class="p">])))</span>
         <span class="n">ls</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
@@ -235,7 +237,7 @@
 
 <div class="viewcode-block" id="Pmf.find_neighbor_boxes"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.find_neighbor_boxes">[docs]</a>    <span class="k">def</span> <span class="nf">find_neighbor_boxes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Find and return all boxes neighboring the box at index.</span>
+<span class="sd">        Find and return all boxes neighboring the box at `index`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">all_vals</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">all_current_values</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">()}</span>
         <span class="n">param_spacing</span> <span class="o">=</span> <span class="p">{</span><span class="n">param</span><span class="o">.</span><span class="n">name</span><span class="p">:</span><span class="n">param</span><span class="o">.</span><span class="n">spacing</span> <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">}</span>
@@ -330,6 +332,10 @@
 <span class="sd">        Subdivide all boxes with P &gt; threshold_prob and assign &quot;locally uniform&quot; probabilities within each box. If include_neighbors is true, also subdivide all boxes neighboring those boxes.</span>
 
 <span class="sd">        Boxes with P &lt; threshold_prob are deleted.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            threshold_prob (`float`): probability above which a box should be retained</span>
+<span class="sd">            include_neighbors (`bool`): whether to also subdivide all immediate neighbors to boxes meeting the threshold</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">num_divs</span> <span class="o">=</span> <span class="p">{</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">:</span><span class="mi">2</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">}</span> <span class="c1">#dummy for now</span>
 
@@ -416,6 +422,9 @@
 <div class="viewcode-block" id="Pmf.multiply"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.multiply">[docs]</a>    <span class="k">def</span> <span class="nf">multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other_pmf</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute and store renormalized product of this Pmf with other_pmf.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other_pmf (:class:`.Pmf`): PMF to multiply by</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># check for silliness</span>
@@ -447,7 +456,7 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            meas (`float`): one output value</span>
-<span class="sd">            model_at_ec (`DataFrame`): DataFrame containing model data at the experimental condition of the measurement and uncertainty values in a column called &#39;uncertainty&#39; for every point in parameter space</span>
+<span class="sd">            model_at_ec (:py:class:`DataFrame`): DataFrame containing model data at the experimental condition of the measurement and uncertainty values in a column called &#39;uncertainty&#39; for every point in parameter space</span>
 <span class="sd">            output_col (`str`): name of column with output variable</span>
 
 <span class="sd">            ec: dict with keys of condition names and values</span>

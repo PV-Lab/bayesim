@@ -25,5 +25,5 @@ Tin Sulfide (SnS) solar cell
 ----------------------------
 redoing fit from Joule paper
 
-some other example (maybe expoplanets? or economics?)
+some other example (maybe exoplanets?)
 -----------------------------------------------------

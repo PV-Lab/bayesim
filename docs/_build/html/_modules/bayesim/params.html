@@ -43,6 +43,8 @@
           <ul class="nav">
             <li class="divider-vertical"></li>
             
+                <li><a href="../../genindex.html">Index</a></li>
+            
             
               <li class="dropdown globaltoc-container">
   <a role="button"
@@ -320,14 +322,14 @@
 <span class="sd">        Add a fitting parameter to the list.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            param (`Fit_param`): A Fit_param object to add to the list</span>
-<span class="sd">            name (`str`): name of the parameter, required if param object not passed</span>
-<span class="sd">            units (`str`): units in which parameter is measured (defaults to &#39;unitless&#39;)</span>
-<span class="sd">            tolerance (`float`): smallest difference between two values of this parameter to consider &quot;real&quot;</span>
-<span class="sd">            val_range (:obj:`list` of :obj:`float`): [min, max] (either this or vals is required)</span>
+<span class="sd">            param (:class:`Fit_param`): A Fit_param object to add to the list</span>
+<span class="sd">            name (str): name of the parameter, required if param object not passed</span>
+<span class="sd">            units (str): units in which parameter is measured (defaults to &#39;unitless&#39;)</span>
+<span class="sd">            tolerance (float): smallest difference between two values of this parameter to consider &quot;real&quot;</span>
+<span class="sd">            val_range (`:obj:`list`` of :obj:`float`): [min, max] (either this or vals is required)</span>
 <span class="sd">            vals (:obj:`list` of :obj:`float`): full list of vals for this param</span>
 <span class="sd">            length (int): initial length of this parameter (defaults to 10)</span>
-<span class="sd">            min_width(`float`): minimum box width for this parameter - subtractive if linear spacing and divisive if logarithmic (defaults to 0.01 of total range, required if providing val_range)</span>
+<span class="sd">            min_width(float): minimum box width for this parameter - subtractive if linear spacing and divisive if logarithmic (defaults to 0.01 of total range, required if providing val_range)</span>
 <span class="sd">            spacing (str): &#39;linear&#39; or &#39;log&#39; (defaults to linear)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="s1">&#39;name&#39;</span> <span class="ow">in</span> <span class="n">argv</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
@@ -352,10 +354,10 @@
 <span class="sd">        Add an experimental condition.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            name (`str`): name of the parameter, required</span>
-<span class="sd">            units (`str`): units in which parameter is measured (defaults to &#39;unitless&#39;)</span>
-<span class="sd">            tolerance (`float`): smallest difference between two values of this parameter to consider &quot;real,&quot; defaults to 1E-6</span>
-<span class="sd">            is_x (`bool`): set this to be the x-axis variable when plotting data, defaults to False</span>
+<span class="sd">            name (str): name of the parameter, required</span>
+<span class="sd">            units (str): units in which parameter is measured (defaults to &#39;unitless&#39;)</span>
+<span class="sd">            tolerance (float): smallest difference between two values of this parameter to consider &quot;real,&quot; defaults to 1E-6</span>
+<span class="sd">            is_x (bool): set this to be the x-axis variable when plotting data, defaults to False</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_present</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]):</span>
             <span class="n">args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">argv</span><span class="p">)</span>
@@ -386,9 +388,9 @@
 <span class="sd">        Add an output variable.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            name (`str`): name of the parameter, required</span>
-<span class="sd">            units (`str`): units in which parameter is measured (defaults to &#39;unitless&#39;)</span>
-<span class="sd">            tolerance (`float`): smallest difference between two values of this parameter to consider &quot;real,&quot; defaults to 1E-6</span>
+<span class="sd">            name (str): name of the parameter, required</span>
+<span class="sd">            units (str): units in which parameter is measured (defaults to &#39;unitless&#39;)</span>
+<span class="sd">            tolerance (float): smallest difference between two values of this parameter to consider &quot;real,&quot; defaults to 1E-6</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_present</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]):</span>
             <span class="n">args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">argv</span><span class="p">)</span>
@@ -421,7 +423,7 @@
 <span class="sd">        Check that the param name isn&#39;t already present in a list.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            name (`str`): name to check for</span>
+<span class="sd">            name (str): name to check for</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">all_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_params</span><span class="p">()]</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">all_names</span><span class="p">:</span>
@@ -434,7 +436,7 @@
 <span class="sd">        Return the Param object with the given name.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            name (`str`): name to search for</span>
+<span class="sd">            name (str): name to search for</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_params</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="o">==</span><span class="n">name</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span></div>
 
@@ -443,8 +445,8 @@
 <span class="sd">        Compare two values of a given param.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            param_name (`str`): name of parameter, must be in one of the lists</span>
-<span class="sd">            val1, val2 (`float`): values to be compared</span>
+<span class="sd">            param_name (str): name of parameter, must be in one of the lists</span>
+<span class="sd">            val1, val2 (float): values to be compared</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            True if abs(val1-val2) &lt; tolerance of param_name</span>

@@ -43,6 +43,8 @@
           <ul class="nav">
             <li class="divider-vertical"></li>
             
+                <li><a href="../genindex.html">Index</a></li>
+            
             
               <li class="dropdown globaltoc-container">
   <a role="button"
@@ -485,10 +487,10 @@ Will stop iterating through observations if/when &gt;= th_pm of probability mass
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>name</strong> (<cite>str</cite>) – name of the parameter, required</li>
-<li><strong>units</strong> (<cite>str</cite>) – units in which parameter is measured (defaults to ‘unitless’)</li>
-<li><strong>tolerance</strong> (<cite>float</cite>) – smallest difference between two values of this parameter to consider “real,” defaults to 1E-6</li>
-<li><strong>is_x</strong> (<cite>bool</cite>) – set this to be the x-axis variable when plotting data, defaults to False</li>
+<li><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – name of the parameter, required</li>
+<li><strong>units</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – units in which parameter is measured (defaults to ‘unitless’)</li>
+<li><strong>tolerance</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – smallest difference between two values of this parameter to consider “real,” defaults to 1E-6</li>
+<li><strong>is_x</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – set this to be the x-axis variable when plotting data, defaults to False</li>
 </ul>
 </td>
 </tr>
@@ -505,14 +507,14 @@ Will stop iterating through observations if/when &gt;= th_pm of probability mass
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>param</strong> (<cite>Fit_param</cite>) – A Fit_param object to add to the list</li>
-<li><strong>name</strong> (<cite>str</cite>) – name of the parameter, required if param object not passed</li>
-<li><strong>units</strong> (<cite>str</cite>) – units in which parameter is measured (defaults to ‘unitless’)</li>
-<li><strong>tolerance</strong> (<cite>float</cite>) – smallest difference between two values of this parameter to consider “real”</li>
-<li><strong>val_range</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code></a> of <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>) – [min, max] (either this or vals is required)</li>
+<li><strong>param</strong> (<a class="reference internal" href="#bayesim.params.Fit_param" title="bayesim.params.Fit_param"><code class="xref py py-class docutils literal notranslate"><span class="pre">Fit_param</span></code></a>) – A Fit_param object to add to the list</li>
+<li><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – name of the parameter, required if param object not passed</li>
+<li><strong>units</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – units in which parameter is measured (defaults to ‘unitless’)</li>
+<li><strong>tolerance</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – smallest difference between two values of this parameter to consider “real”</li>
+<li><strong>val_range</strong> (<cite>:obj:`list`</cite> of <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>) – [min, max] (either this or vals is required)</li>
 <li><strong>vals</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code></a> of <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>) – full list of vals for this param</li>
 <li><strong>length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – initial length of this parameter (defaults to 10)</li>
-<li><strong>min_width</strong> (<cite>float</cite>) – minimum box width for this parameter - subtractive if linear spacing and divisive if logarithmic (defaults to 0.01 of total range, required if providing val_range)</li>
+<li><strong>min_width</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – minimum box width for this parameter - subtractive if linear spacing and divisive if logarithmic (defaults to 0.01 of total range, required if providing val_range)</li>
 <li><strong>spacing</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – ‘linear’ or ‘log’ (defaults to linear)</li>
 </ul>
 </td>
@@ -530,9 +532,9 @@ Will stop iterating through observations if/when &gt;= th_pm of probability mass
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>name</strong> (<cite>str</cite>) – name of the parameter, required</li>
-<li><strong>units</strong> (<cite>str</cite>) – units in which parameter is measured (defaults to ‘unitless’)</li>
-<li><strong>tolerance</strong> (<cite>float</cite>) – smallest difference between two values of this parameter to consider “real,” defaults to 1E-6</li>
+<li><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – name of the parameter, required</li>
+<li><strong>units</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – units in which parameter is measured (defaults to ‘unitless’)</li>
+<li><strong>tolerance</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – smallest difference between two values of this parameter to consider “real,” defaults to 1E-6</li>
 </ul>
 </td>
 </tr>
@@ -559,7 +561,7 @@ Will stop iterating through observations if/when &gt;= th_pm of probability mass
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<cite>str</cite>) – name to search for</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – name to search for</td>
 </tr>
 </tbody>
 </table>
@@ -589,7 +591,7 @@ Will stop iterating through observations if/when &gt;= th_pm of probability mass
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<cite>str</cite>) – name to check for</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – name to check for</td>
 </tr>
 </tbody>
 </table>
@@ -616,7 +618,7 @@ Will stop iterating through observations if/when &gt;= th_pm of probability mass
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>param_name</strong> (<cite>str</cite>) – name of parameter, must be in one of the lists</li>
+<li><strong>param_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – name of parameter, must be in one of the lists</li>
 <li><strong>val2</strong> (<em>val1</em><em>,</em>) – values to be compared</li>
 </ul>
 </td>
@@ -642,19 +644,19 @@ Will stop iterating through observations if/when &gt;= th_pm of probability mass
 <dl class="method">
 <dt id="bayesim.pmf.Pmf.all_current_values">
 <code class="descname">all_current_values</code><span class="sig-paren">(</span><em>param</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/pmf.html#Pmf.all_current_values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.pmf.Pmf.all_current_values" title="Permalink to this definition">¶</a></dt>
-<dd><p>List all values currently being considered for param.</p>
+<dd><p>List all values currently being considered for <cite>param</cite>.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="bayesim.pmf.Pmf.as_dict">
 <code class="descname">as_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/pmf.html#Pmf.as_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.pmf.Pmf.as_dict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return in (readable) dictionary form.</p>
+<dd><p>Return this Pmf object in (readable) dictionary form.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="bayesim.pmf.Pmf.find_neighbor_boxes">
 <code class="descname">find_neighbor_boxes</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/pmf.html#Pmf.find_neighbor_boxes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.pmf.Pmf.find_neighbor_boxes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Find and return all boxes neighboring the box at index.</p>
+<dd><p>Find and return all boxes neighboring the box at <cite>index</cite>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -667,7 +669,7 @@ Will stop iterating through observations if/when &gt;= th_pm of probability mass
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>meas</strong> (<cite>float</cite>) – one output value</li>
-<li><strong>model_at_ec</strong> (<cite>DataFrame</cite>) – DataFrame containing model data at the experimental condition of the measurement and uncertainty values in a column called ‘uncertainty’ for every point in parameter space</li>
+<li><strong>model_at_ec</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>) – DataFrame containing model data at the experimental condition of the measurement and uncertainty values in a column called ‘uncertainty’ for every point in parameter space</li>
 <li><strong>output_col</strong> (<cite>str</cite>) – name of column with output variable</li>
 <li><strong>ec</strong> – dict with keys of condition names and values</li>
 <li><strong>meas</strong> – one output value e.g. J</li>
@@ -691,12 +693,12 @@ values, bounds, and probabilities.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>params</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">param_list</span></code>) – </li>
-<li><strong>total_prob</strong> (<cite>float</cite>) – total probability to divide among points in parameter space - for an initialization, this is 1.0, for a subdivide call will be less.</li>
+<li><strong>params</strong> (<a class="reference internal" href="#bayesim.params.Param_list" title="bayesim.params.Param_list"><code class="xref py py-class docutils literal notranslate"><span class="pre">Param_list</span></code></a>) – </li>
+<li><strong>total_prob</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – total probability to divide among points in parameter space - for an initialization, this is 1.0, for a subdivide call will be less.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">DataFrame with columns for each parameter’s value, min, and max
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">obj:DataFrame with columns for each parameter’s value, min, and max
 as well as a probability associated with that point in parameter
 space</p>
 </td>
@@ -715,6 +717,14 @@ space</p>
 <dt id="bayesim.pmf.Pmf.multiply">
 <code class="descname">multiply</code><span class="sig-paren">(</span><em>other_pmf</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/pmf.html#Pmf.multiply"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.pmf.Pmf.multiply" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute and store renormalized product of this Pmf with other_pmf.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other_pmf</strong> (<a class="reference internal" href="#bayesim.pmf.Pmf" title="bayesim.pmf.Pmf"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pmf</span></code></a>) – PMF to multiply by</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -799,6 +809,18 @@ probs (<a class="reference external" href="https://docs.python.org/3/library/std
 <code class="descname">subdivide</code><span class="sig-paren">(</span><em>threshold_prob</em>, <em>include_neighbors=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/pmf.html#Pmf.subdivide"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.pmf.Pmf.subdivide" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subdivide all boxes with P &gt; threshold_prob and assign “locally uniform” probabilities within each box. If include_neighbors is true, also subdivide all boxes neighboring those boxes.</p>
 <p>Boxes with P &lt; threshold_prob are deleted.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>threshold_prob</strong> (<cite>float</cite>) – probability above which a box should be retained</li>
+<li><strong>include_neighbors</strong> (<cite>bool</cite>) – whether to also subdivide all immediate neighbors to boxes meeting the threshold</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
