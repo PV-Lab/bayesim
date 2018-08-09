@@ -19,4 +19,4 @@ To install bayesim simply type
 Prerequisites
 ----------------------------------
 
-bayesim runs with Python 3.6 or 2.7.
+``bayesim`` has been most thoroughly tested in Python 3.6.

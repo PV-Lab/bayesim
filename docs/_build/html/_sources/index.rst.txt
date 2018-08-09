@@ -10,11 +10,11 @@ Welcome to bayesim's documentation!
    :hidden:
 
    download
-   whybayes
    gettingstarted
-   examples
-   manual
+   whybayesim
    bayesics
+   manual
+   examples
    citingbayesim
 
 there will be more text and stuff here...

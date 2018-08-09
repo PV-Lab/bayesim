@@ -5,8 +5,8 @@ Examples
 .. toctree::
    :hidden:
 
-Ideal diode
------------
+Ideal diode solar cell
+----------------------
 The most self-contained example, in Jupyter notebook form. To run:
 
 * Download the `Github repository <https://github.com/PV-Lab/bayesim>`_ and run from your local machine using `Jupyter <http://jupyter.org>`_
@@ -21,3 +21,10 @@ OR
 Kinematics
 ----------
 Probably the simplest example, explained on the :doc:`bayesics` page. It exists in the `Github repo <https://github.com/PV-Lab/bayesim>`_ under ``examples/kinematics/kinetmatics.py`` and you can run it all in one go from a Terminal or step-by-step in an IDE like Spyder.
+
+Tin Sulfide (SnS) solar cell
+----------------------------
+redoing fit from Joule paper
+
+some other example (maybe expoplanets? or economics?)
+-----------------------------------------------------

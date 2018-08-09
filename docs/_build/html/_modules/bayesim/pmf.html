@@ -9,7 +9,7 @@
     <title>bayesim.pmf &#8212; bayesim 0.9.1 documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
@@ -28,8 +28,6 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <h1>Source code for bayesim.pmf</h1><div class="highlight"><pre>
@@ -88,8 +86,8 @@
 
         <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">points</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span>
         <span class="n">df</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">total_prob</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))]</span>
-
-        <span class="k">return</span> <span class="n">df</span></div>
+</div>
+        <span class="k">return</span> <span class="n">df</span>
 
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
@@ -129,8 +127,8 @@
 <div class="viewcode-block" id="Pmf.as_dict"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.as_dict">[docs]</a>    <span class="k">def</span> <span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return in (readable) dictionary form.&quot;&quot;&quot;</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>
-        <span class="n">d</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="vm">__dict__</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">d</span></div>
+        <span class="n">d</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="vm">__dict__</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">]</span></div>
+        <span class="k">return</span> <span class="n">d</span>
 
 <div class="viewcode-block" id="Pmf.normalize"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.normalize">[docs]</a>    <span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Normalize overall PMF.&quot;&quot;&quot;</span>
@@ -138,8 +136,8 @@
         <span class="c1">#print(norm_const,type(norm_const))</span>
         <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">norm_const</span><span class="p">)</span><span class="o">&lt;</span><span class="mf">1e-12</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Somehow the normalization constant was zero! To play it safe, I won&#39;t do anything.&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">/</span><span class="n">norm_const</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]]</span></div>
+        <span class="k">else</span><span class="p">:</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">/</span><span class="n">norm_const</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]]</span>
 
 <div class="viewcode-block" id="Pmf.uniformize"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.uniformize">[docs]</a>    <span class="k">def</span> <span class="nf">uniformize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -148,16 +146,16 @@
 
 <span class="sd">        Note that because subdivisions are not uniform that this is NOT a uniform prior anymore.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">norm_const</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="o">/</span><span class="n">norm_const</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">norm_const</span><span class="p">)]</span></div>
+        <span class="n">norm_const</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="o">/</span><span class="n">norm_const</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">norm_const</span><span class="p">)]</span>
 
 <div class="viewcode-block" id="Pmf.all_current_values"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.all_current_values">[docs]</a>    <span class="k">def</span> <span class="nf">all_current_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        List all values currently being considered for param.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ls</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">param</span><span class="p">])))</span>
-        <span class="n">ls</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">ls</span></div>
+        <span class="n">ls</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span></div>
+        <span class="k">return</span> <span class="n">ls</span>
 
 <div class="viewcode-block" id="Pmf.find_neighbor_boxes"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.find_neighbor_boxes">[docs]</a>    <span class="k">def</span> <span class="nf">find_neighbor_boxes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -248,8 +246,8 @@
         <span class="c1"># for now, drop all of them - should keep closest corner really</span>
         <span class="n">all_out_query</span> <span class="o">=</span> <span class="n">all_out_query</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
         <span class="n">all_out_check</span> <span class="o">=</span> <span class="n">neighbor_points</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">all_out_query</span><span class="p">)</span>
-        <span class="n">inds_to_drop</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">all_out_check</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">neighbor_points</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="n">inds_to_drop</span><span class="p">)</span></div>
+        <span class="n">inds_to_drop</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">all_out_check</span><span class="o">.</span><span class="n">index</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">neighbor_points</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="n">inds_to_drop</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Pmf.subdivide"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.subdivide">[docs]</a>    <span class="k">def</span> <span class="nf">subdivide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold_prob</span><span class="p">,</span> <span class="n">include_neighbors</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -336,8 +334,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">num_sub</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_sub</span> <span class="o">+</span> <span class="mi">1</span>
 
         <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">num_high_prob_boxes</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; box(es) with probability &gt; &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">threshold_prob</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; and &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">num_nbs</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; neighboring boxes subdivided!&#39;</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">new_boxes</span></div>
+</div>
+        <span class="k">return</span> <span class="n">new_boxes</span>
 
 <div class="viewcode-block" id="Pmf.multiply"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.multiply">[docs]</a>    <span class="k">def</span> <span class="nf">multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other_pmf</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -364,8 +362,8 @@
         <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">new_probs</span><span class="p">))</span><span class="o">&lt;</span><span class="mf">1e-12</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;You&#39;re gonna have a bad time...not multiplying&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_probs</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_probs</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
 
 <div class="viewcode-block" id="Pmf.likelihood"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.likelihood">[docs]</a>    <span class="k">def</span> <span class="nf">likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -421,17 +419,17 @@
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;likelihood has no probability! :(&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]))):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Uh-oh, some probability is NaN!&#39;</span><span class="p">)</span>
-        <span class="n">lkl</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">lkl</span><span class="p">,</span> <span class="n">delta_count</span></div>
+        <span class="n">lkl</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span></div>
+        <span class="k">return</span> <span class="n">lkl</span><span class="p">,</span> <span class="n">delta_count</span>
 
 <div class="viewcode-block" id="Pmf.most_probable"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.most_probable">[docs]</a>    <span class="k">def</span> <span class="nf">most_probable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return the n largest probabilities in a new DataFrame.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">sorted_probs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">&#39;prob&#39;</span><span class="p">,</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">sorted_probs</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">n</span><span class="p">]</span></div>
+        <span class="n">sorted_probs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">&#39;prob&#39;</span><span class="p">,</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">sorted_probs</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">n</span><span class="p">]</span>
 
-<div class="viewcode-block" id="Pmf.param_names"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.param_names">[docs]</a>    <span class="k">def</span> <span class="nf">param_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">]</span></div>
+<div class="viewcode-block" id="Pmf.param_names"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.param_names">[docs]</a>    <span class="k">def</span> <span class="nf">param_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span></div>
+        <span class="k">return</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">]</span>
 
 <div class="viewcode-block" id="Pmf.populate_dense_grid"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.populate_dense_grid">[docs]</a>    <span class="k">def</span> <span class="nf">populate_dense_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -488,8 +486,8 @@
         <span class="k">if</span> <span class="n">make_ind_lists</span><span class="p">:</span>
             <span class="n">return_dict</span><span class="p">[</span><span class="s1">&#39;ind_lists&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ind_lists</span>
         <span class="k">if</span> <span class="n">return_edges</span><span class="p">:</span>
-            <span class="n">return_dict</span><span class="p">[</span><span class="s1">&#39;param_edges&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_edges</span>
-        <span class="k">return</span> <span class="n">return_dict</span></div>
+            <span class="n">return_dict</span><span class="p">[</span><span class="s1">&#39;param_edges&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_edges</span></div>
+        <span class="k">return</span> <span class="n">return_dict</span>
 
 <div class="viewcode-block" id="Pmf.project_1D"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.project_1D">[docs]</a>    <span class="k">def</span> <span class="nf">project_1D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
 
@@ -515,8 +513,8 @@
         <span class="n">param_ind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
         <span class="n">inds_to_sum_along</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mat</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">i</span><span class="o">==</span><span class="n">param_ind</span><span class="p">])</span>
         <span class="n">probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="n">inds_to_sum_along</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">bins</span><span class="p">,</span> <span class="n">probs</span></div>
+</div>
+        <span class="k">return</span> <span class="n">bins</span><span class="p">,</span> <span class="n">probs</span>
 
 <div class="viewcode-block" id="Pmf.project_2D"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.project_2D">[docs]</a>    <span class="k">def</span> <span class="nf">project_2D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_param</span><span class="p">,</span> <span class="n">y_param</span><span class="p">,</span> <span class="n">no_probs</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
@@ -582,8 +580,8 @@
 <span class="sd">            patch_params.append({&#39;args&#39;:[(x_min,y_min),x_width,y_width],&#39;kwargs&#39;:{&#39;fill&#39;:fill,&#39;ec&#39;:ec,&#39;alpha&#39;:alpha}})</span>
 
 <span class="sd">        return patch_params</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">patches</span></div>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="n">patches</span>
 
 <div class="viewcode-block" id="Pmf.visualize"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.visualize">[docs]</a>    <span class="k">def</span> <span class="nf">visualize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -725,12 +723,11 @@
 
         <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="s1">&#39;fpath&#39;</span> <span class="ow">in</span> <span class="n">argv</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span></div></div>
+        <span class="k">if</span> <span class="s1">&#39;fpath&#39;</span> <span class="ow">in</span> <span class="n">argv</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span></div></div>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span>
 </pre></div>
 
           </div>
-          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -747,11 +744,11 @@
 <h3>Navigation</h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../download.html">Download</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../whybayes.html">Why Bayes?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../gettingstarted.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../manual.html">Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../whybayesim.html">Why bayesim?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../bayesics.html">Technical Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../citingbayesim.html">Citing bayesim</a></li>
 </ul>
 
@@ -784,8 +781,8 @@
       &copy;2018, Rachel C Kurchin and Giuseppe Romano.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
     </div>
 

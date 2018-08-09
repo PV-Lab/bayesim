@@ -24,6 +24,8 @@ Bayesian Inference and Parameter Estimation
 .. note::
   I haven't found an online explanation of this material at a not-excessively-mathy level (I firmly believe that you don't need a lot of knowledge of mathematical terminology to understand this; it can really be done in a very visual way) so I wrote my own. If you know of another, please `send it to me <rkurchin@mit.edu>`_ and I'd be happy to link to it here!
 
+  **Update!!** I found some nice explanations/examples in `this repo <https://github.com/jakevdp/BayesianAstronomy>`_! Check them out for some more material in addition to what I've included here.
+
 Most of the examples used to explain Bayes' Theorem have two hypotheses to disginguish between (e.g. "is it raining?": yes or no). However, to use Bayes' Theorem for *parameter estimation*, which is the problem of interest here, we need to generalize to many more than two hypotheses, and those hypotheses may be about the values of multiple different parameters. In addition, we would like to incorporate many pieces of evidence, necessitating many iterations of the Bayesian calculation. These and other factors can make it confusing to conceptualize how to generalize the types of computations we do to estimate the probability of the answer to a yes-or-no question or a dice roll to a problem statement relevant to a more general scientific/modeling inquiry. I will walk through these factors here.
 
 Many hypotheses, in multiple dimensions
@@ -79,7 +81,7 @@ where the hypotheses are sets of values of the parameters {:math:`P`}, i.e., poi
 
 .. math:: M(\{P_1, P_2,...P_l\},\{C_1, C_2,...C_n\}) = O
 
-Given an observation :math:`O_m` at conditions {:math:`C_1^m,C_2^m,...C_n^m`}, we can compute the likelihood over all parameters {:math:`P`} by evaluating our model for these conditions {:math:`C^m`} and comparing the simulated outputs {:math:`M(\{P\},\{C^m\})`} to the measured output :math:`O_m`. But then how do we know what probabilities to assign as a function of how much the measured and simulated outputs differ? Glad you asked...
+Given an observation :math:`O_m` at conditions {:math:`C_1^m,C_2^m,...C_n^m`} (where the :math:`m` superscript indicates specific values of the conditions rather than their full ranges), we can compute the likelihood over all parameters {:math:`P`} by evaluating our model for these conditions {:math:`C^m`} and comparing the simulated outputs {:math:`M(\{P\},\{C^m\})`} to the measured output :math:`O_m`. But then how do we know what probabilities to assign as a function of how much the measured and simulated outputs differ? Glad you asked...
 
 Experimental Uncertainty
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -102,6 +104,8 @@ What this means for our example is that our measurement of some value :math:`O_m
 
 (I'm leaving off the normalization constant for convenience.)
 
+.. _model-uncertainty:
+
 Model Uncertainty
 ^^^^^^^^^^^^^^^^^
 
@@ -109,7 +113,7 @@ Of course, when our model function isn't a simple analytical equation but rather
 
 Then, when we compute likelihoods, we use the sum of these two uncertainties as the standard deviation of our Gaussian.
 
-Especially if the parameter space grid is coarse, incorporating this model uncertainty is critical - if the variation in output variable from one grid point to another is significantly larger than the experimental uncertainty but this uncertainty is used as the standard deviation, it is possible that likelihood could be computed as zero everywhere in the parameter space, just because the measured output corresponded to parameters between several of the chosen sample points.
+Especially if the parameter space grid is coarse, incorporating this model uncertainty is critical - if the variation in output variable from one grid point to another is significantly larger than the experimental uncertainty but this uncertainty is used as the standard deviation, it is possible that likelihood could be computed as zero everywhere in the parameter space, just because the measured output corresponded to parameters between several of the chosen sample points. And that wouldn't be very good.
 
 An illustrative example: Kinematics
 -----------------------------------

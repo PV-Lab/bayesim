@@ -7,11 +7,7 @@ TO DO LIST FOR BAYESIM
 
 * make coarser set of SnS data and try repeating analysis and subdividing on that...
 
-* pare down bayesim implementation part of TB page to just discussion of model uncertainty and move kinematics example (maybe to manual page?)
-
 * add "prerequisites" or something section to docs
-
-* maybe visualize model uncertainties?
 
 * figure out rounding inconsistencies when attaching from file, like
 m = bym.Model(obs_data_path='obs_data.h5', output_var='J', ec_x_var='V', model_data_path='model_data.h5')
@@ -47,6 +43,8 @@ might be something about automatic tolerance setting?
 * if parallelizing anything else, move external functions to utils
 
 
+~ maybe visualize model uncertainties?
+
 ~ speed up visualize_grid somehow (parallelize?)
 
 ~ save model function somehow to at least theoretically close loop within CL interface
@@ -73,6 +71,8 @@ might be something about automatic tolerance setting?
 
 ~ play with code profiling to speed up slow steps (e.g. calc_model_gradients)
 
+
+-GUI!
 
 - mpi4py?
 
