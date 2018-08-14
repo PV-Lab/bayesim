@@ -26,6 +26,8 @@ might be something about automatic tolerance setting?
 
 * fully updated documentation
 
+* discard modeled EC points from file that aren't in observations rather than just importing and ignoring (in check_ecs function)
+
 * eventually, links in notebook examples to relevant bits of documentation...
 
 * change model.attach_params to call attach_ecs and attach_fit_params

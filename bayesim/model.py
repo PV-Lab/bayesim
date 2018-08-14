@@ -379,7 +379,10 @@ class Model(object):
         grps = argv['gb']
         # then check at each model point that they match
         for name,group in grps:
-            if not all(self.ec_pts==group[self.ec_names()].sort_values(self.ec_names()).reset_index(drop=True)):
+            #print(self.ec_pts,group[self.ec_names()].sort_values(self.ec_names()).reset_index(drop=True))
+            # specifically, we check that EC pts is a SUBSET of model EC's at each parameter space point
+            ec_inds = self.ec_pts.index
+            if not all(self.ec_pts==group[self.ec_names()].sort_values(self.ec_names()).reset_index(drop=True).loc[ec_inds]):
                 # FIX MEEEEE
                 #raise ValueError('The experimental conditions do not match to %d digits between the observed and modeled data at the modeled parameter space point %s!'%(self.ec_tol_digits,name))
                 print('there is a problem I need to fix the error message for!')
@@ -391,8 +394,9 @@ class Model(object):
         """
         start_indices = np.zeros(len(self.probs.points),dtype=int)
         end_indices = np.zeros(len(self.probs.points),dtype=int)
-        self.model_data_grps = self.model_data.groupby(by=self.fit_param_names())
+        #print(list(self.model_data_grps.groups.keys())[:5])
         for pt in self.probs.points.iterrows():
+            #print(tuple(pt[1][self.fit_param_names()].tolist()))
             subset_inds = self.model_data_grps.groups[tuple(pt[1][self.fit_param_names()].tolist())]
             if len(subset_inds)==0:
                 print('Something went wrong calculating sim indices! Could not find any points in model data for params %s.'%pt)
@@ -427,8 +431,8 @@ class Model(object):
             # import and sort data on parameter values
             self.model_data = dd.io.load(argv['model_data_path']).sort_values(self.fit_param_names()+self.ec_names()).reset_index(drop=True)
 
-            # Check that columns match EC's and parameter names (and populate fit_params if needed)
-            self.check_data_columns(model_data=self.model_data,output_column=output_col)
+            # Check that columns match EC's and parameter names
+            self.check_data_columns(model_data=self.model_data, output_column=output_col)
 
             # next get list of parameter space points
             param_points_grps = self.model_data.groupby(self.fit_param_names())
@@ -436,6 +440,7 @@ class Model(object):
 
             # if PMF has been populated, check that points match
             if not self.probs.is_empty:
+                #print(len(param_points),len(self.probs.points[self.fit_param_names()]))
                 if not all(param_points==self.probs.points[self.fit_param_names()]):
                     print('Your previously populated PMF does not have the same set of parameter space points as your model data. Proceeding using the points from the model data.')
                     self.probs = Pmf()
@@ -454,7 +459,7 @@ class Model(object):
                     raise ValueError('Your modeled parameter space does not appear to be on a grid; the current version of bayesim can only handle initially gridded spaces (unless using a previously saved subdivided state).')
                     return
                 else:
-
+                    """
                     param_vals = {name:list(set(param_points[name])) for name in self.fit_param_names()}
                     # try to guess spacing - this may need twiddling
                     param_spacing = {}
@@ -471,8 +476,12 @@ class Model(object):
                     for name in param_vals.keys():
                         params.add_fit_param(name=name,vals=param_vals[name])
                     self.attach_params(params)
-
+                    """
+                    #print('params before PMF construction:')
+                    #print(self.params)
                     self.probs = Pmf(params=self.params.fit_params)
+                    #print('top of probs:')
+                    #print(self.probs.points.head())
 
         elif mode=='function':
             # is there a way to save this (that could be saved to HDF5 too) so that subdivide can automatically call it?
@@ -514,9 +523,29 @@ class Model(object):
 
         # round EC's and generate groups
         rd_dct = {c.name:c.tol_digits for c in self.params.ecs}
-        #print(rd_dct)
         self.model_data = self.model_data.round(rd_dct)
+
+        # round fit params - actually just force them to be members of the vals lists
+        print("Rounding model data...")
+        """
+        if any([p.spacing=='linear' for p in self.params.fit_params]):
+            rd_dct = {p.name:p.get_tol_digits() for p in self.params.fit_params if p.spacing=='linear'}
+            self.model_data = self.model_data.round(rd_dct)
+        # then the log ones
+        if any([p.spacing=='log' for p in self.params.fit_params]):
+            for p in self.params.fit_params:
+                if p.spacing=='log':
+                    vals = deepcopy(self.model_data[p.name])
+                    for i in range(len(vals)):
+                        vals[i] = round(vals[i], p.get_tol_digits(val=vals[i]))
+                    self.model_data[p.name] = vals
+        """
+        for p in self.params.fit_params:
+            self.model_data[p.name] = [p.get_closest_val(val) for val in self.model_data[p.name]]
+
+        # generate groups
         self.model_data_ecgrps = self.model_data.groupby(self.ec_names())
+        self.model_data_grps = self.model_data.groupby(by=self.fit_param_names())
 
         #print('before index calc')
         #print(self.model_data.head())
@@ -733,6 +762,8 @@ class Model(object):
                         ecpt = tuple([ec[n] for n in self.ec_names()])
                     else:
                         ecpt = float(ec)
+                    #print(ecpt)
+                    #print(self.model_data_ecgrps.groups.keys())
                     model_here = deepcopy(self.model_data.loc[self.model_data_ecgrps.groups[ecpt]])
 
                     # compute likelihood and do a Bayesian update

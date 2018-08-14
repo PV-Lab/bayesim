@@ -93,7 +93,7 @@ class Pmf(object):
 
     def as_dict(self):
         """Return this Pmf object in (readable) dictionary form."""
-        d = self.__dict__
+        d = deepcopy(self.__dict__)
         d['params'] = [p.__dict__ for p in self.params]
         return d
 
@@ -275,7 +275,7 @@ class Pmf(object):
             for p in self.params:
                 # copy same params except for ranges
                 new_pl.add_fit_param(name=p.name,
-                val_range=[box[1][p.name+'_min'], box[1][p.name+'_max']], length=num_divs[p.name], min_width=p.min_width, spacing=p.spacing, units=p.units)
+                val_range=[box[1][p.name+'_min'], box[1][p.name+'_max']], length=num_divs[p.name], min_width=p.min_width, spacing=p.spacing, units=p.units, tolerance=p.tolerance)
             # make new df, spreading total prob from original box among new smaller ones
             new_boxes.append(self.make_points_list(new_pl.fit_params, total_prob=box[1]['prob']))
 
@@ -288,6 +288,7 @@ class Pmf(object):
             p_args = p.__dict__
             p_args['vals'] = vals=list(set(list(self.points[p.name])))
             del p_args['val_range']
+            #print(p_args)
             #new_params.add_fit_param(name=p.name, vals=list(set(list(self.points[p.name]))), spacing=p.spacing)
             new_params.add_fit_param(**p_args)
         self.params = [p for p in new_params.fit_params]
@@ -441,12 +442,14 @@ class Pmf(object):
             ind_lists = {p.name:[] for p in self.params}
 
         for pt in df.iterrows():
+            #print(pt)
             slices = []
             param_point = self.points.loc[pt[0]] # if df isn't self.points
             for p in self.params:
                 min_val = param_point[p.name+'_min']
                 max_val = param_point[p.name+'_max']
                 inds = [pvals_indices[p.name][v] for v in p.vals if v>min_val and v<max_val]
+                #print(p.name, min_val, max_val, p.vals, inds)
                 slices.append(slice(min(inds),max(inds)+1,None))
                 if make_ind_lists:
                     ind_lists[p.name].append(inds[0])
@@ -597,7 +600,7 @@ class Pmf(object):
         for param in self.params:
             plot_ranges[param.name] = [min(points_to_include[param.name+'_min']), max(points_to_include[param.name+'_max'])]
 
-        fig, axes = plt.subplots(nrows=len(self.params), ncols=len(self.params), figsize=(10,9))
+        fig, axes = plt.subplots(nrows=len(self.params), ncols=len(self.params), figsize=(5*len(self.params),5*len(self.params)))
 
         check1 = timeit.default_timer()
         time1 = round(check1-start_time,2)
@@ -617,7 +620,7 @@ class Pmf(object):
                 round_digits = -1*(int(math.floor(np.log10(x_max-x_min)))) + 1
                 if round((x_max-x_min)/5.0, round_digits) == 0:
                     round_digits = round_digits + 1
-                tick_spacing = round((x_max-x_min)/5., )
+                tick_spacing = round((x_max-x_min)/5., round_digits)
                 axes[rownum][colnum].xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
 
                 for item in ([axes[rownum][colnum].xaxis.label, axes[rownum][colnum].yaxis.label] +axes[rownum][colnum].get_xticklabels() + axes[rownum][colnum].get_yticklabels()):

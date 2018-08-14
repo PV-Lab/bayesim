@@ -32,11 +32,15 @@ class Param(object):
 
     def set_tolerance(self, tol, islog=False):
         """Set the tolerance for this parameter."""
-        if not islog:
+        if hasattr(self, 'spacing'):
+            if self.spacing=='log':
+                self.tolerance = tol
+            elif self.spacing=='linear':
+                self.tol_digits = int(-1*(np.floor(np.log10(tol))))
+                self.tolerance = round(tol, self.tol_digits)
+        else:
             self.tol_digits = int(-1*(np.floor(np.log10(tol))))
             self.tolerance = round(tol, self.tol_digits)
-        else:
-            self.tolerance = tol
 
     def get_val_str(self, val):
         tol_digits = int(-1*(np.floor(np.log10(self.tolerance))))
@@ -61,27 +65,39 @@ class Fit_param(Param):
             min_width(`float`): minimum box width for this parameter - subtractive if linear spacing and divisive if logarithmic (defaults to 0.01 of total range, required if providing val_range)
             spacing (str): 'linear' or 'log' (defaults to linear)
         """
-        Param.__init__(self, **argv) # set name, units, tolerance
         # get spacing and length (or set defaults)
-        self.spacing = argv.get('spacing','linear')
-        self.length = argv.get('length',10)
+        if not 'vals' in argv.keys():
+            self.spacing = argv.get('spacing','linear')
+            self.length = argv.get('length',10)
+        Param.__init__(self, **argv) # set name, units, tolerance
 
         # sanity check
         assert ('val_range' in argv or 'vals' in argv), "You must provide a range of values for this fitting parameter!"
 
         # compute edges and values
-        if 'vals' in argv:
+        if 'vals' in argv.keys():
             vals = argv['vals']
             assert(len(vals)>=2), "vals should have at least two values"
             vals = sorted(vals)
             self.length = len(vals)
             edges = np.zeros(len(vals)+1)
 
+            if 'spacing' in argv.keys():
+                self.spacing = argv['spacing']
+            else:
+                # try to guess spacing
+                diffs = [vals[i+1]-vals[i] for i in range(len(vals)-1)]
+                ratios = [vals[i+1]/vals[i] for i in range(len(vals)-1)]
+                if np.std(diffs)/np.mean(diffs) < np.std(ratios)/np.mean(ratios):
+                    self.spacing = 'linear'
+                else:
+                    self.spacing = 'log'
+
             # first edge
             if self.spacing=='linear':
                 edges[0] = vals[0]-0.5*(vals[1]-vals[0])
             elif self.spacing=='log':
-                edges[0] = vals[0]*((vals[1]/vals[0])**0.5)
+                edges[0] = vals[0]/((vals[1]/vals[0])**0.5)
             # most of the edges
             for i in range(1,len(vals)):
                 if self.spacing=='linear':
@@ -98,7 +114,7 @@ class Fit_param(Param):
             self.val_range = [min(edges),max(edges)]
             self.edges = edges
 
-        elif 'val_range' in argv:
+        elif 'val_range' in argv.keys():
             self.val_range = argv['val_range']
             assert len(self.val_range)==2 and self.val_range[1]>self.val_range[0], "val_range must be of length 2 with second entry larger than first!"
             if self.spacing == 'linear':
@@ -124,29 +140,48 @@ class Fit_param(Param):
             if self.spacing=='linear':
                 self.set_tolerance(0.1*self.min_width)
             elif self.spacing=='log':
-                self.set_tolerance(self.min_width**0.1,True)
+                self.set_tolerance(self.min_width**0.1, True)
+        else:
+            if self.spacing=='linear':
+                self.set_tolerance(argv['tolerance'])
+            elif self.spacing=='log':
+                self.set_tolerance(argv['tolerance'], True)
 
         # now round all the values based on tolerance
         if self.spacing=='linear': #tolerance is subtractive
-            num_digits = int(-1*(np.floor(np.log10(self.tolerance))))+1
+            num_digits = self.get_tol_digits()
             self.edges = [round(e, num_digits) for e in self.edges]
             self.vals = [round(v, num_digits) for v in self.vals]
+            self.val_range = [round(v, num_digits) for v in self.val_range]
         elif self.spacing=='log': #tolerance is multiplicative
             for i in range(len(self.vals)):
                 self.vals[i] = round(self.vals[i], self.get_tol_digits(val=self.vals[i]))
             for i in range(len(self.edges)):
                 self.edges[i] = round(self.edges[i], self.get_tol_digits(val=self.edges[i]))
+            for i in range(2):
+                self.val_range[i] = round(self.val_range[i], self.get_tol_digits(val=self.val_range[i]))
 
     def get_tol_digits(self, **argv):
         """Compute number of digits to round to. 'val' must be provided if logspaced."""
-        if hasattr(self, 'tol_digits'): #linear spacing
+        if self.spacing=='linear':
             return self.tol_digits
-        else: # should be log spacing
-            assert self.spacing=='log', "Something is implemented strangely - maybe set_tolerance() wasn't used where it should've been?"
+        elif self.spacing=='log':
             assert 'val' in argv.keys(), "If parameter is log-spaced, the value is needed to calculate tolerance digits!"
             val = argv['val']
             tol_val = abs(val - val/self.tolerance)
             return int(-1*(np.floor(np.log10(tol_val))))+1
+
+    def get_closest_val(self, val):
+        """Return closest value to val in this parameters current set of vals."""
+        diffs = [abs(val-v) for v in self.vals]
+        #print(diffs)
+        #print(diffs, min(diffs))
+        val_ind = diffs.index(min(diffs))
+        closest_val = self.vals[val_ind]
+        digits = self.get_tol_digits(val=closest_val)
+        if abs(round(closest_val, digits-1)/round(val, digits-1)-1.0)>0.01:
+            print("The values %f and %f were pretty far apart for %s..."%(val, closest_val, self.name))
+        return closest_val
 
     def get_val_str(self, val):
         """Return a string with this parameter's value, reasonably formatted."""
@@ -236,6 +271,7 @@ class Param_list(object):
             if 'param' in argv.keys():
                 self.fit_params[param_ind] = argv['param']
             else:
+                #print(argv)
                 self.fit_params[param_ind] = Fit_param(**argv)
 
     def add_ec(self, **argv):
