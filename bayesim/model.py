@@ -246,6 +246,7 @@ class Model(object):
         self.obs_data = dd.io.load(argv['obs_data_path'])
         # get EC names if necessary
         cols = list(self.obs_data.columns)
+        print(cols)
         if output_col not in cols:
             raise NameError('Your output variable name, %s, is not the name of a column in your input data!' %(output_col))
             return
@@ -265,21 +266,25 @@ class Model(object):
                         else:
                             self.params.add_ec(name=c, tolerance=tol)
                 print('Identified experimental conditions as %s. If this is wrong, rerun and explicitly specify them with attach_ec (make sure they match data file columns) or remove extra columns from data file.' %(str(self.params.param_names('ec'))))
-            else:
-                if 'uncertainty' not in cols:
-                    self.obs_data['uncertainty'] = argv['fixed_unc']*np.ones(len(self.obs_data))
-                    cols.extend('uncertainty')
-                    self.params.set_tolerance(self.output_var, 0.01*argv['fixed_unc'])
-                else: # set tolerance to 1% of minimum uncertainty
-                    self.params.set_tolerance(self.output_var, 0.01*min(self.obs_data['uncertainty']))
-                if set(cols) == set(self.ec_names()+['uncertainty']):
-                    pass # all good
-                elif set(self.ec_names()+['uncertainty']) <= set(cols):
-                    print('Ignoring extra columns in data file: %s'%(str(list(set(cols)-set(self.ec_names())))))
-                elif set(cols) <= set(self.ec_names()+['uncertainty']):
-                    print('These experimental conditions were missing from your data file: %s\nProceeding assuming that %s is the full set of experimental conditions...'%(str(list(set(ec)-set(cols))), str(cols)))
-                    for c in [c for c in cols if not c=='uncertainty']:
-                        self.params.add_ec(name=c)
+
+            # these next bits used to be under an else...
+            if 'uncertainty' not in cols:
+                self.obs_data['uncertainty'] = argv['fixed_unc']*np.ones(len(self.obs_data))
+                cols.extend('uncertainty')
+                #print(self.obs_data.head())
+                self.params.set_tolerance(self.output_var, 0.01*argv['fixed_unc'])
+            else: # set tolerance to 1% of minimum uncertainty
+                self.params.set_tolerance(self.output_var, 0.01*min(self.obs_data['uncertainty']))
+
+            if set(cols) == set(self.ec_names()+['uncertainty']):
+                pass # all good
+            elif set(self.ec_names()+['uncertainty']) <= set(cols):
+                print('Ignoring extra columns in data file: %s'%(str(list(set(cols)-set(self.ec_names())))))
+            elif set(cols) <= set(self.ec_names()+['uncertainty']):
+                print('These experimental conditions were missing from your data file: %s\nProceeding assuming that %s is the full set of experimental conditions...'%(str(list(set(ec)-set(cols))), str(cols)))
+                for c in [c for c in cols if not c=='uncertainty']:
+                    self.params.add_ec(name=c)
+            # ...else ended here
 
         # pick out rows to keep - the way to do this thresholding should probably be tweaked
         if not keep_all:
@@ -459,29 +464,7 @@ class Model(object):
                     raise ValueError('Your modeled parameter space does not appear to be on a grid; the current version of bayesim can only handle initially gridded spaces (unless using a previously saved subdivided state).')
                     return
                 else:
-                    """
-                    param_vals = {name:list(set(param_points[name])) for name in self.fit_param_names()}
-                    # try to guess spacing - this may need twiddling
-                    param_spacing = {}
-                    for name in self.fit_param_names():
-                        vals = param_vals[name]
-                        diffs = [vals[i+1]-vals[i] for i in range(len(vals)-1)]
-                        ratios = [vals[i+1]/vals[i] for i in range(len(vals)-1)]
-                        if np.std(diffs)/np.mean(diffs) < np.std(ratios)/np.mean(ratios):
-                            param_spacing[name] = 'linear'
-                        else:
-                            param_spacing[name] = 'log'
-
-                    params = pm.Param_list()
-                    for name in param_vals.keys():
-                        params.add_fit_param(name=name,vals=param_vals[name])
-                    self.attach_params(params)
-                    """
-                    #print('params before PMF construction:')
-                    #print(self.params)
                     self.probs = Pmf(params=self.params.fit_params)
-                    #print('top of probs:')
-                    #print(self.probs.points.head())
 
         elif mode=='function':
             # is there a way to save this (that could be saved to HDF5 too) so that subdivide can automatically call it?
@@ -527,19 +510,6 @@ class Model(object):
 
         # round fit params - actually just force them to be members of the vals lists
         print("Rounding model data...")
-        """
-        if any([p.spacing=='linear' for p in self.params.fit_params]):
-            rd_dct = {p.name:p.get_tol_digits() for p in self.params.fit_params if p.spacing=='linear'}
-            self.model_data = self.model_data.round(rd_dct)
-        # then the log ones
-        if any([p.spacing=='log' for p in self.params.fit_params]):
-            for p in self.params.fit_params:
-                if p.spacing=='log':
-                    vals = deepcopy(self.model_data[p.name])
-                    for i in range(len(vals)):
-                        vals[i] = round(vals[i], p.get_tol_digits(val=vals[i]))
-                    self.model_data[p.name] = vals
-        """
         for p in self.params.fit_params:
             self.model_data[p.name] = [p.get_closest_val(val) for val in self.model_data[p.name]]
 
@@ -555,7 +525,7 @@ class Model(object):
         self.calc_indices()
 
         if calc_model_unc:
-            self.calc_model_unc()
+            self.calc_model_unc(**argv)
 
     def comparison_plot(self,**argv):
         """
@@ -858,8 +828,10 @@ class Model(object):
 
         Args:
             verbose (`bool`): flag for verbosity, defaults to False
+            model_unc_factor (`float`): multiplier on deltas to give uncertainty, defaults to 0.5 - smaller probably means faster convergence, but also higher chance to miss "hot spots"
         """
 
+        factor = argv.get('model_unc_factor', 0.5)
         verbose = argv.get('verbose', False)
         if verbose:
             print('Calculating model uncertainty...')
@@ -877,7 +849,8 @@ class Model(object):
             inds = self.model_data_ecgrps.groups[entry[0]]
             deltas[inds] = entry[1]
 
-        self.model_data['uncertainty'] = deltas
+        # trying 0.5 instead of 1.0
+        self.model_data['uncertainty'] = factor * deltas
 
         if verbose:
             print('Calculating model uncertainty took %.2f seconds.'%(time.time()-start_time))

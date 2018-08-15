@@ -24,6 +24,3 @@ Probably the simplest example, explained on the :doc:`bayesics` page. It exists 
 Tin Sulfide (SnS) solar cell
 ----------------------------
 redoing fit from Joule paper
-
-some other example (maybe exoplanets?)
------------------------------------------------------

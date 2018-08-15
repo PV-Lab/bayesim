@@ -106,4 +106,6 @@ examples/TE/*
 examples/*/PMFs/*
 examples/*/obs_lists/*
 docs/img/*.pptx
-examples/SnS/SCAPS_sims_sorted.h5
+examples/SnS/SCAPS_sims_sorted*.h5
+examples/SnS/make_sparse_data.py
+examples/SnS/new_sim_points_1.h5

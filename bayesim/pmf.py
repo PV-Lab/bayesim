@@ -606,6 +606,8 @@ class Pmf(object):
         time1 = round(check1-start_time,2)
         #print('setup finished in ' + str(time1) + ' seconds')
 
+        avgs = {}
+
         for rownum in range(0,len(self.params)):
             for colnum in range(0,len(self.params)):
                 x_param = self.params[colnum]
@@ -642,6 +644,9 @@ class Pmf(object):
                         elif x_param.spacing=='linear':
                             vals = [0.5*(bins[i]+bins[i+1]) for i in range(len(probs))]
                         axes[rownum][colnum].hist(vals, weights=probs, bins=bins, edgecolor='k', linewidth=1.0)
+
+                        # weighted averages
+                        avgs[x_param.name] = np.sum([vals[i]*probs[i] for i in range(len(probs))])
 
                         # formatting
                         axes[rownum][colnum].set_ylim(0,1)

@@ -3,40 +3,26 @@ TO DO LIST FOR BAYESIM
 
 [* for necessary for paper, ~ for need to decide if it's necessary, - for future ideas]
 
-* add caveat that it's all subject to the model being "true"
-
-* make coarser set of SnS data and try repeating analysis and subdividing on that...
-
-* add "prerequisites" or something section to docs
-
-* figure out rounding inconsistencies when attaching from file, like
-m = bym.Model(obs_data_path='obs_data.h5', output_var='J', ec_x_var='V', model_data_path='model_data.h5')
-m.set_param_units('J', 'mA/cm^2')
-might be something about automatic tolerance setting?
+* doc stuff:
+  * add caveat that it's all subject to the model being "true"
+  * add "prerequisites" or something section to docs
+  * eventually, links in notebook examples to relevant bits of documentation...
 
 * either move true_vals star to x-axis or use a vertical line (and add legend for them)
 
 * add fcn to calculate weighted average values for each param
 
-* figure out the weird conda and numpy errors in Binder
+* suppress the weird conda and numpy errors in Binder
 
-* also why is tol_digits getting set on Bp?
+* why is tol_digits getting set on Bp?
 
 * more 'verbose' options
-
-* fully updated documentation
-
-* discard modeled EC points from file that aren't in observations rather than just importing and ignoring (in check_ecs function)
-
-* eventually, links in notebook examples to relevant bits of documentation...
 
 * change model.attach_params to call attach_ecs and attach_fit_params
 
 * add more options to CL interface (e.g. invoking comparison plot/visualize_grid, other tweaks to behavior)
 
 * fix log spacing on visualize() in CL version
-
-* more examples - TIDLS, maybe PC1D, maybe non-ideal diode, etc.
 
 * fix save_step behavior in light of new run() protocol
 
@@ -45,21 +31,19 @@ might be something about automatic tolerance setting?
 * if parallelizing anything else, move external functions to utils
 
 
+~ add transform_variable option (e.g. for SnS case)
+
+~ include all options in argparser for command line
+
 ~ maybe visualize model uncertainties?
 
 ~ speed up visualize_grid somehow (parallelize?)
 
 ~ save model function somehow to at least theoretically close loop within CL interface
 
-~ improve defaults in visualizations - both comparison_plot and probs (axis ticks overlapping sometimes, etc.)
+~ discard modeled EC points from file that aren't in observations rather than just importing and ignoring (in check_ecs function)
 
-~ include all options in argparser for command line
-
-~ change project_2D to use grid also (also maybe pass patch parameters rather than actual patch objects?) NOTE: tried this and it seemed to get slower, at least up to the scale I tried (~1000 grid points)
-
-~ maybe do project_2D with imshow()?
-
-~ be able to ignore extra points in model data file
+~ change project_2D to use grid also (also maybe pass patch parameters rather than actual patch objects?) NOTE: tried this and it seemed to get slower, at least up to the scale I tried (~1000 grid points) - maybe use imshow?
 
 ~ plotting points from an inference run?
 
@@ -67,20 +51,20 @@ might be something about automatic tolerance setting?
 
 ~ for big data sets, save_state might need to write separate HDF5 files and store paths to them in the state file
 
-~ make default value of th_pv dimension-number-dependent
+~ make default value of th_pv (and th_pm?) dimension-number-dependent
 
 ~ option to give Python object (DataFrame) to attach_observations rather than only a file
 
 ~ play with code profiling to speed up slow steps (e.g. calc_model_gradients)
 
 
--GUI!
+- GUI!
 
 - mpi4py?
 
 - allow multiple output variables
 
-- making animation of PMF evolving during a run
+- animations
 
 - hierarchical indexing to save space rather than everything written out in every row
 
