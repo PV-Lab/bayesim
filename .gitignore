@@ -115,3 +115,4 @@ examples/SnS/sim_data.h5
 examples/SnS/sim_data_trimmed.h5
 examples/SnS/sim_data_less_sparse.h5
 examples/SnS/__MACOSX/*
+plot_stuff.py
