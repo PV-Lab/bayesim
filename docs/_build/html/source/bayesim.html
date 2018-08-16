@@ -236,7 +236,11 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>verbose</strong> (<cite>bool</cite>) – flag for verbosity, defaults to False</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>verbose</strong> (<cite>bool</cite>) – flag for verbosity, defaults to False</li>
+<li><strong>model_unc_factor</strong> (<cite>float</cite>) – multiplier on deltas to give uncertainty, defaults to 0.5 - smaller probably means faster convergence, but also higher chance to miss “hot spots”</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
@@ -341,7 +345,7 @@ Will stop iterating through observations if/when &gt;= th_pm of probability mass
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>save_step</strong> (<cite>int</cite>) – interval (number of data points) at which to save intermediate PMF’s (defaults to 10, 0 to save only final, &lt;0 to save none)</li>
-<li><strong>th_pm</strong> (<cite>float</cite>) – threshold quantity of probability mass to be concentrated in th_pv fraction of parameter space to trigger the run to stop (defaults to 0.8)</li>
+<li><strong>th_pm</strong> (<cite>float</cite>) – threshold quantity of probability mass to be concentrated in th_pv fraction of parameter space to trigger the run to stop (defaults to 0.9)</li>
 <li><strong>th_pv</strong> (<cite>float</cite>) – threshold fraction of parameter space volume for th_pm fraction of probability to be concentrated into to trigger the run to stop (defaults to 0.05)</li>
 <li><strong>min_num_pts</strong> (<cite>int</cite>) – minimum number of observation points to use - if threshold is reached before this number of points has been used, it will start over and the final PMF will be the average of the number of runs needed to use sufficient points (defaults to 0.7 * the number of experimental measurements)</li>
 <li><strong>prob_bias</strong> (<cite>float</cite>) – number from 0 to 0.5, fraction of PMF from previous step to mix into prior for this step (defaults to 0) - higher values will likely converge faster but possibly have larger errors, especially if min_num_pts is small</li>
@@ -360,9 +364,24 @@ Will stop iterating through observations if/when &gt;= th_pm of probability mass
 </dd></dl>
 
 <dl class="method">
-<dt id="bayesim.model.Model.set_param_units">
-<code class="descname">set_param_units</code><span class="sig-paren">(</span><em>param_name</em>, <em>units</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/model.html#Model.set_param_units"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.set_param_units" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set units for parameter param_name (any type).</p>
+<dt id="bayesim.model.Model.set_param_info">
+<code class="descname">set_param_info</code><span class="sig-paren">(</span><em>param_name</em>, <em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/model.html#Model.set_param_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.set_param_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set additional info for parameter param_name (any type).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>param_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – name of parameter to modify</li>
+<li><strong>units</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – units of parameter</li>
+<li><strong>min_width</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – minimum width of parameter (only for fitting params)</li>
+<li><strong>display_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – name to use on plots (can include TeX)</li>
+<li><strong>tolerance</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – tolerance for this parameter</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -429,6 +448,12 @@ Will stop iterating through observations if/when &gt;= th_pm of probability mass
 <dd><p>Bases: <a class="reference internal" href="#bayesim.params.Param" title="bayesim.params.Param"><code class="xref py py-class docutils literal notranslate"><span class="pre">bayesim.params.Param</span></code></a></p>
 <p>A bayesim fitting parameter. Because they will be initialized on a grid, each fitting parameter stores its full list of values as well as some other information such as the spacing between them and the minimum width of a box (used during grid subdivisions).</p>
 <dl class="method">
+<dt id="bayesim.params.Fit_param.get_closest_val">
+<code class="descname">get_closest_val</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Fit_param.get_closest_val"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Fit_param.get_closest_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return closest value to val in this parameters current set of vals.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="bayesim.params.Fit_param.get_tol_digits">
 <code class="descname">get_tol_digits</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Fit_param.get_tol_digits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Fit_param.get_tol_digits" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute number of digits to round to. ‘val’ must be provided if logspaced.</p>
@@ -463,12 +488,6 @@ Will stop iterating through observations if/when &gt;= th_pm of probability mass
 <dt id="bayesim.params.Param.set_tolerance">
 <code class="descname">set_tolerance</code><span class="sig-paren">(</span><em>tol</em>, <em>islog=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Param.set_tolerance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Param.set_tolerance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the tolerance for this parameter.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="bayesim.params.Param.set_units">
-<code class="descname">set_units</code><span class="sig-paren">(</span><em>units</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Param.set_units"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Param.set_units" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the units for this parameter.</p>
 </dd></dl>
 
 </dd></dl>
@@ -516,6 +535,7 @@ Will stop iterating through observations if/when &gt;= th_pm of probability mass
 <li><strong>length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – initial length of this parameter (defaults to 10)</li>
 <li><strong>min_width</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – minimum box width for this parameter - subtractive if linear spacing and divisive if logarithmic (defaults to 0.01 of total range, required if providing val_range)</li>
 <li><strong>spacing</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – ‘linear’ or ‘log’ (defaults to linear)</li>
+<li><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – verbosity flag</li>
 </ul>
 </td>
 </tr>
@@ -599,7 +619,7 @@ Will stop iterating through observations if/when &gt;= th_pm of probability mass
 
 <dl class="method">
 <dt id="bayesim.params.Param_list.set_ec_x">
-<code class="descname">set_ec_x</code><span class="sig-paren">(</span><em>param_name</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Param_list.set_ec_x"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Param_list.set_ec_x" title="Permalink to this definition">¶</a></dt>
+<code class="descname">set_ec_x</code><span class="sig-paren">(</span><em>param_name</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/params.html#Param_list.set_ec_x"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.params.Param_list.set_ec_x" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the x-variable for experimental conditions.</p>
 </dd></dl>
 
@@ -736,7 +756,8 @@ space</p>
 <dl class="method">
 <dt id="bayesim.pmf.Pmf.param_names">
 <code class="descname">param_names</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/pmf.html#Pmf.param_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.pmf.Pmf.param_names" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return list of parameter names of this PMF.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="bayesim.pmf.Pmf.populate_dense_grid">
@@ -769,7 +790,7 @@ space</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>param</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – one of <cite>self.params</cite></td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>param</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">Fit_param</span></code>) – one of <cite>self.params</cite></td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">bin edges for plotting with matplotlib.pyplot.hist (has length one more than next return list)
 probs (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code></a> of <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>): probability values for histogram-style plot - note that these technically have units of the inverse of whatever the parameter being plotted is (that is, they’re probability densities)</td>
@@ -849,6 +870,12 @@ Useful for rerunning whole inference after subdividing.</p>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.pmf.Pmf.weighted_avgs">
+<code class="descname">weighted_avgs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/bayesim/pmf.html#Pmf.weighted_avgs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.pmf.Pmf.weighted_avgs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a dict with the weighted average for each parameter.</p>
 </dd></dl>
 
 </dd></dl>

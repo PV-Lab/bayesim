@@ -29,7 +29,7 @@ An example using an actual numerical model -- in this case, reproducing the fit 
 
 OR
 
-* Run in the cloud using Binder! |binderbutton|
+* Run in the cloud using Binder! |binderbutton2|
 
-.. |binderbutton| image:: https://mybinder.org/badge.svg
-   :target: https://mybinder.org/v2/gh/pv-lab/bayesim/master?filepath=examples%2FSnS%2FJoule_redux.ipynb
+.. |binderbutton2| image:: https://mybinder.org/badge.svg
+   :target: https://mybinder.org/v2/gh/pv-lab/bayesim/master?filepath=examples%2FSnS%2FSnS_fitting.ipynb
