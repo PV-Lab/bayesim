@@ -13,8 +13,8 @@ Install using
 
   pip install bayesim
 
-Author
-======
+Information
+===========
 :Authors:
     Rachel C. Kurchin and Giuseppe Romano
 

@@ -8,17 +8,9 @@ TO DO LIST FOR BAYESIM
   * add "prerequisites" or something section to docs
   * eventually, links in notebook examples to relevant bits of documentation...
 
-* either move true_vals star to x-axis or use a vertical line (and add legend for them)
-
-* add fcn to calculate weighted average values for each param
-
 * suppress the weird conda and numpy errors in Binder
 
-* why is tol_digits getting set on Bp?
-
 * more 'verbose' options
-
-* change model.attach_params to call attach_ecs and attach_fit_params
 
 * add more options to CL interface (e.g. invoking comparison plot/visualize_grid, other tweaks to behavior)
 
@@ -28,10 +20,14 @@ TO DO LIST FOR BAYESIM
 
 * check 2.7 vs. 3.6 compatibility
 
-* if parallelizing anything else, move external functions to utils
 
+~ why is tol_digits ever getting set on logarithmic parameters (e.g. Bp in diode)
 
-~ add transform_variable option (e.g. for SnS case)
+~ change model.attach_params to call attach_ecs and attach_fit_params
+
+~ either move true_vals star to x-axis or use a vertical line (and add legend for them)
+
+~ if parallelizing anything else, move external functions to utils
 
 ~ include all options in argparser for command line
 

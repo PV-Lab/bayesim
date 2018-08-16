@@ -17,6 +17,7 @@ class Param(object):
             name (`str`): name of the parameter, required
             units (`str`): units in which parameter is measured (defaults to 'unitless')
             tolerance (`float`): smallest difference between two values of this parameter to consider "real"
+            display_name (str): name for plotting (can include TeX), defaults to name
         """
         self.name = argv['name']
         units = argv.get('units','unitless')
@@ -25,10 +26,10 @@ class Param(object):
             self.set_tolerance(argv['tolerance'])
         else:
             self.tolerance = None
-
-    def set_units(self, units):
-        """Set the units for this parameter."""
-        self.units = units
+        if 'display_name' in argv.keys():
+            self.display_name = argv['display_name']
+        else:
+            self.display_name = self.name
 
     def set_tolerance(self, tol, islog=False):
         """Set the tolerance for this parameter."""
@@ -64,12 +65,14 @@ class Fit_param(Param):
             length (int): initial length of this parameter (defaults to 10)
             min_width(`float`): minimum box width for this parameter - subtractive if linear spacing and divisive if logarithmic (defaults to 0.01 of total range, required if providing val_range)
             spacing (str): 'linear' or 'log' (defaults to linear)
+            verbose (bool): flag for verbosity
         """
         # get spacing and length (or set defaults)
         if not 'vals' in argv.keys():
             self.spacing = argv.get('spacing','linear')
             self.length = argv.get('length',10)
         Param.__init__(self, **argv) # set name, units, tolerance
+        verbose = argv.get('verbose',False)
 
         # sanity check
         assert ('val_range' in argv or 'vals' in argv), "You must provide a range of values for this fitting parameter!"
@@ -126,7 +129,8 @@ class Fit_param(Param):
 
         # set min_width
         if 'min_width' not in argv.keys():
-            print('Setting min_width automatically for %s.'%self.name)
+            if verbose:
+                print('Setting min_width automatically for %s.'%self.name)
             if self.spacing == 'linear':
                 min_width = (1./(10*self.length))*(self.val_range[1]-self.val_range[0])
             elif self.spacing == 'log':
@@ -294,10 +298,11 @@ class Param_list(object):
         else:
             raise ValueError("It looks like you're trying to add a duplicate experimental condition, %s!"%argv['name'])
 
-    def set_ec_x(self, param_name):
+    def set_ec_x(self, param_name, verbose=False):
         """Set the x-variable for experimental conditions."""
         if not param_name in self.param_names('ec'):
-            print("Adding the variable %s to the list of experimental conditions and setting it as the x-axis variable for plotting."%param_name)
+            if verbose:
+                print("Adding the variable %s to the list of experimental conditions and setting it as the x-axis variable for plotting."%param_name)
             self.add_ec(name=param_name)
         elif self.ec_x_name==param_name:
             pass #already done

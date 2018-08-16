@@ -106,6 +106,12 @@ examples/TE/*
 examples/*/PMFs/*
 examples/*/obs_lists/*
 docs/img/*.pptx
-examples/SnS/SCAPS_sims_sorted*.h5
+examples/SnS/results_redux.pickle
 examples/SnS/make_sparse_data.py
 examples/SnS/new_sim_points_1.h5
+examples/SnS/results_to_hdf5.py
+examples/SnS/missing_sims.pickle
+examples/SnS/sim_data.h5
+examples/SnS/sim_data_trimmed.h5
+examples/SnS/sim_data_less_sparse.h5
+examples/SnS/__MACOSX/*

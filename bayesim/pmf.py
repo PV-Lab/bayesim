@@ -369,7 +369,7 @@ class Pmf(object):
         new_probs = np.zeros([len(lkl.points),1])
 
         delta_count = 0
-        exp_err_count = 0
+        nan_count = 0
 
         # here's the actual loop that computes the likelihoods
         for point in lkl.points.iterrows():
@@ -377,14 +377,18 @@ class Pmf(object):
             #model_val = model_func(ec, dict(point[1]))
             model_pt = model_data.iloc[point[0]]
             model_val = float(model_pt[output_col])
-            model_err = float(model_pt['uncertainty'])
-            err = model_err + meas_err
+            if not np.isnan(model_val):
+                model_err = float(model_pt['uncertainty'])
+                err = model_err + meas_err
 
-            # tally how many times deltas were bigger
-            if model_err > meas_err:
-                delta_count = delta_count + 1
+                # tally how many times deltas were bigger
+                if model_err > meas_err:
+                    delta_count = delta_count + 1
 
-            new_probs[point[0]] = norm.pdf(meas_val, loc=model_val, scale=abs(err))
+                new_probs[point[0]] = norm.pdf(meas_val, loc=model_val, scale=abs(err))
+            else:
+                new_probs[point[0]] = 1.0/len(lkl.points)
+                nan_count = nan_count + 1
 
         # copy these values in
         lkl.points['prob'] = new_probs
@@ -395,7 +399,7 @@ class Pmf(object):
         if any(np.isnan(np.array(self.points['prob']))):
             raise ValueError('Uh-oh, some probability is NaN!')
         lkl.normalize()
-        return lkl, delta_count
+        return lkl, delta_count, nan_count
 
     def most_probable(self, n):
         """Return the n largest probabilities in a new DataFrame.
@@ -404,6 +408,7 @@ class Pmf(object):
         return sorted_probs.iloc[0:n]
 
     def param_names(self):
+        """Return list of parameter names of this PMF."""
         return [p.name for p in self.params]
 
     def populate_dense_grid(self,**argv):
@@ -466,13 +471,23 @@ class Pmf(object):
             return_dict['param_edges'] = param_edges
         return return_dict
 
+    def weighted_avgs(self):
+        """Returns a dict with the weighted average for each parameter."""
+        avgs = {}
+        for param in self.params:
+            bins, probs = self.project_1D(param)
+            vals = param.vals
+            avgs[param.name] = np.sum([probs[i]*vals[i] for i in range(len(vals))])
+        return avgs
+
+
     def project_1D(self, param):
 
         """
         Project down to a one-dimensional PMF over the given parameter. Used by the visualize() method.
 
         Args:
-            param (dict): one of `self.params`
+            param (:obj:`Fit_param`): one of `self.params`
 
         Returns:
             bins (:obj:`list` of :obj:`float`): bin edges for plotting with matplotlib.pyplot.hist (has length one more than next return list)
@@ -606,8 +621,6 @@ class Pmf(object):
         time1 = round(check1-start_time,2)
         #print('setup finished in ' + str(time1) + ' seconds')
 
-        avgs = {}
-
         for rownum in range(0,len(self.params)):
             for colnum in range(0,len(self.params)):
                 x_param = self.params[colnum]
@@ -645,13 +658,10 @@ class Pmf(object):
                             vals = [0.5*(bins[i]+bins[i+1]) for i in range(len(probs))]
                         axes[rownum][colnum].hist(vals, weights=probs, bins=bins, edgecolor='k', linewidth=1.0)
 
-                        # weighted averages
-                        avgs[x_param.name] = np.sum([vals[i]*probs[i] for i in range(len(probs))])
-
                         # formatting
                         axes[rownum][colnum].set_ylim(0,1)
                         axes[rownum][colnum].yaxis.set_label_position("right")
-                        axes[rownum][colnum].set_ylabel('P(%s)'%x_param.name, rotation=270, labelpad=20) #labelpad is kind of a brute-force way to do this and might break if we change the figure size, but va='bottom' wasn't working
+                        axes[rownum][colnum].set_ylabel('P(%s)'%x_param.display_name, rotation=270, labelpad=20) #labelpad is kind of a brute-force way to do this and might break if we change the figure size, but va='bottom' wasn't working
                         #axes[rownum][colnum].`grid`(axis='y')
 
                         # add true value if desired
@@ -697,8 +707,8 @@ class Pmf(object):
 
         # put the labels on the outside
         for i in range(0,len(self.params)):
-            xlabel = '%s [%s]' %(self.params[i].name,self.params[i].units)
-            ylabel = '%s [%s]' %(self.params[i].name,self.params[i].units)
+            xlabel = '%s [%s]' %(self.params[i].display_name, self.params[i].units)
+            ylabel = '%s [%s]' %(self.params[i].display_name, self.params[i].units)
             axes[len(self.params)-1][i].set_xlabel(xlabel)
             if i>0: # top one is actually a probability
                 axes[i][0].set_ylabel(ylabel)

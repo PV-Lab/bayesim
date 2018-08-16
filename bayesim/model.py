@@ -18,8 +18,8 @@ def calc_deltas(grp, inds, param_lengths, model_data, fit_param_names, probs, ou
     subset.drop_duplicates(subset=fit_param_names, inplace=True)
     subset.sort_values(fit_param_names, inplace=True)
     subset.reset_index(inplace=True)
-    if not all(subset[fit_param_names]==probs.points[fit_param_names]):
-        raise ValueError('Subset at %s does not match probability grid!'%grp)
+    if not len(subset.index)==len(probs.points.index):
+        raise ValueError("Subset at EC's %s does not match probability grid!"%str(grp))
 
     # check if on a grid
     if not len(subset)==np.product(param_lengths):
@@ -52,7 +52,7 @@ def calc_deltas(grp, inds, param_lengths, model_data, fit_param_names, probs, ou
         # this is really ugly because we have to index in at variable positions...
         # likewise here with the error
         with np.errstate(invalid='ignore'):
-            winners[i]=np.fmax(deltas_here[[Ellipsis]+[slice(None,mat.shape[i],None)]+[slice(None)]*(len(mat.shape)-i-1)],deltas_here[[Ellipsis]+[slice(1,mat.shape[i]+1,None)]+[slice(None)]*(len(mat.shape)-i-1)])
+            winners[i]=np.fmax(deltas_here[tuple([Ellipsis]+[slice(None,mat.shape[i],None)]+[slice(None)]*(len(mat.shape)-i-1))],deltas_here[tuple([Ellipsis]+[slice(1,mat.shape[i]+1,None)]+[slice(None)]*(len(mat.shape)-i-1))])
 
     grad = np.amax(winners,axis=0)
 
@@ -246,7 +246,6 @@ class Model(object):
         self.obs_data = dd.io.load(argv['obs_data_path'])
         # get EC names if necessary
         cols = list(self.obs_data.columns)
-        print(cols)
         if output_col not in cols:
             raise NameError('Your output variable name, %s, is not the name of a column in your input data!' %(output_col))
             return
@@ -265,7 +264,7 @@ class Model(object):
                             self.params.set_tolerance(c, tol)
                         else:
                             self.params.add_ec(name=c, tolerance=tol)
-                print('Identified experimental conditions as %s. If this is wrong, rerun and explicitly specify them with attach_ec (make sure they match data file columns) or remove extra columns from data file.' %(str(self.params.param_names('ec'))))
+                print('Identified experimental conditions as %s. (If this is wrong, rerun and explicitly specify them with attach_ec (make sure they match data file columns) or remove extra columns from data file.)' %(str(self.params.param_names('ec'))))
 
             # these next bits used to be under an else...
             if 'uncertainty' not in cols:
@@ -434,10 +433,14 @@ class Model(object):
 
         if mode == 'file':
             # import and sort data on parameter values
-            self.model_data = dd.io.load(argv['model_data_path']).sort_values(self.fit_param_names()+self.ec_names()).reset_index(drop=True)
+            self.model_data = dd.io.load(argv['model_data_path'])
 
             # Check that columns match EC's and parameter names
+            # (and determine parameter names if need be)
             self.check_data_columns(model_data=self.model_data, output_column=output_col)
+
+            # now sort data by param names and EC's
+            self.model_data = self.model_data.sort_values(self.fit_param_names()+self.ec_names()).reset_index(drop=True)
 
             # next get list of parameter space points
             param_points_grps = self.model_data.groupby(self.fit_param_names())
@@ -546,6 +549,7 @@ class Model(object):
             self.params.set_ec_x(self.ec_names()[0])
 
         other_ecs = [c for c in self.params.ecs if not c.name==self.params.ec_x_name]
+        #print(self.params.ec_x_name, [c.name for c in other_ecs])
 
         # read in options and do some sanity checks
         num_ecs = argv.get('num_ecs',1)
@@ -567,7 +571,7 @@ class Model(object):
                     if len(other_ecs)==1: #pt will just be a float rather than a tuple
                         ec_vals.append({other_ecs[0].name:pt})
                     else:
-                        ec_vals.append({self.ec_names()[i]:pt[i] for i in range(len(pt))})
+                        ec_vals.append({other_ecs[i].name:pt[i] for i in range(len(pt))})
 
         num_param_pts = argv.get('num_param_pts',1)
 
@@ -594,6 +598,7 @@ class Model(object):
                 plot_title = plot_title[:-1] + 'at '
                 ecs_here = ec_vals[i]
                 # get obs data for correct EC values
+                #print(ecs_here, obs_data.head())
                 for c in other_ecs:
                     obs_data =  obs_data[abs(obs_data[c.name]-ecs_here[c.name])<=10.**(-1.*c.tol_digits)]
                     plot_title = plot_title + '%s=%s, '%(c.name,c.get_val_str(ecs_here[c.name]))
@@ -632,7 +637,7 @@ class Model(object):
             yvar = self.params.find_param(self.output_var)
             axs[i,0].set_ylabel('%s [%s]' %(yvar.name, yvar.units))
             axs[i,1].set_ylabel('%s [%s]' %('$\Delta$'+yvar.name, yvar.units))
-            axs[i,0].legend(legend_list, fontsize=16)
+            axs[i,0].legend(legend_list, fontsize=14)
             plot_title = plot_title[:-2]
             axs[i,0].set_title(plot_title, fontsize=20)
             if one_ec:
@@ -656,7 +661,7 @@ class Model(object):
 
         Args:
             save_step (`int`): interval (number of data points) at which to save intermediate PMF's (defaults to 10, 0 to save only final, <0 to save none)
-            th_pm (`float`): threshold quantity of probability mass to be concentrated in th_pv fraction of parameter space to trigger the run to stop (defaults to 0.8)
+            th_pm (`float`): threshold quantity of probability mass to be concentrated in th_pv fraction of parameter space to trigger the run to stop (defaults to 0.9)
             th_pv (`float`): threshold fraction of parameter space volume for th_pm fraction of probability to be concentrated into to trigger the run to stop (defaults to 0.05)
             min_num_pts (`int`): minimum number of observation points to use - if threshold is reached before this number of points has been used, it will start over and the final PMF will be the average of the number of runs needed to use sufficient points (defaults to 0.7 * the number of experimental measurements)
             prob_bias (`float`): number from 0 to 0.5, fraction of PMF from previous step to mix into prior for this step (defaults to 0) - higher values will likely converge faster but possibly have larger errors, especially if min_num_pts is small
@@ -664,11 +669,11 @@ class Model(object):
         """
         # read in options
         save_step = argv.get('save_step', 10)
-        th_pm = argv.get('th_pm', 0.8)
+        th_pm = argv.get('th_pm', 0.9)
         th_pv = argv.get('th_pv', 0.05)
         min_num_pts = argv.get('min_num_pts', int(0.7*len(self.obs_data)))
         verbose = argv.get('verbose', False)
-        bias = argv.get('prob_bias',0.0)
+        bias = argv.get('prob_bias', 0.0)
         if bias < 0 or bias > 0.5:
             print("Bias parameter must be between 0 and 0.5 - defaulting to 0.")
             bias = 0
@@ -710,6 +715,7 @@ class Model(object):
         num_runs = 0
         probs_lists = []
         delta_count_list = []
+        nan_count_list = []
         while num_pts_used < min_num_pts:
             prev_used_pts = num_pts_used
             num_runs = num_runs + 1
@@ -737,10 +743,11 @@ class Model(object):
                     model_here = deepcopy(self.model_data.loc[self.model_data_ecgrps.groups[ecpt]])
 
                     # compute likelihood and do a Bayesian update
-                    lkl, delta_count = self.probs.likelihood(meas=obs, model_at_ec=model_here,output_col=self.output_var)
+                    lkl, delta_count, nan_count = self.probs.likelihood(meas=obs, model_at_ec=model_here,output_col=self.output_var)
                     self.probs.multiply(lkl)
                     num_pts_used = num_pts_used + 1
                     delta_count_list.append(delta_count)
+                    nan_count_list.append(nan_count)
 
                     # save intermediate PMF if necessary
                     if save_step >0 and (num_pts_used-prev_used_pts) % save_step == 0:
@@ -762,6 +769,8 @@ class Model(object):
         print('Did a total of %d runs to use a total of %d observations.'%(num_runs,num_pts_used))
 
         print('\nAn average of %d / %d probability points had larger model uncertainty than experimental uncertainty during this run.'%(int(round(np.mean(delta_count_list))),len(self.probs.points)))
+
+        print('\nAn average of %.2f / %d probability points were affected by missing/NaN simulation data.' %(np.mean(nan_count_list), len(self.probs.points)))
 
         if save_step >=0:
             dd.io.save(pmf_folder+'sub%d_PMF_final.h5'%(self.probs.num_sub),self.probs.points)
@@ -945,20 +954,57 @@ class Model(object):
         cols = ['prob'] + [c for cs in [[p.name, p.name+'_min', p.name+'_max'] for p in self.params.fit_params] for c in cs]
         return df[cols]
 
-    def set_param_units(self, param_name, units):
-        """Set units for parameter param_name (any type)."""
-        if param_name not in [p.name for p in self.params.all_params()]:
-            print("I can't set the units for a parameter (%s) that doesn't exist!"%param_name)
-        else:
+    def set_param_info(self, param_name, **argv):
+        """
+        Set additional info for parameter param_name (any type).
+
+        Args:
+            param_name (str): name of parameter to modify
+            units (str): units of parameter
+            min_width (float): minimum width of parameter (only for fitting params)
+            display_name (str): name to use on plots (can include TeX)
+            tolerance (float): tolerance for this parameter
+        """
+        assert param_name in [p.name for p in self.params.all_params()], "I can't set info for a parameter (%s) that doesn't exist!"%param_name
+
+        if 'units' in argv.keys():
             for i in range(len(self.params.fit_params)):
                 if self.params.fit_params[i].name==param_name:
-                    self.params.fit_params[i].set_units(units)
+                    self.params.fit_params[i].units = argv['units']
             for i in range(len(self.params.ecs)):
                 if self.params.ecs[i].name==param_name:
-                    self.params.ecs[i].set_units(units)
+                    self.params.ecs[i].units = argv['units']
             for i in range(len(self.params.output)):
                 if self.params.output[i].name==param_name:
-                    self.params.output[i].set_units(units)
+                    self.params.output[i].units = argv['units']
+
+        if 'min_width' in argv.keys():
+            for i in range(len(self.params.fit_params)):
+                if self.params.fit_params[i].name==param_name:
+                    self.params.fit_params[i].min_width = argv['min_width']
+
+        if 'display_name' in argv.keys():
+            for i in range(len(self.params.fit_params)):
+                if self.params.fit_params[i].name==param_name:
+                    self.params.fit_params[i].display_name = argv['display_name']
+            for i in range(len(self.params.ecs)):
+                if self.params.ecs[i].name==param_name:
+                    self.params.ecs[i].display_name = argv['display_name']
+            for i in range(len(self.params.output)):
+                if self.params.output[i].name==param_name:
+                    self.params.output[i].display_name = argv['display_name']
+
+        # pass these through to PMF since it doesn't always seem to happen automatically...
+        if param_name in self.probs.param_names():
+            for i in range(len(self.probs.params)):
+                if self.probs.params[i].name==param_name:
+                    if 'units' in argv.keys():
+                        self.probs.params[i].units = argv['units']
+                    if 'min_width' in argv.keys():
+                        self.probs.params[i].min_width = argv['min_width']
+                    if 'display_name' in argv.keys():
+                        self.probs.params[i].display_name = argv['display_name']
+
 
     def ec_names(self):
         """Return list of experimental condition names."""
