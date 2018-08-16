@@ -61,7 +61,7 @@ def calc_deltas(grp, inds, param_lengths, model_data, fit_param_names, probs, ou
         return (grp, grad.flatten())
     else:
         # pick out only the boxes that exist
-        return (grp, grad[[i for i in list([ind_lists[p] for p in fit_param_names])]])
+        return (grp, grad[tuple([i for i in list([ind_lists[p] for p in fit_param_names])])])
 
 class Model(object):
     """
@@ -95,7 +95,7 @@ class Model(object):
 
         if load_state:
             if verbose:
-                print('Loading bayesim state from %s...'%state_file)
+                print('Loading bayesim state from %s...\n'%state_file)
             state = dd.io.load(state_file)
 
             # variables
@@ -116,7 +116,7 @@ class Model(object):
 
         else:
             if verbose:
-                print('Constructing bayesim model object...')
+                print('Constructing bayesim model object...\n')
             # initialize empty parameter list
             self.params = pm.Param_list()
 
@@ -171,7 +171,7 @@ class Model(object):
     def attach_params(self, params):
         """Attach a param_list object."""
         if not self.params.is_empty():
-            print('Overwriting preexiting parameter list with this new one.')
+            print('Overwriting preexiting parameter list with this new one.\n')
         self.params = params
         self.probs = Pmf(params=params.fit_params)
 
@@ -241,7 +241,7 @@ class Model(object):
             raise NameError('You must specify ec_x_var if you want to throw out data points that are too close together.')
 
         if verbose:
-            print('Attaching measured data...')
+            print('Attaching measured data...\n')
 
         self.obs_data = dd.io.load(argv['obs_data_path'])
         # get EC names if necessary
@@ -255,7 +255,7 @@ class Model(object):
         else:
             cols.remove(output_col)
             if len(self.params.ecs)==0 or ('ec_x_var' in argv.keys() and len(self.params.ecs)==1):
-                print('Determining experimental conditions from observed data...')
+                print('Determining experimental conditions from observed data...\n')
                 for c in cols:
                     if not c=='uncertainty':
                         # 1% of the smallest difference between values
@@ -264,7 +264,7 @@ class Model(object):
                             self.params.set_tolerance(c, tol)
                         else:
                             self.params.add_ec(name=c, tolerance=tol)
-                print('Identified experimental conditions as %s. (If this is wrong, rerun and explicitly specify them with attach_ec (make sure they match data file columns) or remove extra columns from data file.)' %(str(self.params.param_names('ec'))))
+                print('Identified experimental conditions as %s. (If this is wrong, rerun and explicitly specify them with attach_ec (make sure they match data file columns) or remove extra columns from data file.)\n' %(str(self.params.param_names('ec'))))
 
             # these next bits used to be under an else...
             if 'uncertainty' not in cols:
@@ -278,9 +278,9 @@ class Model(object):
             if set(cols) == set(self.ec_names()+['uncertainty']):
                 pass # all good
             elif set(self.ec_names()+['uncertainty']) <= set(cols):
-                print('Ignoring extra columns in data file: %s'%(str(list(set(cols)-set(self.ec_names())))))
+                print('Ignoring extra columns in data file: %s\n'%(str(list(set(cols)-set(self.ec_names())))))
             elif set(cols) <= set(self.ec_names()+['uncertainty']):
-                print('These experimental conditions were missing from your data file: %s\nProceeding assuming that %s is the full set of experimental conditions...'%(str(list(set(ec)-set(cols))), str(cols)))
+                print('These experimental conditions were missing from your data file: %s\nProceeding assuming that %s is the full set of experimental conditions...\n'%(str(list(set(ec)-set(cols))), str(cols)))
                 for c in [c for c in cols if not c=='uncertainty']:
                     self.params.add_ec(name=c)
             # ...else ended here
@@ -297,7 +297,7 @@ class Model(object):
                     max_step = argv['max_ec_x_step']
                 else:
                     max_step = 0.1 * max(subset[self.params.ec_x_name]-min(subset[self.params.ec_x_name]))
-                    print('Using %.2f as the maximum step size in %s when choosing observation points to keep at %s=%s.'%(max_step, self.params.ec_x_name, other_ecs, grp))
+                    print('Using %.2f as the maximum step size in %s when choosing observation points to keep at %s=%s.\n'%(max_step, self.params.ec_x_name, other_ecs, grp))
                 thresh = thresh_dif_frac * (max(subset[self.output_var])-min(subset[self.output_var]))
                 i = 0
                 while i < len(subset)-1:
@@ -357,11 +357,11 @@ class Model(object):
                 if set(self.fit_param_names())==set(cols):
                     pass # all good
                 elif set(self.fit_param_names()) <= set(cols):
-                    print('Ignoring extra columns in model data file: %s'%(str(list(set(cols)-set(self.fit_param_names())))))
+                    print('Ignoring extra columns in model data file: %s\n'%(str(list(set(cols)-set(self.fit_param_names())))))
                 elif set(cols) <= set(self.fit_param_names()):
-                    print('These experimental conditions were missing from your model data file: %s\nProceeding assuming that %s is the full set of experimental conditions...'%(str(list(set(self.fit_param_names())-set(cols))), str(cols)))
+                    print('These experimental conditions were missing from your model data file: %s\nProceeding assuming that %s is the full set of experimental conditions...\n'%(str(list(set(self.fit_param_names())-set(cols))), str(cols)))
             else:
-                print("Determining fitting parameters from modeled data...")
+                print("Determining fitting parameters from modeled data...\n")
                 for c in cols:
                     if not c=='uncertainty':
                         vals = list(set(model_data[c]))
@@ -378,7 +378,7 @@ class Model(object):
         """
         verbose = argv.get('verbose', False)
         if verbose:
-            print('Checking that modeled data contains all experimental conditions at every combination of fit parameters...')
+            print('Checking that modeled data contains all experimental conditions at every combination of fit parameters...\n')
 
         grps = argv['gb']
         # then check at each model point that they match
@@ -429,7 +429,7 @@ class Model(object):
         calc_model_unc = argv.get('calc_model_unc', False)
 
         if verbose:
-            print('Attaching simulated data...')
+            print('Attaching simulated data...\n')
 
         if mode == 'file':
             # import and sort data on parameter values
@@ -460,7 +460,7 @@ class Model(object):
             # Generate self.probs if necessary
             if self.probs.is_empty:
                 if verbose:
-                    print('Initializing probability distribution...')
+                    print('Initializing probability distribution...\n')
                 # check that points are on a grid (the quick but slightly less certain way)
                 param_lengths = [len(set(param_points[name])) for name in self.fit_param_names()]
                 if not np.product(param_lengths)==len(param_points):
@@ -545,7 +545,7 @@ class Model(object):
             self.params.set_ec_x(argv['ec_x_var'])
 
         if self.params.ec_x_name==None:
-            print('You have not provided an x-variable from your experimental conditions against which to plot. Choosing the first one in the list, %s.'%(self.ec_names()[0]))
+            print('You have not provided an x-variable from your experimental conditions against which to plot. Choosing the first one in the list, %s.\n'%(self.ec_names()[0]))
             self.params.set_ec_x(self.ec_names()[0])
 
         other_ecs = [c for c in self.params.ecs if not c.name==self.params.ec_x_name]
@@ -678,10 +678,10 @@ class Model(object):
             print("Bias parameter must be between 0 and 0.5 - defaulting to 0.")
             bias = 0
         if verbose:
-            print('Running inference!')
+            print('Running inference!\n')
 
         if min_num_pts > len(self.obs_data):
-            print('Cannot use more observation points than there are in the data. Setting min_num_pts to len(self.obs_data)=%d'%len(self.obs_data))
+            print('Cannot use more observation points than there are in the data. Setting min_num_pts to len(self.obs_data)=%d\n'%len(self.obs_data))
             min_num_pts = len(self.obs_data)
 
         # do some sanity checks
@@ -690,7 +690,7 @@ class Model(object):
             return
 
         if self.is_run:
-            print('Running again at the same subdivision level. Previous results may be overridden...')
+            print('Running again at the same subdivision level. Previous results may be overridden...\n')
 
         # set up folders for intermediate files
         if save_step>0:
@@ -727,7 +727,7 @@ class Model(object):
             while not done:
                 # check if we've gone through all the points
                 if num_pts_used == len(self.obs_data):
-                    print('Used all the observed data! Last PMF to go into average may have been further from threshold condition.')
+                    print('Used all the observed data! Last PMF to go into average may have been further from threshold condition.\n')
                     done = True
                 else:
                     # get observed and modeled data
@@ -766,11 +766,11 @@ class Model(object):
 
         probs = np.mean(probs_lists,axis=0)
         self.probs.points['prob'] = probs
-        print('Did a total of %d runs to use a total of %d observations.'%(num_runs,num_pts_used))
+        print('Did a total of %d runs to use a total of %d observations.\n'%(num_runs,num_pts_used))
 
-        print('\nAn average of %d / %d probability points had larger model uncertainty than experimental uncertainty during this run.'%(int(round(np.mean(delta_count_list))),len(self.probs.points)))
+        print('\nAn average of %d / %d probability points had larger model uncertainty than experimental uncertainty during this run.\n'%(int(round(np.mean(delta_count_list))),len(self.probs.points)))
 
-        print('\nAn average of %.2f / %d probability points were affected by missing/NaN simulation data.' %(np.mean(nan_count_list), len(self.probs.points)))
+        print('\nAn average of %.2f / %d probability points were affected by missing/NaN simulation data.\n' %(np.mean(nan_count_list), len(self.probs.points)))
 
         if save_step >=0:
             dd.io.save(pmf_folder+'sub%d_PMF_final.h5'%(self.probs.num_sub),self.probs.points)
@@ -813,7 +813,7 @@ class Model(object):
         """
         verbose = argv.get('verbose', False)
         if verbose:
-            print('Listing the sets of simulation parameters that need to be run...')
+            print('Listing the sets of simulation parameters that need to be run...\n')
 
         # get just the columns with the parameters
         param_pts = self.probs.points[self.fit_param_names()]
@@ -862,7 +862,7 @@ class Model(object):
         self.model_data['uncertainty'] = factor * deltas
 
         if verbose:
-            print('Calculating model uncertainty took %.2f seconds.'%(time.time()-start_time))
+            print('Calculating model uncertainty took %.2f seconds.\n'%(time.time()-start_time))
 
     def save_state(self,filename='bayesim_state.h5'): #rewrite this!
         """

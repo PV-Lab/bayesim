@@ -462,7 +462,7 @@ class Pmf(object):
                 val = param_point['prob']
             else:
                 val = pt[1][col_to_pull]
-            mat[slices] = val
+            mat[tuple(slices)] = val
 
         return_dict = {'mat':mat}
         if make_ind_lists:

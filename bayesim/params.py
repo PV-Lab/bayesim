@@ -259,6 +259,7 @@ class Param_list(object):
             length (int): initial length of this parameter (defaults to 10)
             min_width(float): minimum box width for this parameter - subtractive if linear spacing and divisive if logarithmic (defaults to 0.01 of total range, required if providing val_range)
             spacing (str): 'linear' or 'log' (defaults to linear)
+            verbose (bool): verbosity flag
         """
         if 'name' in argv.keys():
             name = argv['name']
@@ -266,11 +267,13 @@ class Param_list(object):
             name = argv['param'].name
         else:
             raise ValueError("You must provide either a parameter name or a Fit_param object!")
+        verbose = argv.get('verbose',False)
 
         if not self.param_present(name):
             self.fit_params.append(Fit_param(**argv))
         else: # overwrite
-            print("Overwriting metadata for fitting parameter %s with new info."%name)
+            if verbose:
+                print("Overwriting metadata for fitting parameter %s with new info."%name)
             param_ind = self.fit_params.index(self.find_param(name))
             if 'param' in argv.keys():
                 self.fit_params[param_ind] = argv['param']
