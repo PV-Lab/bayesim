@@ -8,8 +8,6 @@ TO DO LIST FOR BAYESIM
   * add "prerequisites" or something section to docs
   * eventually, links in notebook examples to relevant bits of documentation...
 
-* suppress the weird conda and numpy errors in Binder
-
 * more 'verbose' options
 
 * add more options to CL interface (e.g. invoking comparison plot/visualize_grid, other tweaks to behavior)
