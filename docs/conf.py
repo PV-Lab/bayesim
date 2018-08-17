@@ -99,6 +99,7 @@ html_theme_options = {
     'bootstrap_version':"2",
     'navbar_links': [
         ("Index", "genindex"),
+        ("Github", "https://github.com/pv-lab/bayesim", True)
     ],
 }
 
@@ -116,14 +117,9 @@ html_static_path = ['_static']
 # default: ``['localtoc.html', 'relations.html', 'sourcelink.html',
 # 'searchbox.html']``.
 #
-#html_sidebars = {
-#    '**': [
-#        'about.html',
-#        'navigation.html',
-#        'relations.html',
-#        'searchbox.html',
-#    ]
-#}
+html_sidebars = {
+    'sidebar': ['localtoc.html', 'sourcelink.html', 'searchbox.html']
+}
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
