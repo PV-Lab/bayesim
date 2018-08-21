@@ -2,12 +2,12 @@ from pypapers.manuscript import Manuscript as M
 
 p = M(biblio_file ='biblio.bib', journal='prl', numberline=False, twocolumn=False)
 
-MIT = 'Department of Mechanical Engineering, Massachusetts Institute of Technology, 77 Massachusetts Avenue, Cambridge, MA 02139, USA'
+DMSE = r'''Department of Materials Science \& Engineering, Massachusetts Institute of Technology, 77 Massachusetts Avenue, Cambridge, MA 02139, USA'''
+MechE = r'''Department of Mechanical Engineering, Massachusetts Institute of Technology, 77 Massachusetts Avenue, Cambridge, MA 02139, USA'''
 
-
-p.author('Rachel Kurchin',[MIT])
-p.author('Giuseppe Romano',[MIT])
-p.author('Tonio Buonassisi',[MIT],email='buonassi@mit.edu')
+p.author(r'''Rachel Kurchin''',[DMSE])
+p.author('Giuseppe Romano',[MechE])
+p.author('Tonio Buonassisi',[MechE], email='buonassi@mit.edu')
 
 
 fig_1 = p.get_new_figure_label()
