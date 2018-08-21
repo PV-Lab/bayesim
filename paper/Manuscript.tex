@@ -1,5 +1,5 @@
 %File Generated with PyPaper
-\documentclass[aps,prl,reprint,amsmath,amssymb,superscriptaddress,notitlepage,groupedaddress]{revtex4-1}
+\documentclass[aps,prl,amsmath,amssymb,superscriptaddress,notitlepage,groupedaddress]{revtex4-1}
 \usepackage{graphicx}
 \usepackage{dcolumn}
 \usepackage{stackengine}
@@ -42,51 +42,32 @@ Target journal: Computer Physics Communications\end{abstract}
 \fakesection{fake}
  
 \section*{Introduction}
- motivation (within PV and beyond) citing examples of our application of this idea so far (Joule paper and PVSC proceeding) 
+ There are a plethora of examples across diverse scientific and engineering fields of mathematical models used to simulate the results of experimental observations. In many cases, there are input parameters to these models which are difficult to determine via direct measurement, and it is desirable to invert the numerical model -- that is, use the experimental observations to determine values of the input parameters. Bayesian inference is a fruitful framework within which to do such fitting, since the resulting posterior probability distribution over the parameters of interest can give rich insights into not just the most likely values of the parameters, but also uncertainty about these values and the potentially complicated ways in which they can covary to give equally good fits to observations. We have previously demonstrated the value of a Bayesian approach in using automated high-throughput temperature- and illumination-dependent current-voltage measurements (JVTi) to fit material/interface properties and defect recombination parameters in photovoltaic (PV) absorbers~\cite{SnSJoule,FeBayes}. In cases such as these, when the data model is not a simple analytical equation but rather a computationally intensive numerical model, efficient, nonredundant sampling of the parameter space when computing likelihoods becomes critical to making the fit feasible. In this work, we introduce 	exttt{bayesim}, a Python-based code that utilizes adaptive grid sampling to perform Bayesian parameter estimation. We discuss the structure of the code, its implementation, and provide several examples of its usage. While the authors' expertise is in the realm of semiconductor physics and thus the examples herein are drawn from that space, we also discuss the general characteristics of a problem amenable to this approach so that researchers from other fields might adopt it as well. 
 \section*{Model}
- \begin{itemize}
- \item background on Bayes theorem
- \item particulars about how it can be applied to fitting problems we're interested in
- \item advantages over traditional fitting approaches
- \item figure 1
- \end{itemize}
-  
-\begin{figure}[!ht]
-
-\subfloat[\label{Fig:10a}]
-{\includegraphics[width=0.48\columnwidth]{././figure_1a.png}}
-\hfill
-\subfloat[\label{Fig:10b}]
-{\includegraphics[width=0.48\columnwidth]{././figure_1b.png}}
-\caption{(a) Scheme (b) Probability}
-\end{figure}
-
+ \todo[inline]{Should this section titel actually just be ``Technical Background`` as well perhaps?} Bayes' Theorem states \begin{equation}
+\begin{split}\label{Eq:1001}
+P(H|E)=\frac{P(H)P(E|H)}{P(E)}
+\end{split}
+\end{equation}
+where $H$ is a \textit{hypothesis} and $E$ the observed \textit{evidence}. $P(H)$ is termed the \textit{prior}, $P(E|H)$ the \textit{likelihood}, $P(H|E)$ the \textit{posterior}, and $P(E)$ is a normalizing constant. If there are $n$ pieces of evidence, this can generalize to an iterative process where \begin{equation}
+\begin{split}\label{Eq:2}
+P(H|\{E_1,E_2,...E_n\}) = \frac{P(H|\{E_1,E_2...E_{n-1}\})P(E_n|H)}{P(E_n)}
+\end{split}
+\end{equation}
+In a multidimensional parameter estimation problem, each hypothesis $H$ is a tuple of possible values for the fitting parameters, i.e. a point in the parameter space. In \texttt{bayesim}, likelihoods are calculated for each point using a Gaussian where the argument is the difference between observed and simulated output and the standard deviation is the sum of experimental uncertainty and model uncertainty. The experimental uncertainty is a number provided by the user, while the model uncertainty is calculated by \texttt{bayesim} and reflects the sparseness of the parameter space grid, i.e. how much simulated output changes from one grid point to another. A high-level flowchart of what \texttt{bayesim} does is shown in ~(\autoref{fig_1})a.  
 \section*{Software Architecture and Interface}
- \begin{itemize}\item description of structure of new code and workflow for using it (both Python scripting and command-line) \item figure 2 \end{itemize}  \begin{figure}
-{\includegraphics[width=0.7\columnwidth]{././figure_2.png}}
-\caption{Bayesian workflow}
-\end{figure}
+ \subsection{Structure}
+  The structure of \texttt{bayeim} is shown in ~(\autoref{fig_2}). The top-level object with which users interact is implemented in the \texttt{Model} class. The \texttt{params} module defines classes to store information about the various types of parameters (fitting parameters, experimental conditions, and measured output) while the \texttt{Pmf} class stores the probability distribution and implements the manipulations required for Bayesian updates. \subsection{Interfaces}
+  describe ways to "talk to" \texttt{bayesim}. \subsection{Dependencies}
+  \todo[inline]{This probably makes sense to include also, right?} 
 \section*{Application Examples}
  \subsection{Ideal Diode Model}
-  \begin{itemize}\item validation example - ``observed'' data is just generated using the model and we show we can recover the correct input parameters \item figure 3 showing PMF (animation in ESI) \end{itemize}  \begin{figure}
-{\includegraphics[width=0.7\columnwidth]{././figure_3.png}}
-\caption{Ideal diode}
-\end{figure}\subsection{Example with Real Data}
-  \begin{itemize}\item more practical example - probably fitting resistive diode to the same SnS data we used in the Joule paper \item figure 4 showing PMF (animation in ESI) and comparison of JV curves \end{itemize} \todo[inline]{example fgryer2qt rt r}  
-\begin{figure}[!ht]
-
-\subfloat[\label{Fig:40a}]
-{\includegraphics[width=0.48\columnwidth]{././figure_4a.png}}
-\hfill
-\subfloat[\label{Fig:40b}]
-{\includegraphics[width=0.48\columnwidth]{././figure_4b.png}}
-\caption{Real data}
-\end{figure}
-\subsection{Maybe an example with a numerical model like PC1D}
+  \begin{itemize}\item validation example - ``observed'' data is just generated using the model and we show we can recover the correct input parameters \item figure 3 showing PMF \end{itemize}  \subsection{Example with Real Data}
+  \begin{itemize}\item more practical example - probably fitting resistive diode to the same SnS data we used in the Joule paper \item figure 4 showing PMF (animation in ESI) and comparison of JV curves \end{itemize}  \subsection{Maybe an example with a numerical model like PC1D}
   \subsection{Maybe a non-PV example}
   thermoelectrics? TIDLS? 
 \section*{Conclusions}
- 
+ talk about broader applicability of approach 
 \section*{Acknowledgements}
  
 \section*{Appendix}
@@ -98,7 +79,7 @@ Target journal: Computer Physics Communications\end{abstract}
 %Control: page (0) single
 %Control: year (1) truncated
 %Control: production of eprint (0) enabled
-\begin{thebibliography}{0}%
+\begin{thebibliography}{2}%
 \makeatletter
 \providecommand \@ifxundefined [1]{%
  \@ifx{#1\undefined}
@@ -142,5 +123,44 @@ Target journal: Computer Physics Communications\end{abstract}
 \providecommand \BibitemShut  [1]{\csname bibitem#1\endcsname}%
 \let\auto@bib@innerbib\@empty
 %</preamble>
+\bibitem [{\citenamefont {Brandt}\ \emph {et~al.}(2017)\citenamefont {Brandt},
+  \citenamefont {Kurchin}, \citenamefont {Steinmann}, \citenamefont {Kitchaev},
+  \citenamefont {Roat}, \citenamefont {Levcenco}, \citenamefont {Ceder},
+  \citenamefont {Unold}, \citenamefont {Buonassisi},\ and\ \citenamefont
+  {Berlin}}]{SnSJoule}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {R.~E.}\ \bibnamefont
+  {Brandt}}, \bibinfo {author} {\bibfnamefont {R.~C.}\ \bibnamefont {Kurchin}},
+  \bibinfo {author} {\bibfnamefont {V.}~\bibnamefont {Steinmann}}, \bibinfo
+  {author} {\bibfnamefont {D.}~\bibnamefont {Kitchaev}}, \bibinfo {author}
+  {\bibfnamefont {C.}~\bibnamefont {Roat}}, \bibinfo {author} {\bibfnamefont
+  {S.}~\bibnamefont {Levcenco}}, \bibinfo {author} {\bibfnamefont
+  {G.}~\bibnamefont {Ceder}}, \bibinfo {author} {\bibfnamefont
+  {T.}~\bibnamefont {Unold}}, \bibinfo {author} {\bibfnamefont
+  {T.}~\bibnamefont {Buonassisi}}, \ and\ \bibinfo {author} {\bibfnamefont
+  {H.~Z.}\ \bibnamefont {Berlin}},\ }\href {\doibase
+  10.1016/j.joule.2017.10.001} {\bibfield  {journal} {\bibinfo  {journal}
+  {Joule}\ }\textbf {\bibinfo {volume} {1}},\ \bibinfo {pages} {843} (\bibinfo
+  {year} {2017})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Kurchin}\ \emph {et~al.}(2018)\citenamefont
+  {Kurchin}, \citenamefont {Poindexter}, \citenamefont {Kitchaev},
+  \citenamefont {V\"ah\"anissi}, \citenamefont {del Ca\~nizo}, \citenamefont
+  {Zhe}, \citenamefont {Laine}, \citenamefont {Roat}, \citenamefont {Levcenco},
+  \citenamefont {Ceder},\ and\ \citenamefont {Buonassisi}}]{FeBayes}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {R.~C.}\ \bibnamefont
+  {Kurchin}}, \bibinfo {author} {\bibfnamefont {J.~R.}\ \bibnamefont
+  {Poindexter}}, \bibinfo {author} {\bibfnamefont {D.}~\bibnamefont
+  {Kitchaev}}, \bibinfo {author} {\bibfnamefont {V.}~\bibnamefont
+  {V\"ah\"anissi}}, \bibinfo {author} {\bibfnamefont {C.}~\bibnamefont {del
+  Ca\~nizo}}, \bibinfo {author} {\bibfnamefont {L.}~\bibnamefont {Zhe}},
+  \bibinfo {author} {\bibfnamefont {H.~S.}\ \bibnamefont {Laine}}, \bibinfo
+  {author} {\bibfnamefont {C.}~\bibnamefont {Roat}}, \bibinfo {author}
+  {\bibfnamefont {S.}~\bibnamefont {Levcenco}}, \bibinfo {author}
+  {\bibfnamefont {G.}~\bibnamefont {Ceder}}, \ and\ \bibinfo {author}
+  {\bibfnamefont {T.}~\bibnamefont {Buonassisi}},\ }\href@noop {} {\enquote
+  {\bibinfo {title} {Semiconductor parameter extraction via current-voltage
+  characterization and bayesian inference methods},}\ } (\bibinfo {year}
+  {2018})\BibitemShut {NoStop}%
 \end{thebibliography}%
 \end{document}

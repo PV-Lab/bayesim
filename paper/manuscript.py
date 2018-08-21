@@ -5,9 +5,9 @@ p = M(biblio_file ='biblio.bib', journal='prl', numberline=False, twocolumn=Fals
 MIT = 'Department of Mechanical Engineering, Massachusetts Institute of Technology, 77 Massachusetts Avenue, Cambridge, MA 02139, USA'
 
 
-p.add_author('Rachel Kurchin',[MIT])
-p.add_author('Giuseppe Romano',[MIT])
-p.add_author('Tonio Buonassisi',[MIT],email='buonassi@mit.edu')
+p.author('Rachel Kurchin',[MIT])
+p.author('Giuseppe Romano',[MIT])
+p.author('Tonio Buonassisi',[MIT],email='buonassi@mit.edu')
 
 
 fig_1 = p.get_new_figure_label()
@@ -20,19 +20,12 @@ nn2 = p.get_new_equation_label()
 nn3 = p.get_new_equation_label()
 nn4 = p.get_new_equation_label()
 
-p.add_alias(r'''\kappa_{\mathrm{eff}}''','keff')
-p.add_alias(r'''\mathbf{\hat{x}}''','x')
-p.add_alias(r'''\kappa_{\mathrm{bulk}}''','kbulk')
-p.add_alias(r'''K_{\mathrm{bulk}}''','Kbulk')
-p.add_alias(r'''\tilde{\kappa}_{\mathrm{eff}}''','ktilde')
-p.add_alias(r'''\kappa_{\mathrm{Fourier}}''','kfourier')
-p.add_alias(r'''\alpha_{\mathrm{bulk}}''','abulk')
-p.add_alias(r'''\mathbf{\hat{s}}''','s')
+p.alias(r'''\kappa_{\mathrm{eff}}''','keff')
 
 
-p.set_title('Bayesim: a tool for fast device characterization with Bayesian inference')
+p.title('Bayesim: a tool for fast device characterization with Bayesian inference')
 
-p.add_abstract_sentence(r'''Target journal: Computer Physics Communications''')
+p.abstract(r'''Target journal: Computer Physics Communications''')
 
 p.section('Introduction')
 
@@ -49,34 +42,33 @@ p.note('Should this section titel actually just be ``Technical Background`` as w
 
 p.s("Bayes' Theorem states")
 
-p.add_equation('P(H|E)=\frac{P(H)P(E|H)}{P(E)}')
+p.equation(r'''P(H|E)=\frac{P(H)P(E|H)}{P(E)}''',label=nn1)
 
-p.s("where $H$ is a \textit{hypothesis} and $E$ the observed \textit{evidence}. $P(H)$ is termed the \textit{prior}, $P(E|H)$ the \texit{likelihood}, $P(H|E)$ the \textit{posterior}, and $P(E)$ is a normalizing constant. If there are $n$ pieces of evidence, this can generalize to an iterative process where")
+p.s(r'''where $H$ is a \textit{hypothesis} and $E$ the observed \textit{evidence}. $P(H)$ is termed the \textit{prior}, $P(E|H)$ the \textit{likelihood}, $P(H|E)$ the \textit{posterior}, and $P(E)$ is a normalizing constant. If there are $n$ pieces of evidence, this can generalize to an iterative process where''')
 
-p.add_equation('P(H|\{E_1,E_2,...E_n\}) = \frac{P(H|\{E_1,E_2...E_{n-1}\})P(E_n|H)}{P(E_n)}')
+p.equation(r'''P(H|\{E_1,E_2,...E_n\}) = \frac{P(H|\{E_1,E_2...E_{n-1}\})P(E_n|H)}{P(E_n)}''')
 
-p.s('In a multidimensional parameter estimation problem, each hypothesis $H$ is a tuple of possible values for the fitting parameters, i.e. a point in the parameter space. In \texttt{bayesim}, likelihoods are calculated for each point using a Gaussian where the argument is the difference between observed and simulated output and the standard deviation is the sum of experimental uncertainty and model uncertainty. The experimental uncertainty is a number provided by the user, while the model uncertainty is calculated by \texttt{bayesim} and reflects the sparseness of the parameter space grid, i.e. how much simulated output changes from one grid point to another.')
+p.s(r'''In a multidimensional parameter estimation problem, each hypothesis $H$ is a tuple of possible values for the fitting parameters, i.e. a point in the parameter space. In \texttt{bayesim}, likelihoods are calculated for each point using a Gaussian where the argument is the difference between observed and simulated output and the standard deviation is the sum of experimental uncertainty and model uncertainty. The experimental uncertainty is a number provided by the user, while the model uncertainty is calculated by \texttt{bayesim} and reflects the sparseness of the parameter space grid, i.e. how much simulated output changes from one grid point to another.''')
 
-p.figure(filename='figure_1',caption='(a) Scheme (b) Probability',center_page = False,label=fig_1)
+#p.figure(filename='figure_1',caption='(a) Scheme (b) Probability',center_page = False,label=fig_1)
 
-p.s('A high-level flowchart of what \texttt{bayesim} does is shown in ' + p.ref('fig_1') + r'''a. ''')
+p.s(r'''A high-level flowchart of what \texttt{bayesim} does is shown in ''' + p.ref('fig_1') + r'''a. ''')
 
-p.figure(filename='figure_2',caption='Bayesian workflow',center_page = False,label = fig_2)
+#p.figure(filename='figure_2',caption='Bayesian workflow',center_page = False,label = fig_2)
 
 p.section('Software Architecture and Interface')
 #p.s(r'''\begin{itemize}\item description of structure of new code and workflow for using it (both Python scripting and command-line) \item figure 3 \end{itemize}''')
 p.subsection('Structure')
-p.s('The structure of \texttt{bayeim} is shown in ' + p.ref('fig_2') + r'''. The top-level object with which users interact is implemented in the \texttt{Model} class. The \texttt{params} module defines classes to store information about the various types of parameters (fitting parameters, experimental conditions, and measured output) while the \texttt{Pmf} class stores the probability distribution and implements the manipulations required for Bayesian updates.''')
+p.s(r'''The structure of \texttt{bayeim} is shown in ''' + p.ref('fig_2') + r'''. The top-level object with which users interact is implemented in the \texttt{Model} class. The \texttt{params} module defines classes to store information about the various types of parameters (fitting parameters, experimental conditions, and measured output) while the \texttt{Pmf} class stores the probability distribution and implements the manipulations required for Bayesian updates.''')
 
-p.figure(filename='', caption='diagram of software structure', center_page = False, label = fig_2)
+#p.figure(filename='', caption='diagram of software structure', center_page = False, label = fig_2)
 
-p.s('')
 
 p.subsection('Interfaces')
-p.s('describe ways to "talk to" \texttt{bayesim}.')
+p.s(r'''describe ways to "talk to" \texttt{bayesim}.''')
 
 p.subsection('Dependencies')
-p.note('This probably makes sense to include also, right?')
+p.note(r'''This probably makes sense to include also, right?''')
 
 p.section('Application Examples')
 p.subsection('Ideal Diode Model')
