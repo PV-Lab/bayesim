@@ -17,23 +17,23 @@ On this page, we will dive into each part of this flowchart in detail to underst
 
 Defining Parameters
 -------------------
-lalala filler text
+.. lalala filler text
 
 Attaching Observations
 ----------------------
-here's some more filler text
+.. here's some more filler text
 
 Attaching Modeled Data
 ----------------------
-oh man there's gonna be some great text here
+.. oh man there's gonna be some great text here
 
 Performing the Inference
 ------------------------
-this description will be pretty sweet too
+.. this description will be pretty sweet too
 
 Visualizing the Output
 ----------------------
-filler filler filler filler
+.. filler filler filler filler
 
 
 

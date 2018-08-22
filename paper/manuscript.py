@@ -23,36 +23,39 @@ nn4 = p.get_new_equation_label()
 p.alias(r'''\kappa_{\mathrm{eff}}''','keff')
 
 
-p.title('Bayesim: a tool for fast device characterization with Bayesian inference')
+p.title(r'''\texttt{bayesim}: a tool for fast model fitting with Bayesian inference''')
 
 p.abstract(r'''Target journal: Computer Physics Communications''')
 
 p.section('Introduction')
 
 #p.s('motivation (within PV and beyond) citing examples of our application of this idea so far (Joule paper and PVSC proceeding), add some stuff about how semiconductor device community lags behind many others in model tuning, etc.')
-p.s('There are a plethora of examples across diverse scientific and engineering fields of mathematical models used to simulate the results of experimental observations. In many cases, there are input parameters to these models which are difficult to determine via direct measurement, and it is desirable to invert the numerical model -- that is, use the experimental observations to determine values of the input parameters. Bayesian inference is a fruitful framework within which to do such fitting, since the resulting posterior probability distribution over the parameters of interest can give rich insights into not just the most likely values of the parameters, but also uncertainty about these values and the potentially complicated ways in which they can covary to give equally good fits to observations.')
+p.s('There are a plethora of examples across diverse scientific and engineering fields of mathematical models used to simulate the results of experimental observations. In many cases, there are input parameters to these models which are difficult to determine via direct measurement, and it is desirable to invert the numerical model -- that is, use the experimental observations to determine values of the input parameters. Bayesian inference is a fruitful framework within which to do such fitting, since the resulting posterior probability distribution over the parameters of interest can give rich insights into not just the most likely values of the parameters, but also uncertainty about these values and the potentially complicated ways in which they can covary to give equally good fits to observations.', br=True)
 
-p.s('We have previously demonstrated the value of a Bayesian approach in using automated high-throughput temperature- and illumination-dependent current-voltage measurements (JVTi) to fit material/interface properties and defect recombination parameters in photovoltaic (PV) absorbers' + p.cite(['SnSJoule','FeBayes']) + r'''. In cases such as these, when the data model is not a simple analytical equation but rather a computationally intensive numerical model, efficient, nonredundant sampling of the parameter space when computing likelihoods becomes critical to making the fit feasible.''')
+p.s('We have previously demonstrated the value of a Bayesian approach in using automated high-throughput temperature- and illumination-dependent current-voltage measurements (JVTi) to fit material/interface properties and defect recombination parameters in photovoltaic (PV) absorbers' + p.cite(['SnSJoule','FeBayes']) + r'''. In cases such as these, when the data model is not a simple analytical equation but rather a computationally intensive numerical model, efficient, nonredundant sampling of the parameter space when computing likelihoods becomes critical to making the fit feasible.''', br=True)
 
-p.s("In this work, we introduce \texttt{bayesim}, a Python-based code that utilizes adaptive grid sampling to perform Bayesian parameter estimation. We discuss the structure of the code, its implementation, and provide several examples of its usage. While the authors' expertise is in the realm of semiconductor physics and thus the examples herein are drawn from that space, we also discuss the general characteristics of a problem amenable to this approach so that researchers from other fields might adopt it as well.")
+p.s(r'''In this work, we introduce \texttt{bayesim}, a Python-based code that utilizes adaptive grid sampling to perform Bayesian parameter estimation. We discuss the structure of the code, its implementation, and provide several examples of its usage. While the authors' expertise is in the realm of semiconductor physics and thus the examples herein are drawn from that space, we also discuss the general characteristics of a problem amenable to this approach so that researchers from other fields might adopt it as well.''')
 
 
 p.section('Model')
-p.note('Should this section titel actually just be ``Technical Background`` as well perhaps?')
+p.note('Should this section title actually just be ``Technical Background`` as well perhaps?')
 
-p.s("Bayes' Theorem states")
+p.s(r'''Bayes' Theorem is a relationship between conditional probabilities. It states''')
 
 p.equation(r'''P(H|E)=\frac{P(H)P(E|H)}{P(E)}''',label=nn1)
 
-p.s(r'''where $H$ is a \textit{hypothesis} and $E$ the observed \textit{evidence}. $P(H)$ is termed the \textit{prior}, $P(E|H)$ the \textit{likelihood}, $P(H|E)$ the \textit{posterior}, and $P(E)$ is a normalizing constant. If there are $n$ pieces of evidence, this can generalize to an iterative process where''')
+p.s(r'''where the notation $P(A|B)$ indicates the probability of $A$ being true given that $B$ is true. $H$ is a \textit{hypothesis} and $E$ the observed \textit{evidence}. $P(H)$ is termed the \textit{prior}, $P(E|H)$ the \textit{likelihood}, $P(H|E)$ the \textit{posterior}, and $P(E)$ is a normalizing constant. If there are $n$ pieces of evidence, this can generalize to an iterative process where''')
 
 p.equation(r'''P(H|\{E_1,E_2,...E_n\}) = \frac{P(H|\{E_1,E_2...E_{n-1}\})P(E_n|H)}{P(E_n)}''')
 
-p.s(r'''In a multidimensional parameter estimation problem, each hypothesis $H$ is a tuple of possible values for the fitting parameters, i.e. a point in the parameter space. In \texttt{bayesim}, likelihoods are calculated for each point using a Gaussian where the argument is the difference between observed and simulated output and the standard deviation is the sum of experimental uncertainty and model uncertainty. The experimental uncertainty is a number provided by the user, while the model uncertainty is calculated by \texttt{bayesim} and reflects the sparseness of the parameter space grid, i.e. how much simulated output changes from one grid point to another.''')
+p.s(r'''In a multidimensional parameter estimation problem, each hypothesis $H$ is a tuple of possible values for the fitting parameters, i.e. a point in the parameter space, while the evidence $E$ is an observed output of a measurement as a function of various experimental conditions.''', br=True)
 
-#p.figure(filename='figure_1',caption='(a) Scheme (b) Probability',center_page = False,label=fig_1)
+p.s(r'''In order to compute a likelihood, a model capable of simulating that observed output as a function of both the fitting parameters and the experimental conditions is required. In \texttt{bayesim}, likelihoods are calculated for each point in parameter space using a Gaussian where the argument is the difference between observed and simulated output at that point, and the standard deviation is the sum of experimental uncertainty and model uncertainty. The experimental uncertainty is a number provided by the user that quantifies any noise/irreproducibility inherent to the measurement, while the model uncertainty is calculated by \texttt{bayesim} and reflects the sparseness of the parameter space grid, i.e. how much simulated output changes from one grid point to another.''', br=True)
 
-p.s(r'''A high-level flowchart of what \texttt{bayesim} does is shown in ''' + p.ref('fig_1') + r'''a. ''')
+
+p.figure(filename='figure_1', caption='(Figure copied from docs website for now, will make a publication-appropriate version)', center_page=False, label=fig_1)
+
+p.s(r'''A high-level summary of what \texttt{bayesim} does is shown in Figure''' + p.ref(fig_1) + r'''. Part (a) is a flowchart showing that observed (as a function of experimental conditions $\{C\}$ and simulated (as a function of fitting parameters $\{P\}$ and experimental conditions $\{C\}$) outputs are compared to produce a probability distribution over $\{P\}$. Part (b) schematically indicates the adaptive grid sampling approach for a hypothetical two-dimensional parameter space, wherein grid boxes exceeding some threshold probability are subdivided and lower-probability regions discarded, allowing attainment of a high fitting precision without needing to sample the entire parameter space at the same high density.''')
 
 #p.figure(filename='figure_2',caption='Bayesian workflow',center_page = False,label = fig_2)
 
@@ -65,7 +68,7 @@ p.s(r'''The structure of \texttt{bayeim} is shown in ''' + p.ref('fig_2') + r'''
 
 
 p.subsection('Interfaces')
-p.s(r'''describe ways to "talk to" \texttt{bayesim}.''')
+p.s(r'''describe ways to ``talk to`` \texttt{bayesim}.''')
 
 p.subsection('Dependencies')
 p.note(r'''This probably makes sense to include also, right?''')

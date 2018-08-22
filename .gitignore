@@ -116,3 +116,17 @@ examples/SnS/sim_data_trimmed.h5
 examples/SnS/sim_data_less_sparse.h5
 examples/SnS/__MACOSX/*
 plot_stuff.py
+
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.fdb_latexmk
+paper/*.fls
+paper/*.out
+paper/*.log
+paper/*.synctex.gz
+paper/ManuscriptNotes.bib
+
+.DS_Store
+*/.DS_Store
+*/*/.DS_Store
