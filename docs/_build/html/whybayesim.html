@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Why bayesim? &#8212; bayesim 0.9.1 documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-2.3.2/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Technical Background" href="bayesics.html" />
+    <link rel="prev" title="Getting Started" href="gettingstarted.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+
+        <a class="brand" href="index.html">
+          bayesim</a>
+        <span class="navbar-text pull-left"><b></b></span>
+
+        <div class="nav-collapse">
+          <ul class="nav">
+            <li class="divider-vertical"></li>
+            
+                <li><a href="genindex.html">Index</a></li>
+                <li><a href="https://github.com/pv-lab/bayesim">Github</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="gettingstarted.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Why bayesim?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bayesics.html">Technical Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manual.html">Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citingbayesim.html">Citing bayesim</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Why bayesim?</a><ul>
+<li><a class="reference internal" href="#probability-distributions-are-nice">Probability distributions are nice</a></li>
+<li><a class="reference internal" href="#simulations-are-expensive">Simulations are expensive</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="gettingstarted.html" title="Previous Chapter: Getting Started"><span class="icon-chevron-left visible-tablet"></span><span class="hidden-sm hidden-tablet">&laquo; Getting Started</span>
+    </a>
+  </li>
+  <li>
+    <a href="bayesics.html" title="Next Chapter: Technical Background"><span class="icon-chevron-right visible-tablet"></span><span class="hidden-sm hidden-tablet">Technical Background &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li>
+<div id="sourcelink">
+  <a href="_sources/whybayesim.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="span12 content">
+      
+  <div class="section" id="why-bayesim">
+<h1>Why bayesim?<a class="headerlink" href="#why-bayesim" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p>There are plenty of tools already out there for Bayesian parameter estimation. What’s special/useful about <code class="docutils literal notranslate"><span class="pre">bayesim</span></code>? What is it good for? What <em>isn’t</em> it good for?</p>
+<p>I won’t reinvent the wheel of the Bayesian/frequentist debate here because many smarter people have written a lot about it in other places. Instead, I’ll just emphasize a couple important points, the first of which is general to the approach, and the second of which is specific to how <code class="docutils literal notranslate"><span class="pre">bayesim</span></code> implements it.</p>
+<div class="section" id="probability-distributions-are-nice">
+<h2>Probability distributions are nice<a class="headerlink" href="#probability-distributions-are-nice" title="Permalink to this headline">¶</a></h2>
+<p>The output of a <code class="docutils literal notranslate"><span class="pre">bayesim</span></code> analysis is not just a set of values and uncertainties, but rather a full multidimensional probability distribution. The power of this comes when the regions of parameter space that have highest probability are not simple ellipsoidal blobs with axes along the parameter axes, but instead take on more complicated shapes that can reflect underlying tradeoffs between fitting parameters. For example, in our research group’s <a class="reference external" href="https://www.sciencedirect.com/science/article/pii/S254243511730096X">first published paper using Bayesian parameter estimation</a> (which used a much earlier precursor of the code that was eventually developed into <code class="docutils literal notranslate"><span class="pre">bayesim</span></code>), we found that of the four parameters we fit, two were constrained quite well, while two others didn’t seem to be on an individual basis:</p>
+<div class="figure align-center" id="id1">
+<img alt="_images/SnS_probs.png" src="_images/SnS_probs.png" />
+<p class="caption"><span class="caption-text">Figure 3 from <a class="reference external" href="https://www.sciencedirect.com/science/article/pii/S254243511730096X">this paper</a>. The <span class="math notranslate nohighlight">\(\Delta E_c\)</span> and <span class="math notranslate nohighlight">\(S_\text{eff}\)</span> parameters are constrained well, while <span class="math notranslate nohighlight">\(\mu\)</span> and <span class="math notranslate nohighlight">\(\tau\)</span> exhibit a much larger spread in their individual distributions (red and yellow histograms).</span></p>
+</div>
+<p>However, when we look at the two-parameter marginalization of the final posterior distribution (second plot from the right on the bottom row), we see that while the values of <span class="math notranslate nohighlight">\(\mu\)</span> and <span class="math notranslate nohighlight">\(\tau\)</span> may not have been individually well-constrained, their <em>product</em> was pinned quite well. As it happens, this product is related to a quantity known as the <em>electron diffusion length</em>, and under the conditions we measured the solar cell, other effects that <span class="math notranslate nohighlight">\(\mu\)</span> and <span class="math notranslate nohighlight">\(\tau\)</span> have on performance were small enough that they couldn’t be decoupled from each other.</p>
+<p>This type of insight could not be gleaned from a more traditional parameter fitting approach such as a least-squares regression and requires the ability to see the probability distribution over parameters.</p>
+</div>
+<div class="section" id="simulations-are-expensive">
+<h2>Simulations are expensive<a class="headerlink" href="#simulations-are-expensive" title="Permalink to this headline">¶</a></h2>
+<p>A very common approach to multidimensional Bayesian parameter estimation involves Monte Carlo (MC) sampling rather than sampling on a grid as we do here. In general, such approaches scale very well to larger numbers of dimensions and hence may have great appeal (“larger numbers” is problem dependent but for “typical” problems if you have more than 10 parameters to estimate, an MC approach is preferable). Bayesim uses adaptive grid sampling, which has two major benefits over MC sampling for relatively low-dimensional problems:</p>
+<ol class="arabic simple">
+<li>It can be significantly less computationally expensive (from a more formal numerical perspective, it avoids the generally large prefactor in cost estimates for MC sampling, which can overwhelm the dimensional savings when the dimensionality is small) and</li>
+<li>There is significantly less uncertainty that all regions of non-negligible probability are quickly detected, since the coarsest iteration tends to identify all “hotspots” immediately, provided the <a class="reference internal" href="bayesics.html#model-uncertainty"><span class="std std-ref">model uncertainty</span></a> associated with the sampling density is incorporated.</li>
+</ol>
+<p>The take-home message here is that <code class="docutils literal notranslate"><span class="pre">bayesim</span></code>’s <strong>approach shines in situations where the computational effort required to evaluate the likelihood is large, as when the data models are sophisticated numerical solvers, and the number of fitting parameters is (relatively) small.</strong></p>
+<p>Many of the <a class="reference internal" href="examples.html"><span class="doc">Examples</span></a> we show here involve analytical models, however. This is done only to create examples that are tractable to run in a few seconds on a typical personal computer. In reality, while <code class="docutils literal notranslate"><span class="pre">bayesim</span></code> certainly works with these models, it is unlikely to be the most efficient approach to fitting their parameters. In addition, with an analytical model, tradeoffs such as the one between <span class="math notranslate nohighlight">\(\mu\)</span> and <span class="math notranslate nohighlight">\(\tau\)</span> described above are generally already apparent from the mathematical form of the model and hence the final probability distribution isn’t necessarily required for such insights.</p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018, Rachel C Kurchin and Giuseppe Romano.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.6.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

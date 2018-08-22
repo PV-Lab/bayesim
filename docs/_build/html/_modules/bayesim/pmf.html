@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>bayesim.pmf &#8212; bayesim 0.9.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-2.3.2/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+
+        <a class="brand" href="../../index.html">
+          bayesim</a>
+        <span class="navbar-text pull-left"><b></b></span>
+
+        <div class="nav-collapse">
+          <ul class="nav">
+            <li class="divider-vertical"></li>
+            
+                <li><a href="../../genindex.html">Index</a></li>
+                <li><a href="https://github.com/pv-lab/bayesim">Github</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../../gettingstarted.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../whybayesim.html">Why bayesim?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bayesics.html">Technical Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citingbayesim.html">Citing bayesim</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"></ul>
+</li>
+              
+            
+            
+              
+                
+              
+            
+            
+            
+            
+              <li></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="span12 content">
+      
+  <h1>Source code for bayesim.pmf</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">norm</span><span class="p">,</span><span class="n">lognorm</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">product</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib.ticker</span> <span class="k">as</span> <span class="nn">ticker</span>
+<span class="kn">import</span> <span class="nn">bayesim.params</span> <span class="k">as</span> <span class="nn">pm</span>
+<span class="kn">import</span> <span class="nn">timeit</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">product</span>
+
+<div class="viewcode-block" id="Pmf"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf">[docs]</a><span class="k">class</span> <span class="nc">Pmf</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class that stores a PMF capable of nested sampling / &quot;adaptive mesh refinement&quot;.</span>
+
+<span class="sd">    Stores probabilities in a DataFrame which associates regions of parameter space with probability values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Pmf.make_points_list"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.make_points_list">[docs]</a>    <span class="k">def</span> <span class="nf">make_points_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">total_prob</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Helper function for Pmf.__init__ as well as Pmf.subdivide.</span>
+<span class="sd">        Given names and values for parameters, generate DataFrame listing</span>
+<span class="sd">        values, bounds, and probabilities.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            params (:class:`.Param_list`):</span>
+<span class="sd">            total_prob (float): total probability to divide among points in parameter space - for an initialization, this is 1.0, for a subdivide call will be less.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            :obj:DataFrame with columns for each parameter&#39;s value, min, and max</span>
+<span class="sd">            as well as a probability associated with that point in parameter</span>
+<span class="sd">            space</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># generate the list of box center coordinates</span>
+        <span class="n">param_indices</span> <span class="o">=</span> <span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">vals</span><span class="p">))</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">params</span><span class="p">]</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">param_indices</span><span class="p">)]</span>
+        <span class="c1"># iterate through to get values and add columns for param ranges</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)):</span> <span class="c1"># for every point (read: combination of value indices) in parameter space...</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">)):</span> <span class="c1"># for each parameter...</span>
+                <span class="c1"># get value</span>
+                <span class="n">val_index</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span>
+                <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">vals</span><span class="p">[</span><span class="n">val_index</span><span class="p">])</span>
+                <span class="c1"># get min and max of bounding box</span>
+                <span class="n">row</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">params</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">edges</span><span class="p">[</span><span class="n">val_index</span><span class="p">],</span><span class="n">params</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">edges</span><span class="p">[</span><span class="n">val_index</span><span class="o">+</span><span class="mi">1</span><span class="p">]])</span>
+            <span class="n">points</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span>
+
+        <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+        <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="p">[[</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="o">+</span><span class="s1">&#39;_min&#39;</span><span class="p">,</span><span class="n">n</span><span class="o">+</span><span class="s1">&#39;_max&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">()]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">l</span><span class="p">]</span> <span class="c1"># there has to be a more readable way to do this</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">points</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">total_prob</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))]</span>
+
+        <span class="k">return</span> <span class="n">df</span></div>
+
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a Pmf object. Provide one of the three input options, or else will initialize empty.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            params (:obj:`Param_list`): Param_list object containing parameters to be fit and associated metadata</span>
+<span class="sd">            param_points (:obj:`DataFrame`): DataFrame containing all parameter points to start with</span>
+<span class="sd">            prob_dict (:obj:`dict`): output of as_dict()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="s1">&#39;prob_dict&#39;</span> <span class="ow">in</span> <span class="n">argv</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">prob_dict</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="s1">&#39;prob_dict&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">is_empty</span> <span class="o">=</span> <span class="n">prob_dict</span><span class="p">[</span><span class="s1">&#39;is_empty&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_sub</span> <span class="o">=</span> <span class="n">prob_dict</span><span class="p">[</span><span class="s1">&#39;num_sub&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="n">prob_dict</span><span class="p">[</span><span class="s1">&#39;points&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="p">[</span><span class="n">pm</span><span class="o">.</span><span class="n">Fit_param</span><span class="p">(</span><span class="o">**</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">prob_dict</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">]]</span>
+        <span class="k">elif</span> <span class="s1">&#39;params&#39;</span> <span class="ow">in</span> <span class="n">argv</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="c1"># for now just copy in the param_list wholesale</span>
+            <span class="c1"># eventually should probably scrub and/or update vals...</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_sub</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_points_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">is_empty</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">is_empty</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="s1">&#39;param_points&#39;</span> <span class="ow">in</span> <span class="n">argv</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Still need to implement initializing a Pmf from a list of points!&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c1"># empty arguments</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_sub</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">is_empty</span> <span class="o">=</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="Pmf.as_dict"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.as_dict">[docs]</a>    <span class="k">def</span> <span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return this Pmf object in (readable) dictionary form.&quot;&quot;&quot;</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+        <span class="n">d</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="vm">__dict__</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">d</span></div>
+
+<div class="viewcode-block" id="Pmf.normalize"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.normalize">[docs]</a>    <span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Normalize overall PMF.&quot;&quot;&quot;</span>
+        <span class="n">norm_const</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="c1">#print(norm_const,type(norm_const))</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">norm_const</span><span class="p">)</span><span class="o">&lt;</span><span class="mf">1e-12</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Somehow the normalization constant was zero! To play it safe, I won&#39;t do anything.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">/</span><span class="n">norm_const</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]]</span></div>
+
+<div class="viewcode-block" id="Pmf.uniformize"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.uniformize">[docs]</a>    <span class="k">def</span> <span class="nf">uniformize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Keep PMF shape and subdivisions but make every probability equal.</span>
+<span class="sd">        Useful for rerunning whole inference after subdividing.</span>
+
+<span class="sd">        Note that because subdivisions are not uniform that this is NOT a uniform prior anymore.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">norm_const</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="o">/</span><span class="n">norm_const</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">norm_const</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="Pmf.all_current_values"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.all_current_values">[docs]</a>    <span class="k">def</span> <span class="nf">all_current_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List all values currently being considered for `param`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ls</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">param</span><span class="p">])))</span>
+        <span class="n">ls</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">ls</span></div>
+
+<div class="viewcode-block" id="Pmf.find_neighbor_boxes"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.find_neighbor_boxes">[docs]</a>    <span class="k">def</span> <span class="nf">find_neighbor_boxes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find and return all boxes neighboring the box at `index`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">all_vals</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">all_current_values</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">()}</span>
+        <span class="n">param_spacing</span> <span class="o">=</span> <span class="p">{</span><span class="n">param</span><span class="o">.</span><span class="n">name</span><span class="p">:</span><span class="n">param</span><span class="o">.</span><span class="n">spacing</span> <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">}</span>
+        <span class="n">this_point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="n">indices_to_intersect</span><span class="o">=</span><span class="p">[]</span>
+        <span class="c1"># get range of values of each param to consider &quot;neighbors&quot;</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
+            <span class="n">param</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">this_param_val</span> <span class="o">=</span> <span class="n">this_point</span><span class="p">[</span><span class="n">param</span><span class="p">]</span>
+            <span class="n">this_param_index</span> <span class="o">=</span> <span class="n">all_vals</span><span class="p">[</span><span class="n">param</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">this_param_val</span><span class="p">)</span>
+
+            <span class="c1"># handle the edge cases</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">this_param_index</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1">#down_delta = (all_vals[param[&#39;name&#39;]][this_param_index]-all_vals[param[&#39;name&#39;]][this_param_index-1])*1.001</span>
+                <span class="k">if</span> <span class="n">param_spacing</span><span class="p">[</span><span class="n">param</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;linear&#39;</span><span class="p">:</span>
+                    <span class="n">down_delta</span> <span class="o">=</span> <span class="p">(</span><span class="n">this_point</span><span class="p">[</span><span class="n">param</span><span class="o">+</span><span class="s1">&#39;_max&#39;</span><span class="p">]</span><span class="o">-</span><span class="n">this_point</span><span class="p">[</span><span class="n">param</span><span class="o">+</span><span class="s1">&#39;_min&#39;</span><span class="p">])</span><span class="o">*</span><span class="mf">1.501</span>
+                <span class="k">elif</span> <span class="n">param_spacing</span><span class="p">[</span><span class="n">param</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;log&#39;</span><span class="p">:</span>
+                    <span class="n">down_delta</span> <span class="o">=</span> <span class="n">this_point</span><span class="p">[</span><span class="n">param</span><span class="p">]</span><span class="o">-</span><span class="n">this_point</span><span class="p">[</span><span class="n">param</span><span class="o">+</span><span class="s1">&#39;_min&#39;</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">this_point</span><span class="p">[</span><span class="n">param</span><span class="o">+</span><span class="s1">&#39;_min&#39;</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">this_point</span><span class="p">[</span><span class="n">param</span><span class="o">+</span><span class="s1">&#39;_max&#39;</span><span class="p">]</span><span class="o">*</span><span class="mf">1.001</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">down_delta</span><span class="o">=</span><span class="mi">0</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">this_param_index</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_vals</span><span class="p">[</span><span class="n">param</span><span class="p">])</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="c1">#up_delta = (all_vals[param[&#39;name&#39;]][this_param_index+1]-all_vals[param[&#39;name&#39;]][this_param_index])*1.001</span>
+                <span class="k">if</span> <span class="n">param_spacing</span><span class="p">[</span><span class="n">param</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;linear&#39;</span><span class="p">:</span>
+                    <span class="n">up_delta</span> <span class="o">=</span> <span class="p">(</span><span class="n">this_point</span><span class="p">[</span><span class="n">param</span><span class="o">+</span><span class="s1">&#39;_max&#39;</span><span class="p">]</span><span class="o">-</span><span class="n">this_point</span><span class="p">[</span><span class="n">param</span><span class="o">+</span><span class="s1">&#39;_min&#39;</span><span class="p">])</span><span class="o">*</span><span class="mf">1.501</span>
+                <span class="k">elif</span> <span class="n">param_spacing</span><span class="p">[</span><span class="n">param</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;log&#39;</span><span class="p">:</span>
+                    <span class="n">up_delta</span> <span class="o">=</span> <span class="n">this_point</span><span class="p">[</span><span class="n">param</span><span class="o">+</span><span class="s1">&#39;_max&#39;</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">this_point</span><span class="p">[</span><span class="n">param</span><span class="o">+</span><span class="s1">&#39;_max&#39;</span><span class="p">]</span><span class="o">*</span><span class="mf">1.001</span><span class="o">/</span><span class="n">this_point</span><span class="p">[</span><span class="n">param</span><span class="o">+</span><span class="s1">&#39;_min&#39;</span><span class="p">])</span><span class="o">-</span><span class="n">this_point</span><span class="p">[</span><span class="n">param</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">up_delta</span><span class="o">=</span><span class="mi">0</span>
+            <span class="c1">#print(param,up_delta,down_delta)</span>
+            <span class="n">gt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">param</span><span class="p">]</span><span class="o">&gt;=</span><span class="n">this_param_val</span><span class="o">-</span><span class="n">down_delta</span>
+            <span class="n">lt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">param</span><span class="p">]</span><span class="o">&lt;=</span><span class="n">this_param_val</span><span class="o">+</span><span class="n">up_delta</span>
+            <span class="n">this_set</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">gt</span> <span class="o">&amp;</span> <span class="n">lt</span><span class="p">]</span>
+            <span class="c1">#print(this_set[[pm[&#39;name&#39;] for pm in self.params]])</span>
+            <span class="n">indices_to_intersect</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">this_set</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">))</span>
+
+        <span class="n">indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="o">*</span><span class="n">indices_to_intersect</span><span class="p">))</span>
+        <span class="n">indices</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+        <span class="n">neighbor_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+        <span class="c1"># check if we went too far out along any axis</span>
+        <span class="n">inds_to_drop</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">all_out_query</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
+            <span class="n">param</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">other_params</span> <span class="o">=</span> <span class="p">[</span><span class="n">pm</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">pm</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">pm</span><span class="o">.</span><span class="n">name</span><span class="o">==</span><span class="n">param</span><span class="p">]</span>
+            <span class="c1"># clunky brute-force search but it should be a smallish list so hopefully it won&#39;t kill us</span>
+            <span class="c1"># first check that we&#39;re inside the box for all other params</span>
+            <span class="n">in_box_query</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">other_params</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">param_spacing</span><span class="p">[</span><span class="n">q</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;linear&#39;</span><span class="p">:</span>
+                    <span class="n">in_box_query</span> <span class="o">=</span> <span class="n">in_box_query</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&lt;</span><span class="si">%f</span><span class="s1"> &amp; </span><span class="si">%s</span><span class="s1">&gt;</span><span class="si">%f</span><span class="s1"> &amp; &#39;</span><span class="o">%</span><span class="p">(</span><span class="n">q</span><span class="p">,</span><span class="n">this_point</span><span class="p">[</span><span class="n">q</span><span class="o">+</span><span class="s1">&#39;_max&#39;</span><span class="p">],</span><span class="n">q</span><span class="p">,</span><span class="n">this_point</span><span class="p">[</span><span class="n">q</span><span class="o">+</span><span class="s1">&#39;_min&#39;</span><span class="p">])</span>
+                <span class="k">elif</span> <span class="n">param_spacing</span><span class="p">[</span><span class="n">q</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;log&#39;</span><span class="p">:</span>
+                    <span class="n">in_box_query</span> <span class="o">=</span> <span class="n">in_box_query</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&lt;</span><span class="si">%E</span><span class="s1"> &amp; </span><span class="si">%s</span><span class="s1">&gt;</span><span class="si">%E</span><span class="s1"> &amp; &#39;</span><span class="o">%</span><span class="p">(</span><span class="n">q</span><span class="p">,</span><span class="n">this_point</span><span class="p">[</span><span class="n">q</span><span class="o">+</span><span class="s1">&#39;_max&#39;</span><span class="p">],</span><span class="n">q</span><span class="p">,</span><span class="n">this_point</span><span class="p">[</span><span class="n">q</span><span class="o">+</span><span class="s1">&#39;_min&#39;</span><span class="p">])</span>
+            <span class="c1"># then check each direction in this param</span>
+            <span class="k">if</span> <span class="n">param_spacing</span><span class="p">[</span><span class="n">param</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;linear&#39;</span><span class="p">:</span>
+                <span class="n">gt_query</span> <span class="o">=</span> <span class="n">in_box_query</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&gt;</span><span class="si">%f</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">param</span><span class="p">,</span><span class="n">this_point</span><span class="p">[</span><span class="n">param</span><span class="o">+</span><span class="s1">&#39;_max&#39;</span><span class="p">])</span>
+                <span class="n">lt_query</span> <span class="o">=</span> <span class="n">in_box_query</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&lt;</span><span class="si">%f</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">param</span><span class="p">,</span><span class="n">this_point</span><span class="p">[</span><span class="n">param</span><span class="o">+</span><span class="s1">&#39;_min&#39;</span><span class="p">])</span>
+                <span class="n">all_out_query</span> <span class="o">=</span> <span class="n">all_out_query</span> <span class="o">+</span> <span class="s1">&#39;(</span><span class="si">%s</span><span class="s1">&gt;</span><span class="si">%f</span><span class="s1"> | </span><span class="si">%s</span><span class="s1">&lt;</span><span class="si">%f</span><span class="s1">) &amp; &#39;</span><span class="o">%</span><span class="p">(</span><span class="n">param</span><span class="p">,</span><span class="n">this_point</span><span class="p">[</span><span class="n">param</span><span class="o">+</span><span class="s1">&#39;_max&#39;</span><span class="p">],</span><span class="n">param</span><span class="p">,</span><span class="n">this_point</span><span class="p">[</span><span class="n">param</span><span class="o">+</span><span class="s1">&#39;_min&#39;</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="n">param_spacing</span><span class="p">[</span><span class="n">param</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;log&#39;</span><span class="p">:</span>
+                <span class="n">gt_query</span> <span class="o">=</span> <span class="n">in_box_query</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&gt;</span><span class="si">%E</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">param</span><span class="p">,</span><span class="n">this_point</span><span class="p">[</span><span class="n">param</span><span class="o">+</span><span class="s1">&#39;_max&#39;</span><span class="p">])</span>
+                <span class="n">lt_query</span> <span class="o">=</span> <span class="n">in_box_query</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&lt;</span><span class="si">%E</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">param</span><span class="p">,</span><span class="n">this_point</span><span class="p">[</span><span class="n">param</span><span class="o">+</span><span class="s1">&#39;_min&#39;</span><span class="p">])</span>
+                <span class="n">all_out_query</span> <span class="o">=</span> <span class="n">all_out_query</span> <span class="o">+</span> <span class="s1">&#39;(</span><span class="si">%s</span><span class="s1">&gt;</span><span class="si">%E</span><span class="s1"> | </span><span class="si">%s</span><span class="s1">&lt;</span><span class="si">%E</span><span class="s1">) &amp; &#39;</span><span class="o">%</span><span class="p">(</span><span class="n">param</span><span class="p">,</span><span class="n">this_point</span><span class="p">[</span><span class="n">param</span><span class="o">+</span><span class="s1">&#39;_max&#39;</span><span class="p">],</span><span class="n">param</span><span class="p">,</span><span class="n">this_point</span><span class="p">[</span><span class="n">param</span><span class="o">+</span><span class="s1">&#39;_min&#39;</span><span class="p">])</span>
+            <span class="c1"># pull points that are outside bounds of this param</span>
+            <span class="n">gt_check</span> <span class="o">=</span> <span class="n">neighbor_points</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">gt_query</span><span class="p">)</span>
+            <span class="n">lt_check</span> <span class="o">=</span> <span class="n">neighbor_points</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">lt_query</span><span class="p">)</span>
+            <span class="c1"># group them by coords in other params</span>
+            <span class="n">gt_check_grps</span> <span class="o">=</span> <span class="n">gt_check</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">other_params</span><span class="p">)</span>
+            <span class="n">lt_check_grps</span> <span class="o">=</span> <span class="n">lt_check</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">other_params</span><span class="p">)</span>
+            <span class="c1"># if any group has multiple indices, drop the ones corresponding to the &quot;further out&quot; values</span>
+            <span class="k">for</span> <span class="n">grp</span><span class="p">,</span><span class="n">inds</span> <span class="ow">in</span> <span class="n">gt_check_grps</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inds</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="n">vals</span> <span class="o">=</span> <span class="n">gt_check</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">inds</span><span class="o">.</span><span class="n">index</span><span class="p">][</span><span class="n">param</span><span class="p">]</span>
+                    <span class="n">keep</span> <span class="o">=</span> <span class="n">vals</span><span class="o">.</span><span class="n">idxmin</span><span class="p">()</span>
+                    <span class="n">drop</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">inds</span><span class="o">.</span><span class="n">index</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">i</span><span class="o">==</span><span class="n">keep</span><span class="p">]</span>
+                    <span class="n">inds_to_drop</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">drop</span><span class="p">)</span>
+                    <span class="c1">#print(&#39;dropping &#39;+str(drop))</span>
+            <span class="k">for</span> <span class="n">grp</span><span class="p">,</span><span class="n">inds</span> <span class="ow">in</span> <span class="n">lt_check_grps</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inds</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="n">vals</span> <span class="o">=</span> <span class="n">lt_check</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">inds</span><span class="o">.</span><span class="n">index</span><span class="p">][</span><span class="n">param</span><span class="p">]</span>
+                    <span class="n">keep</span> <span class="o">=</span> <span class="n">vals</span><span class="o">.</span><span class="n">idxmax</span><span class="p">()</span>
+                    <span class="n">drop</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">inds</span><span class="o">.</span><span class="n">index</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">i</span><span class="o">==</span><span class="n">keep</span><span class="p">]</span>
+                    <span class="n">inds_to_drop</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">drop</span><span class="p">)</span>
+                    <span class="c1">#print(&#39;dropping &#39;+str(drop))</span>
+        <span class="c1"># and finally, check for ones that aren&#39;t inside bounds at all</span>
+        <span class="c1"># for now, drop all of them - should keep closest corner really</span>
+        <span class="n">all_out_query</span> <span class="o">=</span> <span class="n">all_out_query</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">all_out_check</span> <span class="o">=</span> <span class="n">neighbor_points</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">all_out_query</span><span class="p">)</span>
+        <span class="n">inds_to_drop</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">all_out_check</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">neighbor_points</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="n">inds_to_drop</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Pmf.subdivide"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.subdivide">[docs]</a>    <span class="k">def</span> <span class="nf">subdivide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold_prob</span><span class="p">,</span> <span class="n">include_neighbors</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Subdivide all boxes with P &gt; threshold_prob and assign &quot;locally uniform&quot; probabilities within each box. If include_neighbors is true, also subdivide all boxes neighboring those boxes.</span>
+
+<span class="sd">        Boxes with P &lt; threshold_prob are deleted.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            threshold_prob (`float`): probability above which a box should be retained</span>
+<span class="sd">            include_neighbors (`bool`): whether to also subdivide all immediate neighbors to boxes meeting the threshold</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">num_divs</span> <span class="o">=</span> <span class="p">{</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">:</span><span class="mi">2</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">}</span> <span class="c1">#dummy for now</span>
+
+        <span class="c1"># pick out the boxes that will be subdivided</span>
+        <span class="n">to_subdivide</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="n">threshold_prob</span><span class="p">]</span>
+        <span class="c1">#print(len(to_subdivide))</span>
+        <span class="c1">#dropped_boxes = deepcopy(to_subdivide)</span>
+
+        <span class="n">num_high_prob_boxes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_subdivide</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">num_high_prob_boxes</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;nothing to subdivide!&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">include_neighbors</span><span class="p">:</span>
+            <span class="c1"># find neighbor boxes</span>
+            <span class="n">neighbor_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="n">to_subdivide</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+                <span class="n">neighbor_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">find_neighbor_boxes</span><span class="p">(</span><span class="n">box</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="n">neighbors</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">neighbor_list</span><span class="p">)</span>
+            <span class="n">to_subdivide</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">to_subdivide</span><span class="p">,</span><span class="n">neighbors</span><span class="p">])</span>
+            <span class="n">to_subdivide</span> <span class="o">=</span> <span class="n">to_subdivide</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">columns</span> <span class="o">!=</span> <span class="s1">&#39;prob&#39;</span><span class="p">])</span> <span class="c1"># exclude probability when considering identical-ness</span>
+
+        <span class="n">num_nbs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_subdivide</span><span class="p">)</span><span class="o">-</span><span class="n">num_high_prob_boxes</span>
+
+        <span class="c1"># check if minimum width is already satisfied for any parameter</span>
+        <span class="n">test_box</span> <span class="o">=</span> <span class="n">to_subdivide</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">spacing</span><span class="o">==</span><span class="s1">&#39;linear&#39;</span><span class="p">:</span>
+                <span class="n">this_width</span> <span class="o">=</span> <span class="n">box</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_max&#39;</span><span class="p">]</span><span class="o">-</span><span class="n">box</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_min&#39;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">p</span><span class="o">.</span><span class="n">spacing</span><span class="o">==</span><span class="s1">&#39;log&#39;</span><span class="p">:</span>
+                <span class="n">this_width</span> <span class="o">=</span> <span class="n">box</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_max&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">box</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_min&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">this_width</span> <span class="o">&lt;=</span> <span class="n">p</span><span class="o">.</span><span class="n">min_width</span><span class="p">:</span>
+                <span class="c1"># don&#39;t divide along this direction</span>
+                <span class="n">num_divs</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Minimum width/factor of </span><span class="si">%s</span><span class="s1"> already satisfied for parameter </span><span class="si">%s</span><span class="s1">, not subdividing in that direction!&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">get_val_str</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">min_width</span><span class="p">),</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+
+        <span class="c1"># create new boxes (and delete old ones)</span>
+        <span class="n">new_boxes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1">#dropped_inds = []</span>
+        <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="n">to_subdivide</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="c1"># first, remove this box from DataFrame</span>
+            <span class="c1">#dropped_inds.append(box[0])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="n">box</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="c1"># create new DataFrame with subdivided boxes</span>
+            <span class="n">new_pl</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Param_list</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
+                <span class="c1"># copy same params except for ranges</span>
+                <span class="n">new_pl</span><span class="o">.</span><span class="n">add_fit_param</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">val_range</span><span class="o">=</span><span class="p">[</span><span class="n">box</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_min&#39;</span><span class="p">],</span> <span class="n">box</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_max&#39;</span><span class="p">]],</span> <span class="n">length</span><span class="o">=</span><span class="n">num_divs</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">],</span> <span class="n">min_width</span><span class="o">=</span><span class="n">p</span><span class="o">.</span><span class="n">min_width</span><span class="p">,</span> <span class="n">spacing</span><span class="o">=</span><span class="n">p</span><span class="o">.</span><span class="n">spacing</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">p</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">p</span><span class="o">.</span><span class="n">tolerance</span><span class="p">)</span>
+            <span class="c1"># make new df, spreading total prob from original box among new smaller ones</span>
+            <span class="n">new_boxes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">make_points_list</span><span class="p">(</span><span class="n">new_pl</span><span class="o">.</span><span class="n">fit_params</span><span class="p">,</span> <span class="n">total_prob</span><span class="o">=</span><span class="n">box</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;prob&#39;</span><span class="p">]))</span>
+
+        <span class="c1"># put in the new points (and completely drop the old ones)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">new_boxes</span><span class="p">)</span>
+
+        <span class="c1"># make new lists of self.params (this way might be slow...)</span>
+        <span class="n">new_params</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Param_list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
+            <span class="n">p_args</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="vm">__dict__</span>
+            <span class="n">p_args</span><span class="p">[</span><span class="s1">&#39;vals&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vals</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">])))</span>
+            <span class="k">del</span> <span class="n">p_args</span><span class="p">[</span><span class="s1">&#39;val_range&#39;</span><span class="p">]</span>
+            <span class="c1">#print(p_args)</span>
+            <span class="c1">#new_params.add_fit_param(name=p.name, vals=list(set(list(self.points[p.name]))), spacing=p.spacing)</span>
+            <span class="n">new_params</span><span class="o">.</span><span class="n">add_fit_param</span><span class="p">(</span><span class="o">**</span><span class="n">p_args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">new_params</span><span class="o">.</span><span class="n">fit_params</span><span class="p">]</span>
+
+        <span class="c1"># sort values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">())</span>
+
+        <span class="c1"># reindex DataFrame</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># should be normalized already, but just in case:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
+
+        <span class="c1"># increment subdivide count</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_sub</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_sub</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">num_high_prob_boxes</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; box(es) with probability &gt; &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">threshold_prob</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; and &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">num_nbs</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; neighboring boxes subdivided!&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">new_boxes</span></div>
+
+<div class="viewcode-block" id="Pmf.multiply"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.multiply">[docs]</a>    <span class="k">def</span> <span class="nf">multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other_pmf</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute and store renormalized product of this Pmf with other_pmf.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other_pmf (:class:`.Pmf`): PMF to multiply by</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># check for silliness</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other_pmf</span><span class="p">,</span> <span class="n">Pmf</span><span class="p">),</span> <span class="s2">&quot;You didn&#39;t feed in a Pmf object!&quot;</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">other_pmf</span><span class="o">.</span><span class="n">points</span><span class="p">),</span> <span class="s2">&quot;Pmf&#39;s are over different numbers of points. Can&#39;t exactly do a pointwise multiplication on that, can I?&quot;</span>
+        <span class="c1"># should add a check that all points match</span>
+
+        <span class="c1"># copy and sort/index DataFrames to match so that we&#39;re multiplying</span>
+        <span class="c1"># the right probabilities together</span>
+        <span class="n">these_probs</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
+        <span class="n">other_probs</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">other_pmf</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
+
+        <span class="n">these_probs</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">())</span>
+        <span class="n">other_probs</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">())</span>
+
+        <span class="c1"># actually multiply</span>
+        <span class="n">new_probs</span> <span class="o">=</span> <span class="n">these_probs</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">other_probs</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span>
+
+        <span class="c1"># check if there&#39;s any probability there...</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">new_probs</span><span class="p">))</span><span class="o">&lt;</span><span class="mf">1e-12</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;You&#39;re gonna have a bad time...not multiplying&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_probs</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Pmf.likelihood"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.likelihood">[docs]</a>    <span class="k">def</span> <span class="nf">likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute likelihood over this Pmf&#39;s parameter space given modeled data at the given EC&#39;s for every parameter space point and a measurement at the same EC&#39;s.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            meas (`float`): one output value</span>
+<span class="sd">            model_at_ec (:py:class:`DataFrame`): DataFrame containing model data at the experimental condition of the measurement and uncertainty values in a column called &#39;uncertainty&#39; for every point in parameter space</span>
+<span class="sd">            output_col (`str`): name of column with output variable</span>
+
+<span class="sd">            ec: dict with keys of condition names and values</span>
+<span class="sd">            meas: one output value e.g. J</span>
+<span class="sd">            unc: uncertainty in measured value (stdev of a Gaussian)</span>
+<span class="sd">            model_func: should accept one dict of params and one of conditions and output measurement (might deprecate)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># read in and process inputs</span>
+        <span class="n">meas</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="s1">&#39;meas&#39;</span><span class="p">]</span>
+        <span class="n">model_data</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="s1">&#39;model_at_ec&#39;</span><span class="p">]</span>
+        <span class="n">model_data</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">())</span>
+        <span class="n">model_data</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">output_col</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="s1">&#39;output_col&#39;</span><span class="p">]</span>
+        <span class="n">meas_val</span> <span class="o">=</span> <span class="n">meas</span><span class="p">[</span><span class="n">output_col</span><span class="p">]</span>
+        <span class="n">meas_err</span> <span class="o">=</span> <span class="n">meas</span><span class="p">[</span><span class="s1">&#39;uncertainty&#39;</span><span class="p">]</span>
+
+        <span class="c1"># set up likelihood DF</span>
+        <span class="n">lkl</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">new_probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">lkl</span><span class="o">.</span><span class="n">points</span><span class="p">),</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">delta_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">nan_count</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># here&#39;s the actual loop that computes the likelihoods</span>
+        <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">lkl</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="c1">#print(ec, point[1])</span>
+            <span class="c1">#model_val = model_func(ec, dict(point[1]))</span>
+            <span class="n">model_pt</span> <span class="o">=</span> <span class="n">model_data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="n">model_val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">model_pt</span><span class="p">[</span><span class="n">output_col</span><span class="p">])</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">model_val</span><span class="p">):</span>
+                <span class="n">model_err</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">model_pt</span><span class="p">[</span><span class="s1">&#39;uncertainty&#39;</span><span class="p">])</span>
+                <span class="n">err</span> <span class="o">=</span> <span class="n">model_err</span> <span class="o">+</span> <span class="n">meas_err</span>
+
+                <span class="c1"># tally how many times deltas were bigger</span>
+                <span class="k">if</span> <span class="n">model_err</span> <span class="o">&gt;</span> <span class="n">meas_err</span><span class="p">:</span>
+                    <span class="n">delta_count</span> <span class="o">=</span> <span class="n">delta_count</span> <span class="o">+</span> <span class="mi">1</span>
+
+                <span class="n">new_probs</span><span class="p">[</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">norm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">meas_val</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">model_val</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="nb">abs</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_probs</span><span class="p">[</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">lkl</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
+                <span class="n">nan_count</span> <span class="o">=</span> <span class="n">nan_count</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="c1"># copy these values in</span>
+        <span class="n">lkl</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_probs</span>
+
+        <span class="c1"># make sure that the likelihood isn&#39;t zero everywhere...</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">new_probs</span><span class="p">))</span><span class="o">&lt;</span><span class="mf">1e-12</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;likelihood has no probability! :(&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]))):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Uh-oh, some probability is NaN!&#39;</span><span class="p">)</span>
+        <span class="n">lkl</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">lkl</span><span class="p">,</span> <span class="n">delta_count</span><span class="p">,</span> <span class="n">nan_count</span></div>
+
+<div class="viewcode-block" id="Pmf.most_probable"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.most_probable">[docs]</a>    <span class="k">def</span> <span class="nf">most_probable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the n largest probabilities in a new DataFrame.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sorted_probs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">&#39;prob&#39;</span><span class="p">,</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sorted_probs</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">n</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Pmf.param_names"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.param_names">[docs]</a>    <span class="k">def</span> <span class="nf">param_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return list of parameter names of this PMF.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Pmf.populate_dense_grid"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.populate_dense_grid">[docs]</a>    <span class="k">def</span> <span class="nf">populate_dense_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">argv</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Populate a grid such as the one created by make_dense_grid.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            df (`obj`:DataFrame): DataFrame to populate from (should have columns for every param)</span>
+<span class="sd">            col_to_pull (`str`): name of the column to use when populating grid points</span>
+<span class="sd">            make_ind_lists (`bool`): whether to return a list of indices corresponding to the first in every slice (used by bayesim.model.calc_model_gradients)</span>
+<span class="sd">            return_edges (`bool`): whether to return list of edge values also (used by bayesim.pmf.project_2D)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            a dict with keys for each thing requested</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># read in inputs</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="s1">&#39;df&#39;</span><span class="p">]</span>
+        <span class="n">col_to_pull</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="s1">&#39;col_to_pull&#39;</span><span class="p">]</span>
+        <span class="n">make_ind_lists</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;make_ind_lists&#39;</span><span class="p">,</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">return_edges</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;return_edges&#39;</span><span class="p">,</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># initialize things</span>
+        <span class="n">mat_shape</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">pvals_indices</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">param_edges</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
+            <span class="n">mat_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">length</span><span class="p">)</span>
+            <span class="n">pvals_indices</span><span class="p">[</span><span class="n">param</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">param</span><span class="o">.</span><span class="n">vals</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">vals</span><span class="p">))}</span>
+            <span class="c1">#indices_lists.append(range(len(param_vals[pname])))</span>
+
+        <span class="n">mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">mat_shape</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+
+        <span class="c1"># initialize optional things</span>
+        <span class="k">if</span> <span class="n">make_ind_lists</span><span class="p">:</span>
+            <span class="n">ind_lists</span> <span class="o">=</span> <span class="p">{</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">:[]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">}</span>
+
+        <span class="k">for</span> <span class="n">pt</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="c1">#print(pt)</span>
+            <span class="n">slices</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">param_point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">pt</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="c1"># if df isn&#39;t self.points</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
+                <span class="n">min_val</span> <span class="o">=</span> <span class="n">param_point</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_min&#39;</span><span class="p">]</span>
+                <span class="n">max_val</span> <span class="o">=</span> <span class="n">param_point</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_max&#39;</span><span class="p">]</span>
+                <span class="n">inds</span> <span class="o">=</span> <span class="p">[</span><span class="n">pvals_indices</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">][</span><span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">vals</span> <span class="k">if</span> <span class="n">v</span><span class="o">&gt;</span><span class="n">min_val</span> <span class="ow">and</span> <span class="n">v</span><span class="o">&lt;</span><span class="n">max_val</span><span class="p">]</span>
+                <span class="c1">#print(p.name, min_val, max_val, p.vals, inds)</span>
+                <span class="n">slices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">inds</span><span class="p">),</span><span class="nb">max</span><span class="p">(</span><span class="n">inds</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="kc">None</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">make_ind_lists</span><span class="p">:</span>
+                    <span class="n">ind_lists</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inds</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">col_to_pull</span> <span class="o">==</span> <span class="s1">&#39;prob&#39;</span><span class="p">:</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="n">param_point</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="n">pt</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">col_to_pull</span><span class="p">]</span>
+            <span class="n">mat</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">slices</span><span class="p">)]</span> <span class="o">=</span> <span class="n">val</span>
+
+        <span class="n">return_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;mat&#39;</span><span class="p">:</span><span class="n">mat</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">make_ind_lists</span><span class="p">:</span>
+            <span class="n">return_dict</span><span class="p">[</span><span class="s1">&#39;ind_lists&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ind_lists</span>
+        <span class="k">if</span> <span class="n">return_edges</span><span class="p">:</span>
+            <span class="n">return_dict</span><span class="p">[</span><span class="s1">&#39;param_edges&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_edges</span>
+        <span class="k">return</span> <span class="n">return_dict</span></div>
+
+<div class="viewcode-block" id="Pmf.weighted_avgs"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.weighted_avgs">[docs]</a>    <span class="k">def</span> <span class="nf">weighted_avgs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a dict with the weighted average for each parameter.&quot;&quot;&quot;</span>
+        <span class="n">avgs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
+            <span class="n">bins</span><span class="p">,</span> <span class="n">probs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_1D</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+            <span class="n">vals</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">vals</span>
+            <span class="n">avgs</span><span class="p">[</span><span class="n">param</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">probs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vals</span><span class="p">))])</span>
+        <span class="k">return</span> <span class="n">avgs</span></div>
+
+
+<div class="viewcode-block" id="Pmf.project_1D"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.project_1D">[docs]</a>    <span class="k">def</span> <span class="nf">project_1D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Project down to a one-dimensional PMF over the given parameter. Used by the visualize() method.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            param (:obj:`Fit_param`): one of `self.params`</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bins (:obj:`list` of :obj:`float`): bin edges for plotting with matplotlib.pyplot.hist (has length one more than next return list)</span>
+<span class="sd">            probs (:obj:`list` of :obj:`float`): probability values for histogram-style plot - note that these technically have units of the inverse of whatever the parameter being plotted is (that is, they&#39;re probability densities)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">## first find bin edges</span>
+        <span class="c1"># pull all bounds, then flatten, remove duplicates, and sort</span>
+        <span class="n">bins</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">param</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_min&#39;</span><span class="p">])</span><span class="o">+</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">param</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_max&#39;</span><span class="p">]))))</span>
+
+        <span class="c1"># generate dense grid and populate with probabilities</span>
+        <span class="n">dense_grid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">populate_dense_grid</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">,</span> <span class="n">col_to_pull</span><span class="o">=</span><span class="s1">&#39;prob&#39;</span><span class="p">,</span> <span class="n">make_ind_lists</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="n">dense_grid</span><span class="p">[</span><span class="s1">&#39;mat&#39;</span><span class="p">]</span>
+
+        <span class="c1"># sum along all dimensions except the parameter of interest</span>
+        <span class="n">param_ind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">inds_to_sum_along</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mat</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">i</span><span class="o">==</span><span class="n">param_ind</span><span class="p">])</span>
+        <span class="n">probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="n">inds_to_sum_along</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">bins</span><span class="p">,</span> <span class="n">probs</span></div>
+
+<div class="viewcode-block" id="Pmf.project_2D"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.project_2D">[docs]</a>    <span class="k">def</span> <span class="nf">project_2D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_param</span><span class="p">,</span> <span class="n">y_param</span><span class="p">,</span> <span class="n">no_probs</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Project down to two dimensions over the two parameters. This one doesn&#39;t actually need to sum, it just draws a bunch of (potentially overlapping) rectangles with transparencies according to their probability densities (as a fraction of the normalized area). Used by the visualize() method.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x_param (dict): one of `self.params`, to be the x-axis of the 2D joint plot</span>
+<span class="sd">            y_param (dict): one of `self.params`, to be the y-axis of the 2D joint plot</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (:obj:`list` of :obj:`matplotlib.patches.Rectangle`): patches for plotting the 2D joint probability distribution</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">x_name</span> <span class="o">=</span> <span class="n">x_param</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">y_name</span> <span class="o">=</span> <span class="n">y_param</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">max_prob</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">])</span>
+        <span class="n">patches</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="n">x_min</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">x_name</span><span class="o">+</span><span class="s1">&#39;_min&#39;</span><span class="p">]</span>
+            <span class="n">x_width</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">x_name</span><span class="o">+</span><span class="s1">&#39;_max&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_min</span>
+            <span class="n">y_min</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">y_name</span><span class="o">+</span><span class="s1">&#39;_min&#39;</span><span class="p">]</span>
+            <span class="n">y_width</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">y_name</span><span class="o">+</span><span class="s1">&#39;_max&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">y_min</span>
+            <span class="k">if</span> <span class="n">no_probs</span><span class="p">:</span>
+                <span class="n">patches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mpl</span><span class="o">.</span><span class="n">patches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">((</span><span class="n">x_min</span><span class="p">,</span><span class="n">y_min</span><span class="p">),</span><span class="n">x_width</span><span class="p">,</span><span class="n">y_width</span><span class="p">,</span><span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">ec</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">alpha</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">max_prob</span>
+                <span class="k">if</span> <span class="n">alpha</span><span class="o">&gt;</span><span class="mf">1e-3</span><span class="p">:</span> <span class="c1">#this speeds it up a lot</span>
+                    <span class="n">patches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mpl</span><span class="o">.</span><span class="n">patches</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">((</span><span class="n">x_min</span><span class="p">,</span><span class="n">y_min</span><span class="p">),</span><span class="n">x_width</span><span class="p">,</span><span class="n">y_width</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">))</span>
+
+        <span class="c1"># here lies the so-far failed attempt to speed this up with grids</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        # generate dense grid and populate with probabilities</span>
+<span class="sd">        dense_grid = self.populate_dense_grid(self.points,&#39;prob&#39;,False,False,return_edges=True)</span>
+<span class="sd">        mat = dense_grid[&#39;mat&#39;]</span>
+<span class="sd">        param_vals = dense_grid[&#39;param_vals&#39;]</span>
+<span class="sd">        param_edges = dense_grid[&#39;param_edges&#39;]</span>
+
+<span class="sd">        # sum along all dimensions except the parameter of interest</span>
+<span class="sd">        param_names = [p[&#39;name&#39;] for p in self.params]</span>
+<span class="sd">        param_inds = [param_names.index(p[&#39;name&#39;]) for p in self.params]</span>
+<span class="sd">        inds_to_sum_along = tuple([i for i in range(len(mat.shape)) if not i in param_inds])</span>
+<span class="sd">        dense_probs_list = np.sum(mat,axis=inds_to_sum_along)</span>
+<span class="sd">        print(dense_probs_list.shape)</span>
+
+<span class="sd">        # generate list of patch parameters - first need every pair of indices</span>
+<span class="sd">        ind_pairs = product(*[range(i) for i in dense_probs_list.shape])</span>
+<span class="sd">        patch_params = []</span>
+<span class="sd">        for pr in ind_pairs:</span>
+<span class="sd">            x_min = param_edges[x_name][pr[0]]</span>
+<span class="sd">            x_width = param_edges[x_name][pr[0]+1] - x_min</span>
+<span class="sd">            y_min = param_edges[y_name][pr[1]]</span>
+<span class="sd">            y_width = param_edges[y_name][pr[1]+1] - y_min</span>
+<span class="sd">            if no_probs:</span>
+<span class="sd">                fill = False</span>
+<span class="sd">                ec = &#39;k&#39;</span>
+<span class="sd">                alpha = 0</span>
+<span class="sd">            else:</span>
+<span class="sd">                alpha = dense_probs_list[pr]/max_prob</span>
+<span class="sd">                ec = &#39;None&#39;</span>
+<span class="sd">                fill=True</span>
+<span class="sd">            patch_params.append({&#39;args&#39;:[(x_min,y_min),x_width,y_width],&#39;kwargs&#39;:{&#39;fill&#39;:fill,&#39;ec&#39;:ec,&#39;alpha&#39;:alpha}})</span>
+
+<span class="sd">        return patch_params</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">patches</span></div>
+
+<div class="viewcode-block" id="Pmf.visualize"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.pmf.Pmf.visualize">[docs]</a>    <span class="k">def</span> <span class="nf">visualize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make histogram matrix to visualize the PMF.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            frac_points (`float`): number &gt;0 and &lt;=1 indicating fraction of total points to visualize (will take the most probable, defaults to 1.0)</span>
+<span class="sd">            just_grid (`bool`): whether to show only the grid (i.e. visualize subdivisions) or the whole PMF (defaults to False)</span>
+<span class="sd">            fpath (`str`): optional, path to save image to</span>
+<span class="sd">            true_vals (`dict`): optional, set of param values to highlight on PMF</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># read in options</span>
+        <span class="n">frac_points</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;frac_points&#39;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">just_grid</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;just_grid&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;fpath&#39;</span> <span class="ow">in</span> <span class="n">argv</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">fpath</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="s1">&#39;fpath&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s1">&#39;true_vals&#39;</span> <span class="ow">in</span> <span class="n">argv</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="c1"># check that all params are there</span>
+            <span class="n">true_vals</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="s1">&#39;true_vals&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">true_vals</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">==</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">()):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Your true_vals do not have all the paramter names! Proceeding without them.&#39;</span><span class="p">)</span>
+                <span class="n">plot_true_vals</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="c1"># check that values are within ranges</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">true_vals</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">&gt;</span><span class="n">p</span><span class="o">.</span><span class="n">edges</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="n">true_vals</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">&lt;</span><span class="n">p</span><span class="o">.</span><span class="n">edges</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Your true_vals are not within the correct bounds. Proceeding without them.&#39;</span><span class="p">)</span>
+                <span class="n">plot_true_vals</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">plot_true_vals</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">plot_true_vals</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
+
+        <span class="c1"># find ranges to plot - this likely needs tweaking</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
+        <span class="n">points_to_include</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">most_probable</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">frac_points</span><span class="o">*</span><span class="n">N</span><span class="p">))</span>
+        <span class="n">plot_ranges</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
+            <span class="n">plot_ranges</span><span class="p">[</span><span class="n">param</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">points_to_include</span><span class="p">[</span><span class="n">param</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_min&#39;</span><span class="p">]),</span> <span class="nb">max</span><span class="p">(</span><span class="n">points_to_include</span><span class="p">[</span><span class="n">param</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_max&#39;</span><span class="p">])]</span>
+
+        <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">),</span> <span class="n">ncols</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">),</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">),</span><span class="mi">5</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">)))</span>
+
+        <span class="n">check1</span> <span class="o">=</span> <span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
+        <span class="n">time1</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">check1</span><span class="o">-</span><span class="n">start_time</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+        <span class="c1">#print(&#39;setup finished in &#39; + str(time1) + &#39; seconds&#39;)</span>
+
+        <span class="k">for</span> <span class="n">rownum</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="n">colnum</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">)):</span>
+                <span class="n">x_param</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">colnum</span><span class="p">]</span>
+                <span class="n">y_param</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">rownum</span><span class="p">]</span>
+
+                <span class="c1"># pre-formatting</span>
+                <span class="n">x_min</span> <span class="o">=</span> <span class="n">plot_ranges</span><span class="p">[</span><span class="n">x_param</span><span class="o">.</span><span class="n">name</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">x_max</span> <span class="o">=</span> <span class="n">plot_ranges</span><span class="p">[</span><span class="n">x_param</span><span class="o">.</span><span class="n">name</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">)</span>
+                <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">set_axisbelow</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                <span class="c1"># force four x-ticks to avoid numbers overlapping...hopefully</span>
+                <span class="n">round_digits</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">x_max</span><span class="o">-</span><span class="n">x_min</span><span class="p">))))</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="nb">round</span><span class="p">((</span><span class="n">x_max</span><span class="o">-</span><span class="n">x_min</span><span class="p">)</span><span class="o">/</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">round_digits</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">round_digits</span> <span class="o">=</span> <span class="n">round_digits</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="n">tick_spacing</span> <span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="n">x_max</span><span class="o">-</span><span class="n">x_min</span><span class="p">)</span><span class="o">/</span><span class="mf">5.</span><span class="p">,</span> <span class="n">round_digits</span><span class="p">)</span>
+                <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span class="n">ticker</span><span class="o">.</span><span class="n">MultipleLocator</span><span class="p">(</span><span class="n">tick_spacing</span><span class="p">))</span>
+
+                <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="p">([</span><span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">label</span><span class="p">]</span> <span class="o">+</span><span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">()</span> <span class="o">+</span> <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">get_yticklabels</span><span class="p">()):</span>
+                    <span class="n">item</span><span class="o">.</span><span class="n">set_fontsize</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">x_param</span><span class="o">.</span><span class="n">spacing</span><span class="o">==</span><span class="s1">&#39;log&#39;</span><span class="p">:</span>
+                    <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">set_xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">rownum</span><span class="o">==</span><span class="n">colnum</span><span class="p">:</span> <span class="c1">#diagonal - single-variable histogram</span>
+                    <span class="k">if</span> <span class="n">just_grid</span><span class="p">:</span>
+                        <span class="n">fig</span><span class="o">.</span><span class="n">delaxes</span><span class="p">(</span><span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">])</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">diag_start</span> <span class="o">=</span> <span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
+                        <span class="n">bins</span><span class="p">,</span> <span class="n">probs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_1D</span><span class="p">(</span><span class="n">x_param</span><span class="p">)</span>
+                        <span class="n">checkpoint</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span><span class="o">-</span><span class="n">diag_start</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+                        <span class="c1">#print(&#39;project_1D took &#39; + str(checkpoint) + &#39; seconds&#39;)</span>
+                        <span class="k">if</span> <span class="n">x_param</span><span class="o">.</span><span class="n">spacing</span><span class="o">==</span><span class="s1">&#39;log&#39;</span><span class="p">:</span>
+                            <span class="n">vals</span> <span class="o">=</span> <span class="p">[</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">bins</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">bins</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">probs</span><span class="p">))]</span>
+                        <span class="k">elif</span> <span class="n">x_param</span><span class="o">.</span><span class="n">spacing</span><span class="o">==</span><span class="s1">&#39;linear&#39;</span><span class="p">:</span>
+                            <span class="n">vals</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">bins</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="n">bins</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">probs</span><span class="p">))]</span>
+                        <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">probs</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">bins</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+
+                        <span class="c1"># formatting</span>
+                        <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+                        <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_label_position</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+                        <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;P(</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="n">x_param</span><span class="o">.</span><span class="n">display_name</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">270</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span> <span class="c1">#labelpad is kind of a brute-force way to do this and might break if we change the figure size, but va=&#39;bottom&#39; wasn&#39;t working</span>
+                        <span class="c1">#axes[rownum][colnum].`grid`(axis=&#39;y&#39;)</span>
+
+                        <span class="c1"># add true value if desired</span>
+                        <span class="k">if</span> <span class="n">plot_true_vals</span><span class="p">:</span>
+                            <span class="n">true_x</span> <span class="o">=</span> <span class="p">[</span><span class="n">true_vals</span><span class="p">[</span><span class="n">x_param</span><span class="o">.</span><span class="n">name</span><span class="p">]]</span>
+                            <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">true_x</span><span class="p">,[</span><span class="nb">min</span><span class="p">([</span><span class="nb">max</span><span class="p">(</span><span class="n">probs</span><span class="p">)</span><span class="o">+</span><span class="mf">0.05</span><span class="p">,</span><span class="mf">0.95</span><span class="p">])],</span><span class="mi">200</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">marker</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">)</span>
+
+                        <span class="n">diag_finish</span> <span class="o">=</span> <span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
+                        <span class="n">diag_time</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">diag_finish</span><span class="o">-</span><span class="n">diag_start</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+                        <span class="c1">#print(&#39;diagonal plot finished in &#39; + str(diag_time) + &#39; seconds&#39;)</span>
+
+                <span class="k">elif</span> <span class="n">rownum</span> <span class="o">&gt;</span> <span class="n">colnum</span><span class="p">:</span> <span class="c1"># below diagonal</span>
+                    <span class="n">offdiag_start</span> <span class="o">=</span> <span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">just_grid</span><span class="p">:</span>
+                        <span class="n">patches</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_2D</span><span class="p">(</span><span class="n">x_param</span><span class="p">,</span> <span class="n">y_param</span><span class="p">,</span> <span class="n">no_probs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                        <span class="c1">#patch_params = self.project_2D(x_param, y_param, no_probs=True)</span>
+                        <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">patches</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_2D</span><span class="p">(</span><span class="n">x_param</span><span class="p">,</span> <span class="n">y_param</span><span class="p">)</span>
+                        <span class="c1">#patch_params = self.project_2D(x_param, y_param)</span>
+                    <span class="n">checkpoint</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span><span class="o">-</span><span class="n">offdiag_start</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="c1">#print(&#39;project_2D took &#39; + str(checkpoint) + &#39; seconds&#39;)</span>
+                    <span class="k">for</span> <span class="n">patch</span> <span class="ow">in</span> <span class="n">patches</span><span class="p">:</span>
+                    <span class="c1">#for patch in patch_params:</span>
+                        <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">patch</span><span class="p">)</span>
+                        <span class="c1">#axes[rownum][colnum].add_patch(mpl.patches.Rectangle(*patch[&#39;args&#39;],**patch[&#39;kwargs&#39;]))</span>
+                    <span class="c1"># formatting</span>
+                    <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">plot_ranges</span><span class="p">[</span><span class="n">y_param</span><span class="o">.</span><span class="n">name</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="n">plot_ranges</span><span class="p">[</span><span class="n">y_param</span><span class="o">.</span><span class="n">name</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">y_param</span><span class="o">.</span><span class="n">spacing</span><span class="o">==</span><span class="s1">&#39;log&#39;</span><span class="p">:</span>
+                        <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">plot_true_vals</span><span class="p">:</span>
+                        <span class="n">true_x</span> <span class="o">=</span> <span class="p">[</span><span class="n">true_vals</span><span class="p">[</span><span class="n">x_param</span><span class="o">.</span><span class="n">name</span><span class="p">]]</span>
+                        <span class="n">true_y</span> <span class="o">=</span> <span class="p">[</span><span class="n">true_vals</span><span class="p">[</span><span class="n">y_param</span><span class="o">.</span><span class="n">name</span><span class="p">]]</span>
+                        <span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">]</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">true_x</span><span class="p">,</span><span class="n">true_y</span><span class="p">,</span><span class="mi">200</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="s2">&quot;None&quot;</span><span class="p">,</span><span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span><span class="n">linewidths</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">zorder</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+                    <span class="c1">#axes[rownum][colnum].grid(False)</span>
+                    <span class="n">offdiag_finish</span> <span class="o">=</span> <span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
+                    <span class="n">offdiag_time</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">offdiag_finish</span><span class="o">-</span><span class="n">offdiag_start</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="c1">#print(&#39;off-diagonal plot finished in &#39; + str(offdiag_time) + &#39; seconds&#39;)</span>
+
+                <span class="k">else</span><span class="p">:</span> <span class="c1"># above diagonal</span>
+                    <span class="n">fig</span><span class="o">.</span><span class="n">delaxes</span><span class="p">(</span><span class="n">axes</span><span class="p">[</span><span class="n">rownum</span><span class="p">][</span><span class="n">colnum</span><span class="p">])</span>
+
+        <span class="c1"># put the labels on the outside</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">)):</span>
+            <span class="n">xlabel</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> [</span><span class="si">%s</span><span class="s1">]&#39;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">display_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+            <span class="n">ylabel</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> [</span><span class="si">%s</span><span class="s1">]&#39;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">display_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+            <span class="n">axes</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">xlabel</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">i</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span> <span class="c1"># top one is actually a probability</span>
+                <span class="n">axes</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">ylabel</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="s1">&#39;fpath&#39;</span> <span class="ow">in</span> <span class="n">argv</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span></div></div>
+</pre></div>
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018, Rachel C Kurchin and Giuseppe Romano.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.6.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Technical Background &#8212; bayesim 0.9.1 documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-2.3.2/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Manual" href="manual.html" />
+    <link rel="prev" title="Why bayesim?" href="whybayesim.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+
+        <a class="brand" href="index.html">
+          bayesim</a>
+        <span class="navbar-text pull-left"><b></b></span>
+
+        <div class="nav-collapse">
+          <ul class="nav">
+            <li class="divider-vertical"></li>
+            
+                <li><a href="genindex.html">Index</a></li>
+                <li><a href="https://github.com/pv-lab/bayesim">Github</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="gettingstarted.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="whybayesim.html">Why bayesim?</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Technical Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manual.html">Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citingbayesim.html">Citing bayesim</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Technical Background</a><ul>
+<li><a class="reference internal" href="#bayes-theorem">Bayes’ Theorem</a></li>
+<li><a class="reference internal" href="#bayesian-inference-and-parameter-estimation">Bayesian Inference and Parameter Estimation</a><ul>
+<li><a class="reference internal" href="#many-hypotheses-in-multiple-dimensions">Many hypotheses, in multiple dimensions</a></li>
+<li><a class="reference internal" href="#iterative-bayesian-updates">Iterative Bayesian updates</a></li>
+<li><a class="reference internal" href="#where-does-the-likelihood-come-from-data-modeling">Where does the likelihood come from?!? Data modeling!</a></li>
+<li><a class="reference internal" href="#experimental-uncertainty">Experimental Uncertainty</a></li>
+<li><a class="reference internal" href="#model-uncertainty">Model Uncertainty</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#an-illustrative-example-kinematics">An illustrative example: Kinematics</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="whybayesim.html" title="Previous Chapter: Why bayesim?"><span class="icon-chevron-left visible-tablet"></span><span class="hidden-sm hidden-tablet">&laquo; Why bayesim?</span>
+    </a>
+  </li>
+  <li>
+    <a href="manual.html" title="Next Chapter: Manual"><span class="icon-chevron-right visible-tablet"></span><span class="hidden-sm hidden-tablet">Manual &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li>
+<div id="sourcelink">
+  <a href="_sources/bayesics.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="span12 content">
+      
+  <div class="section" id="technical-background">
+<h1>Technical Background<a class="headerlink" href="#technical-background" title="Permalink to this headline">¶</a></h1>
+<p>This page includes some references about Bayes’ Theorem and Bayesian inference and discusses the particulars of the implementation of these ideas within <code class="docutils literal notranslate"><span class="pre">bayesim</span></code>.</p>
+<div class="section" id="bayes-theorem">
+<h2>Bayes’ Theorem<a class="headerlink" href="#bayes-theorem" title="Permalink to this headline">¶</a></h2>
+<p>There are a <a class="reference external" href="https://brohrer.github.io/how_bayesian_inference_works.html">plethora</a> of <a class="reference external" href="https://brilliant.org/wiki/bayes-theorem/">great</a> <a class="reference external" href="https://betterexplained.com/articles/an-intuitive-and-short-explanation-of-bayes-theorem/">explanations</a> of Bayes’ Theorem out there already, so I won’t go through all the bayesics here but instead refer you to one of those linked above or any number of others you can find online or in a textbook.</p>
+<p>Assuming you understand Bayes’ Theorem to your own satisfaction at this point, let’s remind ourselves of some <strong>terminology</strong>.</p>
+<div class="math notranslate nohighlight" id="equation-bayesics-0">
+<span class="eqno">(1)<a class="headerlink" href="#equation-bayesics-0" title="Permalink to this equation">¶</a></span>\[\color{firebrick} {P(H|E)} =
+\frac{\color{darkorange} {P(H)}
+\color{darkmagenta} {P(E|H)}}
+{\color{teal} {P(E)}}\]</div>
+<p>The <span class="math notranslate nohighlight">\(\color{firebrick}{\mathbf{\text{posterior probability}}}\)</span> of our hypothesis <span class="math notranslate nohighlight">\(H\)</span> given observed evidence <span class="math notranslate nohighlight">\(E\)</span> is the result of a Bayesian update to the <span class="math notranslate nohighlight">\(\color{darkorange}{\mathbf{\text{prior}}}\)</span> estimate of the probability of <span class="math notranslate nohighlight">\(H\)</span> given the <span class="math notranslate nohighlight">\(\color{darkmagenta}{\mathbf{\text{likelihood}}}\)</span> of observing <span class="math notranslate nohighlight">\(E\)</span> in a world where <span class="math notranslate nohighlight">\(H\)</span> is true and the probability of observing our <span class="math notranslate nohighlight">\(\color{teal}{\mathbf{\text{evidence}}}\)</span> in the first place.</p>
+</div>
+<div class="section" id="bayesian-inference-and-parameter-estimation">
+<h2>Bayesian Inference and Parameter Estimation<a class="headerlink" href="#bayesian-inference-and-parameter-estimation" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>I haven’t found an online explanation of this material at a not-excessively-mathy level (I firmly believe that you don’t need a lot of knowledge of mathematical terminology to understand this; it can really be done in a very visual way) so I wrote my own. If you know of another, please <a class="reference external" href="mailto:rkurchin&#37;&#52;&#48;mit&#46;edu">send it to me</a> and I’d be happy to link to it here!</p>
+<p class="last"><strong>Update!!</strong> I found some nice explanations/examples in <a class="reference external" href="https://github.com/jakevdp/BayesianAstronomy">this repo</a>! Check them out for some more material in addition to what I’ve included here.</p>
+</div>
+<p>Most of the examples used to explain Bayes’ Theorem have two hypotheses to disginguish between (e.g. “is it raining?”: yes or no). However, to use Bayes’ Theorem for <em>parameter estimation</em>, which is the problem of interest here, we need to generalize to many more than two hypotheses, and those hypotheses may be about the values of multiple different parameters. In addition, we would like to incorporate many pieces of evidence, necessitating many iterations of the Bayesian calculation. These and other factors can make it confusing to conceptualize how to generalize the types of computations we do to estimate the probability of the answer to a yes-or-no question or a dice roll to a problem statement relevant to a more general scientific/modeling inquiry. I will walk through these factors here.</p>
+<div class="section" id="many-hypotheses-in-multiple-dimensions">
+<h3>Many hypotheses, in multiple dimensions<a class="headerlink" href="#many-hypotheses-in-multiple-dimensions" title="Permalink to this headline">¶</a></h3>
+<p>The first step is let our hypotheses <span class="math notranslate nohighlight">\(H\)</span> range over more than two values. That is, rather than having <span class="math notranslate nohighlight">\(H_1\)</span> = “yes, it is raining” and <span class="math notranslate nohighlight">\(H_2\)</span> = “no, it is not raining”, we would instead have something like <span class="math notranslate nohighlight">\(H_1\)</span> = “the value of parameter <span class="math notranslate nohighlight">\(A\)</span> is <span class="math notranslate nohighlight">\(a_1\)</span>“, <span class="math notranslate nohighlight">\(H_2\)</span> = “the value of parameter <span class="math notranslate nohighlight">\(A\)</span> is <span class="math notranslate nohighlight">\(a_2\)</span>“, etc. for as many <span class="math notranslate nohighlight">\(a_n\)</span> as we wanted to consider. While we could then in principle enumerate many different statements of Bayes’ Theorem of the form</p>
+<div class="math notranslate nohighlight" id="equation-bayesics-1">
+<span class="eqno">(2)<a class="headerlink" href="#equation-bayesics-1" title="Permalink to this equation">¶</a></span>\[\begin{split}\begin{eqnarray}
+P(A=a_1|E) &amp;=&amp; \frac{P(A=a_1)P(E|A=a_1)}{P(E)} \\
+P(A=a_2|E) &amp;=&amp; \frac{P(A=a_2)P(E|A=a_2)}{P(E)} \\
+&amp;...&amp; \\
+P(A=a_n|E) &amp;=&amp; \frac{P(A=a_n)P(E|A=A_n)}{P(E)}
+\end{eqnarray},\end{split}\]</div>
+<p>this is quite cumbersome and so instead we will write</p>
+<div class="math notranslate nohighlight" id="equation-bayesics-2">
+<span class="eqno">(3)<a class="headerlink" href="#equation-bayesics-2" title="Permalink to this equation">¶</a></span>\[P(A|E) = \frac{P(A)P(E|A)}{P(E)}\]</div>
+<p>with the understanding that this probability is not a single value but rather a function over all possible values of <span class="math notranslate nohighlight">\(A\)</span>. This also allows the number of equations we have to write not to explode when we want to add another fitting parameter, and instead the probability function just to be defined over an additional dimension:</p>
+<div class="math notranslate nohighlight" id="equation-bayesics-3">
+<span class="eqno">(4)<a class="headerlink" href="#equation-bayesics-3" title="Permalink to this equation">¶</a></span>\[P(A,B|E) = \frac{P(A,B)P(E|A,B)}{P(E)}\]</div>
+</div>
+<div class="section" id="iterative-bayesian-updates">
+<h3>Iterative Bayesian updates<a class="headerlink" href="#iterative-bayesian-updates" title="Permalink to this headline">¶</a></h3>
+<p>The next step is to reframe Bayes’ Theorem as an explicitly iterative procedure. Imagine we’ve incorporated one piece of evidence <span class="math notranslate nohighlight">\(E_1\)</span>, resulting in a posterior probability <span class="math notranslate nohighlight">\(P(H|E_1)\)</span>. To update our posterior again given further observation <span class="math notranslate nohighlight">\(E_2\)</span>, we simply let this <em>posterior</em> become our new <em>prior</em>:</p>
+<div class="math notranslate nohighlight" id="equation-bayesics-4">
+<span class="eqno">(5)<a class="headerlink" href="#equation-bayesics-4" title="Permalink to this equation">¶</a></span>\[P(H|\{E_1,E_2\}) = \frac{P(H|E_1)P(E_2|H)}{P(E_2)}\]</div>
+<p>Hopefully now it’s easy to see that for <em>n</em> pieces of evidence, we can say that</p>
+<div class="math notranslate nohighlight" id="equation-bayesics-5">
+<span class="eqno">(6)<a class="headerlink" href="#equation-bayesics-5" title="Permalink to this equation">¶</a></span>\[P(H|\{E_1,E_2,...E_n\}) = \frac{P(H|\{E_1,E_2...E_{n-1}\})P(E_n|H)}{P(E_n)}\]</div>
+</div>
+<div class="section" id="where-does-the-likelihood-come-from-data-modeling">
+<h3>Where does the likelihood come from?!? Data modeling!<a class="headerlink" href="#where-does-the-likelihood-come-from-data-modeling" title="Permalink to this headline">¶</a></h3>
+<p>At this point, it would be natural to say “Sure, that math all makes sense, but how do I actually <em>know</em> what that likelihood <span class="math notranslate nohighlight">\(P(E|H)\)</span> <em>is?!?</em>”</p>
+<p>This is where having a <strong>model</strong> of our experimental observations comes in. This model could take many forms - it might be a simple analytical equation, or it might be a sophisticated numerical solver. The key traits are that it can accurately predict the outcome of a measurement on your system as as function of all relevant experimental conditions as well as fitting parameters of interest.</p>
+<p>More specifically, suppose your measurement yields some output variable <span class="math notranslate nohighlight">\(O\)</span> as a function of various experimental conditions {<span class="math notranslate nohighlight">\(C\)</span>}. Then your evidence looks like</p>
+<div class="math notranslate nohighlight" id="equation-bayesics-6">
+<span class="eqno">(7)<a class="headerlink" href="#equation-bayesics-6" title="Permalink to this equation">¶</a></span>\[O(C_1, C_2,...C_n)\]</div>
+<p>Suppose also that you have a set of model parameters {<span class="math notranslate nohighlight">\(P\)</span>} that you wish to know the values of. That means that your posterior distribution after <span class="math notranslate nohighlight">\(m\)</span> observations will look something like</p>
+<div class="math notranslate nohighlight" id="equation-bayesics-7">
+<span class="eqno">(8)<a class="headerlink" href="#equation-bayesics-7" title="Permalink to this equation">¶</a></span>\[P(P_1, P_2,...P_l|O_1,O_2...O_m)\]</div>
+<p>where the hypotheses are sets of values of the parameters {<span class="math notranslate nohighlight">\(P\)</span>}, i.e., points in the fitting parameter space. Then your <strong>model</strong> must take the form</p>
+<div class="math notranslate nohighlight" id="equation-bayesics-8">
+<span class="eqno">(9)<a class="headerlink" href="#equation-bayesics-8" title="Permalink to this equation">¶</a></span>\[M(\{P_1, P_2,...P_l\},\{C_1, C_2,...C_n\}) = O\]</div>
+<p>Given an observation <span class="math notranslate nohighlight">\(O_m\)</span> at conditions {<span class="math notranslate nohighlight">\(C_1^m,C_2^m,...C_n^m\)</span>} (where the <span class="math notranslate nohighlight">\(m\)</span> superscript indicates specific values of the conditions rather than their full ranges), we can compute the likelihood over all parameters {<span class="math notranslate nohighlight">\(P\)</span>} by evaluating our model for these conditions {<span class="math notranslate nohighlight">\(C^m\)</span>} and comparing the simulated outputs {<span class="math notranslate nohighlight">\(M(\{P\},\{C^m\})\)</span>} to the measured output <span class="math notranslate nohighlight">\(O_m\)</span>. But then how do we know what probabilities to assign as a function of how much the measured and simulated outputs differ? Glad you asked…</p>
+</div>
+<div class="section" id="experimental-uncertainty">
+<h3>Experimental Uncertainty<a class="headerlink" href="#experimental-uncertainty" title="Permalink to this headline">¶</a></h3>
+<p>Our experimental measurement <span class="math notranslate nohighlight">\(O_m\)</span> will have some associated uncertainty <span class="math notranslate nohighlight">\(\Delta O\)</span>, generally a known property of our equipment/measurement technique. Quantifying this uncertainty is key to understanding how to calculate likelihoods. Specifically, we need to introduce an <strong>error model</strong>. We’ll use a Gaussian distribution, a very common pattern for experimental errors in all kinds of measurements:</p>
+<div class="math notranslate nohighlight" id="equation-bayesics-9">
+<span class="eqno">(10)<a class="headerlink" href="#equation-bayesics-9" title="Permalink to this equation">¶</a></span>\[P(x) = \frac{1}{\sqrt{2\pi\sigma^2}}e^{-\frac{(x-\mu)^2}{2\sigma^2}}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\mu\)</span> is the <strong>mean</strong>, <span class="math notranslate nohighlight">\(\sigma\)</span> is the <strong>standard deviation</strong>, and the term in front of the exponential is just a normalizing constant (to make sure that the probability distribution integrates to 1). The distribution looks like this:</p>
+<div class="figure align-center" id="id2">
+<a class="reference internal image-reference" href="_images/720px-Normal_Distribution_PDF.png"><img alt="_images/720px-Normal_Distribution_PDF.png" src="_images/720px-Normal_Distribution_PDF.png" style="width: 432.0px; height: 276.0px;" /></a>
+<p class="caption"><span class="caption-text">You can see the impact of the two parameters - a larger <span class="math notranslate nohighlight">\(\sigma\)</span> value makes the distribution wider, while <span class="math notranslate nohighlight">\(\mu\)</span> simply shifts the center. (Image from <a class="reference external" href="https://en.wikipedia.org/wiki/Normal_distribution">Wikipedia</a>.)</span></p>
+</div>
+<p>What this means for our example is that our measurement of some value <span class="math notranslate nohighlight">\(O_m^0\)</span> for our output parameter <span class="math notranslate nohighlight">\(O\)</span> is converted to a distribution of possible “true” values for <span class="math notranslate nohighlight">\(O_m\)</span>:</p>
+<div class="math notranslate nohighlight" id="equation-bayesics-10">
+<span class="eqno">(11)<a class="headerlink" href="#equation-bayesics-10" title="Permalink to this equation">¶</a></span>\[P(O_m) \propto \exp\left({-\frac{(O_m-O_m^0)^2}{2*\Delta O^2}}\right)\]</div>
+<p>(I’m leaving off the normalization constant for convenience.)</p>
+</div>
+<div class="section" id="model-uncertainty">
+<span id="id1"></span><h3>Model Uncertainty<a class="headerlink" href="#model-uncertainty" title="Permalink to this headline">¶</a></h3>
+<p>Of course, when our model function isn’t a simple analytical equation but rather a numerical solver of some sort, we can’t evaluate it on a continuous parameter space but we instead have to discretize the space into a grid and choose points on that grid at which to simulate. This introduces a so-called “model uncertainty” proportional to the magnitude of the variation in the model output as one moves around the fitting parameter space. This model uncertainty is calculated in <code class="docutils literal notranslate"><span class="pre">bayesim</span></code> at each experimental condition for each point in the parameter space as the largest change in model output from that point to any of the immediately adjacent points.</p>
+<p>Then, when we compute likelihoods, we use the sum of these two uncertainties as the standard deviation of our Gaussian.</p>
+<p>Especially if the parameter space grid is coarse, incorporating this model uncertainty is critical - if the variation in output variable from one grid point to another is significantly larger than the experimental uncertainty but this uncertainty is used as the standard deviation, it is possible that likelihood could be computed as zero everywhere in the parameter space, just because the measured output corresponded to parameters between several of the chosen sample points. And that wouldn’t be very good.</p>
+</div>
+</div>
+<div class="section" id="an-illustrative-example-kinematics">
+<h2>An illustrative example: Kinematics<a class="headerlink" href="#an-illustrative-example-kinematics" title="Permalink to this headline">¶</a></h2>
+<p>This probably all seems a bit abstract at this point, so illustrate how we do this in practice, let’s use a simple example. Suppose we want to estimate the value of <span class="math notranslate nohighlight">\(g\)</span>, the acceleration due to gravity near Earth’s surface, and <span class="math notranslate nohighlight">\(v_0\)</span>, the initial velocity of a vertically launched projectile (e.g. a ball tossed straight up), based on some measured data about the trajectory of the ball. We know from basic kinematics that the height of the ball as a function of time should obey (assuming that the projectile’s initial height is defined as 0)</p>
+<div class="math notranslate nohighlight" id="equation-bayesics-11">
+<span class="eqno">(12)<a class="headerlink" href="#equation-bayesics-11" title="Permalink to this equation">¶</a></span>\[y(t) = v_0t - \frac 12 gt^2\]</div>
+<p>This function represents our <strong>model</strong> of the data we will measure and we can equivalently write</p>
+<div class="math notranslate nohighlight" id="equation-bayesics-12">
+<span class="eqno">(13)<a class="headerlink" href="#equation-bayesics-12" title="Permalink to this equation">¶</a></span>\[M(v_0, g; t) = v_0t - \frac 12 gt^2\]</div>
+<p>where we’ve now explicitly delineated our parameters <span class="math notranslate nohighlight">\(g\)</span> and <span class="math notranslate nohighlight">\(v_0\)</span> and our measurement condition <span class="math notranslate nohighlight">\(t\)</span>.</p>
+<p>Now let’s suppose we make a measurement after 2 seconds of flight and find that <span class="math notranslate nohighlight">\(y(2)=3\)</span>, with an uncertainty in the measurement of 0.2. Recalling our Gaussian error model from above, we can write</p>
+<div class="math notranslate nohighlight" id="equation-bayesics-13">
+<span class="eqno">(14)<a class="headerlink" href="#equation-bayesics-13" title="Permalink to this equation">¶</a></span>\[P(y(2)) \propto \exp\left({-\frac{(y(2)-3)^2}{2*0.2^2}}\right)\]</div>
+<p>(Assume model uncertainty is negligible.) But what we <em>really</em> want is a probability distribution over our parameters, not over the measurement value itself. Fortunately, our model function lets us do just that! We can translate our distribution over possible measured values into one over possible parameter values using the model function:</p>
+<div class="math notranslate nohighlight" id="equation-condprob">
+<span class="eqno">(15)<a class="headerlink" href="#equation-condprob" title="Permalink to this equation">¶</a></span>\[\begin{split}\begin{eqnarray}
+P(v_0, g | y(2)=3 \pm 0.2) &amp; \propto &amp; \exp\left({-\frac{(M(v_0,g;2)-3)^2}{2*0.2^2}}\right) \\
+&amp; \propto &amp; \exp\left({-\frac{(2v_0 - 2g - 3)^2}{0.08}}\right)
+\end{eqnarray}\end{split}\]</div>
+<p>Now we can visualize what that distribution looks like in “<span class="math notranslate nohighlight">\(v_0\)</span>-<span class="math notranslate nohighlight">\(g\)</span>” space:</p>
+<div class="figure align-center" id="id3">
+<img alt="_images/probs_1.png" src="_images/probs_1.png" />
+<p class="caption"><span class="caption-text">On the left, the probability distribution over a wide range of possible values. On the right, zoomed in to near the true value of <span class="math notranslate nohighlight">\(g\)</span> to show Gaussian spread.</span></p>
+</div>
+<p>Another way we might want to visualize would be in the space of what the actual trajectories look like:</p>
+<div class="figure align-center" id="id4">
+<img alt="_images/trajs.png" src="_images/trajs.png" />
+<p class="caption"><span class="caption-text">On the left, <span class="math notranslate nohighlight">\(y(t)\)</span> trajectories from <span class="math notranslate nohighlight">\(t=0\)</span> to <span class="math notranslate nohighlight">\(t=3\)</span>. On the right, zooming in on the region indicated to see spread around <cite>y(2)=3</cite>.</span></p>
+</div>
+<p>So we can see that what the inference step did was essentially “pin” the trajectories to go through (or close to) the measured point at (<em>t</em>,*y*)=(2.0,3.0).</p>
+<p>Now let’s suppose we take another measurement, a short time later: <em>y(2.3)=0.1</em>, but with a larger uncertainty, this time of 0.5. Now we return to Bayes’ Theorem - our prior distribution will be the conditional distribution from Equation <a class="reference internal" href="#equation-condprob">(15)</a> above, and the likelihood will be a new conditional distribution generated in exactly the same way but for this new data point. What does the posterior look like?</p>
+<div class="figure align-center" id="id5">
+<img alt="_images/probs_2.png" src="_images/probs_2.png" />
+<p class="caption"><span class="caption-text">(Note that the axis limits are smaller than above)</span></p>
+</div>
+<p>As we would expect, we’re starting to zero in on a smaller region. And how about the trajectories?</p>
+<div class="figure align-center" id="id6">
+<img alt="_images/trajs_2.png" src="_images/trajs_2.png" />
+<p class="caption"><span class="caption-text">Newly refined set of trajectories shown in red, overlaid on (paler) larger set from the previous step.</span></p>
+</div>
+<p>As expected, we’ve further winnowed down the possible trajectories. If we continued this process for more and more measurements, eventually zeroing in on the correct values with greater and greater precision.</p>
+<p>To see this example as implemented in <code class="docutils literal notranslate"><span class="pre">bayesim</span></code>, check out the <a class="reference internal" href="examples.html"><span class="doc">Examples</span></a> page!</p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2018, Rachel C Kurchin and Giuseppe Romano.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.6.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
