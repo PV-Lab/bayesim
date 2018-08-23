@@ -48,8 +48,7 @@ Target journal: Computer Physics Communications
 
   In this work, we introduce \texttt{bayesim}, a Python-based code that utilizes adaptive grid sampling to perform Bayesian parameter estimation. We discuss the structure of the code, its implementation, and provide several examples of its usage. While the authors' expertise is in the realm of semiconductor physics and thus the examples herein are drawn from that space, we also discuss the general characteristics of a problem amenable to this approach so that researchers from other fields might adopt it as well.
 
-\section*{Model}
-  \todo[inline]{Should this section title actually just be ``Technical Background`` as well perhaps?}
+\section*{Technical Background}
 
  Bayes' Theorem is a relationship between conditional probabilities. It states
 
@@ -103,10 +102,21 @@ Target journal: Computer Physics Communications
 
 \section*{Application Examples}
   \subsection{Ideal Diode Model}
-    \begin{itemize}
-      \item validation example - ``observed'' data is just generated using the model and we show we can recover the correct input parameters
-      \item figure 3 showing PMF
-    \end{itemize}
+    As a first example, we fit a simple two-parameter model of solar cell current density $J$ (as a function of voltage $V$ and temperature $T$) known as the ideal diode model:
+
+    \begin{equation}
+      J(V,T) = J_L+J_0\left(\exp{\frac{qV}{nkT}}-1\right)
+    \end{equation}
+
+    where $k=8.61733\times 10^{-5}$ eV/K is Boltzmann's constant, by convention $J_L$ (the light current) is negative and $J_0$ (the saturation current) is positive but strongly dependent on temperature, a dependence we can approximate as:
+
+    \begin{equation}
+      J_0 \approx B'T^{3/n}\exp{\left(\frac{-E_{g0}}{nkT}\right)}
+    \end{equation}
+
+    where $E_{g0}$ is the zero-temperature bandgap of the material. For this example, we will set this to 1.2 eV and $J_L$ to -0.03 mA/cm$^2$. There are thus two parameters to be fit, the coefficient $B'$ (which can range over a wide variety of values) and the ideality factor $n$ (which is by definition between 1 and 2).
+
+    As validation, we generate the ``observations" using the same model we'll use for fitting, with parameter values of $n=1.36$ and $B'=258$, and four temperature values of 150, 200, 250, and 300 K.
 
   \subsection{SnS Solar Cell}
     \begin{itemize}
