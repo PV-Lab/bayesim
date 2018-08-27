@@ -11,6 +11,7 @@ import os
 import sys
 from joblib import Parallel, delayed, cpu_count
 import time
+import platform
 
 class Model(object):
     """
@@ -800,8 +801,14 @@ class Model(object):
 
         deltas = np.zeros(len(self.model_data))
 
-        # for every set of conditions...
-        deltas_list = Parallel(n_jobs=cpu_count())(delayed(calc_deltas)(grp, self.model_data_ecgrps.groups[grp], param_lengths, self.model_data, self.fit_param_names(), self.probs, self.output_var) for grp in self.model_data_ecgrps.groups)
+        if platform.system()=='Windows':
+            # need to do it in serial
+            deltas_list = []
+            for grp in self.model_data_ecgrps.groups:
+                deltas_list.append(calc_deltas(grp, self.model_data_ecgrps.groups[grp], param_lengths, self.model_data, self.fit_param_names(), self.probs, self.output_var))
+        else:
+            # parallalize!
+            deltas_list = Parallel(n_jobs=cpu_count())(delayed(calc_deltas)(grp, self.model_data_ecgrps.groups[grp], param_lengths, self.model_data, self.fit_param_names(), self.probs, self.output_var) for grp in self.model_data_ecgrps.groups)
 
         for entry in deltas_list:
             inds = self.model_data_ecgrps.groups[entry[0]]
