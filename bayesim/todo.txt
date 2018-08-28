@@ -19,6 +19,8 @@ TO DO LIST FOR BAYESIM
 * check 2.7 vs. 3.6 compatibility
 
 
+~ entropy-based thresholding instead of th_pm and th_pv
+
 ~ why is tol_digits ever getting set on logarithmic parameters (e.g. Bp in diode)
 
 ~ change model.attach_params to call attach_ecs and attach_fit_params

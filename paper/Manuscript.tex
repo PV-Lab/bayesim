@@ -83,22 +83,27 @@ Target journal: Computer Physics Communications
 \section*{Software Architecture and Interface}
 
   \begin{figure}
-    \includegraphics[width=0.7\columnwidth]{structure.png}
-    \caption{\texttt{bayesim} software structure, indicating class definitions, internal and external dependencies, and interfaces.}
+    \includegraphics[width=0.55\columnwidth]{structure.png}
+    \includegraphics[width=0.4\columnwidth]{flowchart.png}
+    \caption{Left: \texttt{bayesim} software structure, indicating class definitions, internal and external dependencies, and interfaces. Right: Flowchart of use of \texttt{bayesim}. (I will update these to make a more sensible figure with less white space, and also add subdivision into the loop)}
     \label{structure}
   \end{figure}
 
-  The structure of \texttt{bayeim} is shown in ~\autoref{structure}. Detailed and up-to-date documentation of classes, functions, and example applications is maintained online.~\cite{docs}
+  The basic structure of \texttt{bayesim} is shown in ~\autoref{structure}a. Detailed and up-to-date documentation of classes, functions, and example applications is maintained online.~\cite{docs} The top-level object with which users interact is implemented in the \texttt{Model} class. The \texttt{params} module defines classes to store information about the various types of parameters (fitting parameters, experimental conditions, and measured output) while the \texttt{Pmf} class stores the probability distribution and implements the manipulations required for Bayesian updates.
 
-  \subsection{Structure}
+  ~\autoref{structure}b is a flowchart of using the code, with the main inference loop surrounded by a dotted line. One first needs to provide the observed and modeled data. Observed data is accepted in HDF5 format, while modeled data can be an HDF5 file (in which case \texttt{bayesimn} will determine the fitting parameter space grid from this file), or if the fitting parameter space has been predefined, one can also attach a Python function that computes the model data (e.g. an interface to a numerical model). Observed data should have associated experimental uncertainties, or the user can indicate a fixed value of uncertainty to use for all observations upon attaching the data.
 
-    The top-level object with which users interact is implemented in the \texttt{Model} class. The \texttt{params} module defines classes to store information about the various types of parameters (fitting parameters, experimental conditions, and measured output) while the \texttt{Pmf} class stores the probability distribution and implements the manipulations required for Bayesian updates.
+  \todo{do we need a figure for this?} Once modeled data is attached, model uncertainty can be computed. At each point in the space of experimental conditions, a matrix of the simulated output variable as a function of the fitting parameters is constructed and at each point in this matrix, the largest difference along any index is computed. This is set as the model uncertainty for this set of experimental conditions at this point in parameter space.
 
-  \subsection{Interfaces}
-    The most flexible way to interact with \texttt{bayesim} is via Python scripting or through literate programming in a Jupyter notebook. There is also a command line interface (CLI) for users less familiar with coding in Python.
+  At this point, the inference loop can proceed. We start with a bounded prior distribution over the entire parameter space grid and the observed data in a randomized order. We feed in one piece of evidence (i.e. one observed data point) and compute the likelihood using a Gaussian. The standard deviation for each point in the parameter space is the sum of the experimental uncertainy of that observation and the model uncertainty at that point. The posterior distribution is computed as a Bayesian update on the prior. Next, we check whether the threshold condition for concentration of probability (defined as at least some percentage (by default 90\%) of the probability mass residing in at most some percentage (by default 5\%) of the parameter space volume. If this threshold is satisfied, the current posterior is stored and the prior reset to a uniform distribution. If not, the next observation is fed in. This procedure is repeated until the requisite number (by default, 80\%) of observed data points has been used, with the final posterior being the average of every stored posterior. The posterior is calculated in this way (rather than a Bayesian multiplication through every single observed point) to avoid numerical errors that can arise if very small numbers are multiplied together.
 
-  \subsection{Dependencies}
-    \texttt{bayesim} relies on a variety of external open-source packages. These include \texttt{numpy}~\cite{numpy} and \texttt{scipy}~\cite{scipy} for a variety of mathematical functions and vectorized implementations, \texttt{joblib}~\cite{joblib} for simple parallelism, \texttt{deepdish}~\cite{deepdish} for saving and loading HDF5 files, \texttt{pandas}~\cite{pandas} for data manipulation, and \texttt{matplotlib}~\cite{mpl} for visualization.
+  Now the grid can be subdivided. The user defines a threshold probability (by default 0.001) for a grid box to possess, and all boxes with greater than this probability, as well as all their immediate neighbors, are divided in two along every parameter. \texttt{bayesim} saves a list of the new model calculations that need to be done for inference to proceed again, and the user provides these, again either as a callable or an HDF5 file. For the next round of inference, the user can also define a ``bias" parameter from 0 to 0.5 (default 0) that will mix in some fraction of the posterior from the previous step with the uniform distribution over this new grid.
+
+  This overall procedure can be repeated as many times as the user wishes to get a more precise fit -- eventually, the concentration of probability becomes limited by experimental rather than model uncertainty. There is also an option to define a minimum width for a box along any parameter direction, and if a box is already less than this width, \texttt{bayesim} will not subdivide in that direction.
+
+  The most flexible way to interact with \texttt{bayesim} is via Python scripting or through literate programming in a Jupyter notebook. There is also a command line interface (CLI) for users less familiar with coding in Python.
+
+  \texttt{bayesim} relies on a variety of external open-source packages. These include \texttt{numpy}~\cite{numpy} and \texttt{scipy}~\cite{scipy} for a variety of mathematical functions and vectorized implementations, \texttt{joblib}~\cite{joblib} for simple parallelism, \texttt{deepdish}~\cite{deepdish} for saving and loading HDF5 files, \texttt{pandas}~\cite{pandas} for data manipulation, and \texttt{matplotlib}~\cite{mpl} for visualization.
 
 \section*{Application Examples}
   \subsection{Ideal Diode Model}
@@ -106,6 +111,7 @@ Target journal: Computer Physics Communications
 
     \begin{equation}
       J(V,T) = J_L+J_0\left(\exp{\frac{qV}{nkT}}-1\right)
+      \label{ID_eqn}
     \end{equation}
 
     where $k=8.61733\times 10^{-5}$ eV/K is Boltzmann's constant, by convention $J_L$ (the light current) is negative and $J_0$ (the saturation current) is positive but strongly dependent on temperature, a dependence we can approximate as:
@@ -116,7 +122,22 @@ Target journal: Computer Physics Communications
 
     where $E_{g0}$ is the zero-temperature bandgap of the material. For this example, we will set this to 1.2 eV and $J_L$ to -0.03 mA/cm$^2$. There are thus two parameters to be fit, the coefficient $B'$ (which can range over a wide variety of values) and the ideality factor $n$ (which is by definition between 1 and 2).
 
-    As validation, we generate the ``observations" using the same model we'll use for fitting, with parameter values of $n=1.36$ and $B'=258$, and four temperature values of 150, 200, 250, and 300 K.
+    \begin{figure}
+      \includegraphics[width=0.45\columnwidth]{diode_obs.png}
+      \includegraphics[width=0.45\columnwidth]{diode_obs_zoom.png}
+      \includegraphics[width=0.3\columnwidth]{diode_pmf_1.png}
+      \includegraphics[width=0.65\columnwidth]{diode_comp_1.png}
+      \includegraphics[width=0.3\columnwidth]{diode_pmf_2.png}
+      \includegraphics[width=0.65\columnwidth]{diode_comp_2.png}
+      \includegraphics[width=0.3\columnwidth]{diode_pmf_3.png}
+      \includegraphics[width=0.65\columnwidth]{diode_comp_3.png}
+      \caption{a) ``Observations" generated by ideal diode model, Equation~\ref{ID_eqn}, b) Observed data saved by \texttt{bayesim}, with zoom to show where neglected data points were, Next three rows: PMF's, comparisons of highest three probability model points with observed data, and absolute errors thereof, on the initial grid, and after one and two subdivisions, respectively. ``True'' values for the parameters indicated on the PMF in red. (this figure is a giant data dump right now; I'm figuring out how to make it less terrifyingly overwhelming - like possibly overlaying all three PMF's onto one plot in different colors)}
+      \label{ID_data}
+    \end{figure}
+
+    As validation, we generate the ``observations" using the same model we'll use for fitting, with parameter values of $n=1.36$ and $B'=258$, and four temperature values of 150, 200, 250, and 300 K. These ``observations" are shown in ~\autoref{ID_data}a. When \texttt{bayesim} imports observed data, it can optionally discard data points that are very close by to each other in order to reduce computational load on modeling less informative points - this capacity is demonsrated in ~\autoref{ID_data}b.
+
+    The next three rows of ~\autoref{ID_data} show the posterior distributions, comparison of JV data between observations and the three highest-probability model points, and absolute errors thereof, on the initial grid and after one and two rounds of subdivision. Note that the ranges on the parameter values get narrower as does the scale of absolute errors.
 
   \subsection{SnS Solar Cell}
     \begin{itemize}

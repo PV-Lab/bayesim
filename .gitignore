@@ -126,6 +126,7 @@ paper/*.out
 paper/*.log
 paper/*.synctex.gz
 paper/ManuscriptNotes.bib
+paper/*.pptx
 
 .DS_Store
 */.DS_Store
