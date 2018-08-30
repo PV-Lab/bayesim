@@ -107,7 +107,18 @@
 
 <div class="container">
   <div class="row">
-    <div class="span12 content">
+      <div class="span3">
+        <div id="sidebar" class="bs-sidenav well" data-spy="affix">
+<form action="../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+        </div>
+      </div>
+    <div class="span9 content">
       
   <h1>Source code for bayesim.model</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">bayesim.pmf</span> <span class="k">import</span> <span class="n">Pmf</span>
@@ -123,6 +134,7 @@
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">from</span> <span class="nn">joblib</span> <span class="k">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span><span class="p">,</span> <span class="n">cpu_count</span>
 <span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">platform</span>
 
 <div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.model.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -912,8 +924,14 @@
 
         <span class="n">deltas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="p">))</span>
 
-        <span class="c1"># for every set of conditions...</span>
-        <span class="n">deltas_list</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">cpu_count</span><span class="p">())(</span><span class="n">delayed</span><span class="p">(</span><span class="n">calc_deltas</span><span class="p">)(</span><span class="n">grp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="n">grp</span><span class="p">],</span> <span class="n">param_lengths</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_param_names</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_var</span><span class="p">)</span> <span class="k">for</span> <span class="n">grp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span><span class="o">==</span><span class="s1">&#39;Windows&#39;</span><span class="p">:</span>
+            <span class="c1"># need to do it in serial</span>
+            <span class="n">deltas_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">grp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>
+                <span class="n">deltas_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc_deltas</span><span class="p">(</span><span class="n">grp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="n">grp</span><span class="p">],</span> <span class="n">param_lengths</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_param_names</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_var</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># parallalize!</span>
+            <span class="n">deltas_list</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">cpu_count</span><span class="p">())(</span><span class="n">delayed</span><span class="p">(</span><span class="n">calc_deltas</span><span class="p">)(</span><span class="n">grp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="n">grp</span><span class="p">],</span> <span class="n">param_lengths</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_param_names</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_var</span><span class="p">)</span> <span class="k">for</span> <span class="n">grp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">deltas_list</span><span class="p">:</span>
             <span class="n">inds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="n">entry</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
@@ -1088,7 +1106,7 @@
     </p>
     <p>
         &copy; Copyright 2018, Rachel C Kurchin and Giuseppe Romano.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.6.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.7.<br/>
     </p>
   </div>
 </footer>
