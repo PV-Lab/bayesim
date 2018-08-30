@@ -23,11 +23,11 @@ TO DO LIST FOR BAYESIM
 
 ~ why is tol_digits ever getting set on logarithmic parameters (e.g. Bp in diode)
 
+~ add calc_errors that takes a point in PMF (by index? as a dict?) and calculates average absolute and relative errors between model and observations for those parameters
+
 ~ change model.attach_params to call attach_ecs and attach_fit_params
 
 ~ either move true_vals star to x-axis or use a vertical line (and add legend for them)
-
-~ if parallelizing anything else, move external functions to utils
 
 ~ include all options in argparser for command line
 
@@ -54,6 +54,8 @@ TO DO LIST FOR BAYESIM
 ~ play with code profiling to speed up slow steps (e.g. calc_model_gradients)
 
 
+- automate creation of composite image of PMF and errors through subdivision steps
+
 - GUI!
 
 - mpi4py?
@@ -62,7 +64,7 @@ TO DO LIST FOR BAYESIM
 
 - animations
 
-- hierarchical indexing to save space rather than everything written out in every row
+- hierarchical indexing to save space rather than everything written out in every row?
 
 - alternative error models (e.g. lognormal as well as normal)
 
