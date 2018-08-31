@@ -489,6 +489,7 @@ class Model(object):
             num_ecs (`int`): number of EC values to plot, defaults to 1 (ignored if ecs is provided)
             num_param_pts (`int`): number of the most probable parameter space points to plot (defaults to 1)
             ec_x_var (`str`): one of self.ec_names, will overwrite if this was provided before in attach_observations, required if it wasn't. If ec was provided, this will supercede that
+            return_avg_err (bool): whether or not to return average (absolute) error for highest probability model over all EC's plotted (defaults to False)
             fpath (`str`): optional, path to save image to if desired
         """
         if 'ec_x_var' in argv.keys():
@@ -497,6 +498,9 @@ class Model(object):
         if self.params.ec_x_name==None:
             print('You have not provided an x-variable from your experimental conditions against which to plot. Choosing the first one in the list, %s.\n'%(self.ec_names()[0]))
             self.params.set_ec_x(self.ec_names()[0])
+
+        return_avg_err = argv.get('return_avg_err', False)
+        all_errs = []
 
         other_ecs = [c for c in self.params.ecs if not c.name==self.params.ec_x_name]
         #print(self.params.ec_x_name, [c.name for c in other_ecs])
@@ -567,6 +571,9 @@ class Model(object):
                         model_data =  model_data[abs(model_data[c.name]-ecs_here[c.name])<=10.**(-1.*c.tol_digits)]
                 model_data.sort_values(by=[self.params.ec_x_name])
                 errors = np.subtract(model_data[self.output_var], obs_data[self.output_var])
+                if c_ind==1: #take errors from highest probability
+                    all_errs.extend([abs(e) for e in errors])
+
                 axs[i,0].plot(model_data[self.params.ec_x_name], model_data[self.output_var], color=color)
                 axs[i,1].plot(model_data[self.params.ec_x_name], errors, color=color)
                 leg_label = 'modeled: '
@@ -603,6 +610,9 @@ class Model(object):
         plt.tight_layout()
         if 'fpath' in argv.keys():
             plt.savefig(argv['fpath'])
+
+        if return_avg_err:
+            return np.mean(all_errs)
 
     def run(self, **argv):
         """

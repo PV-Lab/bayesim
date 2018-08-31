@@ -584,10 +584,15 @@ class Pmf(object):
             just_grid (`bool`): whether to show only the grid (i.e. visualize subdivisions) or the whole PMF (defaults to False)
             fpath (`str`): optional, path to save image to
             true_vals (`dict`): optional, set of param values to highlight on PMF
+            return_plots (bool): whether to return figure and axes (used by visualize_PMF_sequence in utils), default False
         """
         # read in options
         frac_points = argv.get('frac_points', 1.0)
         just_grid = argv.get('just_grid', False)
+        return_plots = argv.get('return_plots', False)
+        if return_plots:
+            plt.ioff()
+
         if 'fpath' in argv.keys():
             fpath = argv['fpath']
 
@@ -661,6 +666,9 @@ class Pmf(object):
                         # formatting
                         axes[rownum][colnum].set_ylim(0,1)
                         axes[rownum][colnum].yaxis.set_label_position("right")
+                        axes[rownum][colnum].yaxis.tick_right()
+                        for label in axes[rownum][colnum].get_yticklabels():
+                            label.set_fontsize(20)
                         axes[rownum][colnum].set_ylabel('P(%s)'%x_param.display_name, rotation=270, labelpad=20) #labelpad is kind of a brute-force way to do this and might break if we change the figure size, but va='bottom' wasn't working
                         #axes[rownum][colnum].`grid`(axis='y')
 
@@ -717,3 +725,10 @@ class Pmf(object):
 
         if 'fpath' in argv.keys():
             plt.savefig(fpath)
+
+        if return_plots:
+            return fig, axes
+            plt.close()
+
+        else:
+            plt.show()

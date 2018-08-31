@@ -1,6 +1,118 @@
 from copy import deepcopy
 import numpy as np
 import pandas as pd
+import sys
+import bayesim.params as pm
+#import bayesim.model as bym
+import model as bym
+import bayesim.pmf as pmf
+import matplotlib.pyplot as plt
+import matplotlib.patches as mplp
+from matplotlib import colors as mcolors
+
+def visualize_PMF_sequence(statefile_list, **argv):
+    """
+    Create plot akin to that produced by pmf.visualize() but with data from multiple PMF's overlaid. All should have the same set of fitting parameters. For now assumes that first statefile has the largest axes bounds, will add automated check later.
+
+    Args:
+        statefile_list (list of str): list of paths to statefiles (saved by Model.save_state function storing PMF's to be visualized), in order from least to most subdivided
+        name_list (list of str): optional, list of names for legend, defaults to filenames
+        true_vals (`dict`): optional, set of param values to highlight on PMF
+        fpath (str): optional, path to save image to
+    """
+
+    # get legend names
+    if 'name_list' in argv.keys():
+        name_list = argv['name_list']
+    else:
+        name_list = [sf.split('/')[-1].split('.')[0] for sf in statefile_list]
+
+    if 'true_vals' in argv.keys():
+        plot_true_vals = True
+        true_vals = argv['true_vals']
+    else:
+        plot_true_vals = False
+
+    # load the models one by one (to save RAM) and get visualizations
+    figs = []
+    axes_sets = []
+    for statefile in statefile_list:
+        m = bym.Model(load_state=True, state_file=statefile)
+        if plot_true_vals:
+            f, a = m.probs.visualize(return_plots=True, true_vals=true_vals)
+        else:
+            f, a = m.probs.visualize(return_plots=True)
+        figs.append(f)
+        axes_sets.append(a)
+    num_params = len(m.params.fit_params)
+
+    # get color cycle
+    prop_cycle = plt.rcParams['axes.prop_cycle']
+    colors = prop_cycle.by_key()['color']
+
+    # initialize the figure
+    fig, axes = plt.subplots(nrows=num_params, ncols=num_params, figsize=(5*num_params, 5*num_params))
+
+    for rownum in range(num_params):
+        for colnum in range(num_params):
+            for i in range(len(figs)):
+                old_ax = axes_sets[i][rownum][colnum]
+                color = colors[i]
+                patches = old_ax.patches
+                if i==0: # formatting stuff
+                    if rownum<colnum: # build the legend here
+                        if rownum==0 and colnum==num_params-1:
+                            axes[rownum][colnum].axis('off')
+                            axes[rownum][colnum].set_xlim([0,1])
+                            axes[rownum][colnum].set_ylim([0,1])
+
+                            for j in range(len(axes_sets)):
+                                x = 0.2
+                                if plot_true_vals:
+                                    y = 0.8-(float(j)/float(len(axes_sets)+1))*0.7
+                                else:
+                                    y = 0.8-(float(j)/float(len(axes_sets)))*0.7
+                                axes[rownum][colnum].add_patch(mplp.Rectangle((x,y), 0.1, 0.1, facecolor=colors[j]))
+                                axes[rownum][colnum].text(x+0.15, y, name_list[j], color='k', fontsize=20)
+                            if plot_true_vals:
+                                axes[rownum][colnum].scatter([0.16],[0.1],200,'#FFFF00',marker='*')
+                                axes[rownum][colnum].scatter([0.25],[0.1],200,c="None",marker='o',linewidths=3,edgecolors='#FFFF00')
+                                axes[rownum][colnum].text(0.35, 0.1, 'true values', color='k', fontsize=20)
+                        else:
+                            fig.delaxes(axes[rownum][colnum])
+                    else:
+                        axes[rownum][colnum].set_xlim(old_ax.get_xlim())
+                        axes[rownum][colnum].set_ylim(old_ax.get_ylim())
+                        axes[rownum][colnum].set_xlabel(old_ax.get_xlabel(), fontsize=24)
+                        axes[rownum][colnum].set_xscale(old_ax.get_xscale())
+                        axes[rownum][colnum].set_yscale(old_ax.get_yscale())
+                        axes[rownum][colnum].set_axisbelow(True)
+
+                        if rownum==colnum:
+                            axes[rownum][colnum].yaxis.set_label_position("right")
+                            axes[rownum][colnum].set_ylabel(old_ax.get_ylabel(), rotation=270, labelpad=24, fontsize=24)
+                            if plot_true_vals:
+                                true_x, true_y = old_ax.collections[0]._offsets[0]
+                                axes[rownum][colnum].scatter(true_x,0.05,200,'#FFFF00',marker='*',zorder=100)
+
+                        else:
+                            axes[rownum][colnum].set_ylabel(old_ax.get_ylabel(), fontsize=24)
+                            if plot_true_vals:
+                                true_x, true_y = old_ax.collections[0]._offsets[0]
+                                axes[rownum][colnum].scatter(true_x,true_y,200,c="None",marker='o',linewidths=3,edgecolors='#FFFF00',zorder=100)
+
+                        for item in (axes[rownum][colnum].get_xticklabels() + axes[rownum][colnum].get_yticklabels()):
+                            item.set_fontsize(20)
+
+                for patch in patches:
+                    axes[rownum][colnum].add_patch(mplp.Rectangle((patch._x, patch._y), patch._width, patch._height, facecolor=color, alpha=patch._alpha, zorder=i+1))
+
+    if 'fpath' in argv.keys():
+        plt.savefig(argv['fpath'])
+
+    else:
+        plt.show()
+
 
 def calc_deltas(grp, inds, param_lengths, model_data, fit_param_names, probs, output_var):
     # construct matrix of output_var({fit_params})
