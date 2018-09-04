@@ -76,7 +76,7 @@ urlcolor={blue!80!black}}
 
  \begin{figure}
    \includegraphics[width=0.9\columnwidth]{figure_1.png}
-   \caption{\hl{(Figure copied from docs website for now, will make a publication-appropriate version)}}
+   \caption{a) High-level flowchart of inputs and outputs to \texttt{bayesim}, b) 2D schematic of adaptive grid sampling approach.}
    \label{fig1}
  \end{figure}
 
@@ -85,9 +85,10 @@ urlcolor={blue!80!black}}
 \section*{Software Architecture and Interface}
 
   \begin{figure}
-    \includegraphics[width=0.25\columnwidth]{structure.png}
-    \includegraphics[width=0.65\columnwidth]{flowchart.png}
-    \caption{Left: \texttt{bayesim} software structure. Right: Flowchart of use of \texttt{bayesim}.}
+    %\includegraphics[width=0.25\columnwidth]{structure.png}
+    %\includegraphics[width=0.65\columnwidth]{flowchart.png}
+    \includegraphics[width=0.95\columnwidth]{figure_2.png}
+    \caption{a) \texttt{bayesim} software structure. b) Detailed flowchart of use of \texttt{bayesim}, with calculation steps and various levels of iteration indicated.}
     \label{structure}
   \end{figure}
 
@@ -97,7 +98,7 @@ urlcolor={blue!80!black}}
 
   \todo{do we need a figure for this?} Once modeled data is attached, model uncertainty can be computed. At each point in the space of experimental conditions, a matrix of the simulated output variable as a function of the fitting parameters is constructed and at each point in this matrix, the largest difference along any index is computed. This is set as the model uncertainty for this set of experimental conditions at this point in parameter space.
 
-  At this point, the inference loop can proceed. We start with a bounded prior distribution over the entire parameter space grid and the observed data in a randomized order. We feed in one piece of evidence (i.e. one observed data point) and compute the likelihood using a Gaussian. The standard deviation for each point in the parameter space is the sum of the experimental uncertainy of that observation and the model uncertainty at that point. The posterior distribution is computed as a Bayesian update on the prior. Next, we check whether the threshold condition for concentration of probability (defined as at least some percentage (by default 90\%) of the probability mass residing in at most some percentage (by default 5\%) of the parameter space volume. If this threshold is satisfied, the current posterior is stored and the prior reset to a uniform distribution. If not, the next observation is fed in. This procedure is repeated until the requisite number (by default, 80\%) of observed data points has been used, with the final posterior being the average of every stored posterior. The posterior is calculated in this way (rather than a Bayesian multiplication through every single observed point) to avoid numerical errors that can arise if very small numbers are multiplied together.
+  At this point, the Bayesian inference loop can proceed. We start with a bounded prior distribution over the entire parameter space grid and the observed data in a randomized order. We feed in one piece of evidence (i.e. one observed data point) and compute the likelihood using a Gaussian. The standard deviation for each point in the parameter space is the sum of the experimental uncertainy of that observation and the model uncertainty at that point. The posterior distribution is computed as a Bayesian update on the prior. Next, we check whether the threshold condition for concentration of probability (defined as at least some percentage (by default 90\%) of the probability mass residing in at most some percentage (by default 5\%) of the parameter space volume. If this threshold is satisfied, the current posterior is stored and the prior reset to a uniform distribution. If not, the next observation is fed in. This procedure is repeated until the requisite number (by default, 80\%) of observed data points has been used, with the final posterior being the average of every stored posterior. The posterior is calculated in this way (rather than a Bayesian multiplication through every single observed point) to avoid numerical errors that can arise if very small numbers are multiplied together. This procedure of running the Bayesian loop multiple times until the desired number of pieces of evidence are used is encapsulated in the \texttt{Model.run()} function.
 
   Now the grid can be subdivided. The user defines a threshold probability (by default 0.001) for a grid box to possess, and all boxes with greater than this probability, as well as all their immediate neighbors, are divided in two along every parameter. \texttt{bayesim} saves a list of the new model calculations that need to be done for inference to proceed again, and the user provides these, again either as a callable or an HDF5 file. For the next round of inference, the user can also define a ``bias" parameter from 0 to 0.5 (default 0) that will mix in some fraction of the posterior from the previous step with the uniform distribution over this new grid.
 
