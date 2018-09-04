@@ -156,17 +156,23 @@ urlcolor={blue!80!black}}
       \label{SnS_data}
     \end{figure}
 
-    We start on a significantly coarser grid than Ref.~\cite{SnSJoule} and show only one level of subdivision to make the example feasible to run on a personal computer. \~autoref{SnS_data} shows the results from this fit done in \texttt{bayesim} compared to the higher-resolution grid analysis done previously. Note that the inference step in full-resolution grid took a few hours, while the adaptive grid fit takes a few minutes. While the fit precision is of course lower at only one level of subdivision, the extracted values are generally in agreement and more importantly, the relationship between the mobility and lifetime (namely, that the product, i.e. the diffusion length), is constrained, emerges just as clearly.
+    We start on a significantly coarser grid than Ref.~\cite{SnSJoule} and show only one level of subdivision to make the example feasible to run on a personal computer. ~\autoref{SnS_data} shows the results from this fit done in \texttt{bayesim} compared to the higher-resolution grid analysis done previously. Note that the inference step in full-resolution grid took a few hours, while the adaptive grid fit takes a few minutes. While the fit precision is of course lower at only one level of subdivision, the extracted values are generally in agreement and more importantly, the relationship between the mobility and lifetime (namely, that the product, i.e. the diffusion length), is constrained, emerges just as clearly.
 
 
 \section*{Conclusions}
- talk about broader applicability of approach
+ We have introduced \texttt{bayesim}, a Python-based adaptive grid sampled Bayesian inference code which is flexible to the model used to calculated likelihood as well as the parameter space over which to fit. We provided two examples of application of the code in the space of characterizing PV devices using JVT(i) measurements, as this is the authors' area of expertise. However, nothing about the code or the approach limits it to application in PV materials. Any situation where there is:
+ \begin{itemize}
+   \item a forward model that captures the relevant physics (particularly one that is relatively expensive to evaluate), and
+   \item a set of measurements of the output of that model as a function of several experimental conditions
+ \end{itemize}
+ would be amenable to \texttt{bayesim}. The online documentation page~\cite{docs} maintains a list of examples which will grow as the authors become aware of/implement more. This website also hosts other useful information, such as detailed documentation of every class and function in \texttt{bayesim}, a more extensive technical background section than is included here, and an updated manual for usage of the code.
 
 \section*{Acknowledgements}
+R.C.K. acknowledges the funding of a Blue Waters Graduate Fellowship. The SnS work referenced in~\cite{SnSJoule} was funded by a Google Faculty Research Award, as well as the Center for Next Generation Materials by Design (CNGMD), an Energy Frontier Research Center funded by the U.S. Department of Energy, Office of Science, Basic Energy Sciences.
 
 \section*{Appendix}
  \begin{itemize}
-   \item include minimal code to run ideal diode example
+   \item include minimal code to run ideal diode example via CLI
    \item link to Github repo (which has installation instructions and documentation as well as list of planned future features)
   \end{itemize}
 
