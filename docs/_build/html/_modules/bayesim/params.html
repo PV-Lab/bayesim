@@ -116,7 +116,7 @@
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
 
-<div class="viewcode-block" id="Param"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.params.Param">[docs]</a><span class="k">class</span> <span class="nc">Param</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Param"><a class="viewcode-back" href="../../bayesim.html#bayesim.params.Param">[docs]</a><span class="k">class</span> <span class="nc">Param</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A parameter in a bayesim analysis. Can be a fitting parameter or an experimental condition.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -143,7 +143,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">display_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
 
-<div class="viewcode-block" id="Param.set_tolerance"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.params.Param.set_tolerance">[docs]</a>    <span class="k">def</span> <span class="nf">set_tolerance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="p">,</span> <span class="n">islog</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="Param.set_tolerance"><a class="viewcode-back" href="../../bayesim.html#bayesim.params.Param.set_tolerance">[docs]</a>    <span class="k">def</span> <span class="nf">set_tolerance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="p">,</span> <span class="n">islog</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Set the tolerance for this parameter.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;spacing&#39;</span><span class="p">):</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">spacing</span><span class="o">==</span><span class="s1">&#39;log&#39;</span><span class="p">:</span>
@@ -155,11 +155,11 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">tol_digits</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">tol</span><span class="p">))))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">tol</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_digits</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Param.get_val_str"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.params.Param.get_val_str">[docs]</a>    <span class="k">def</span> <span class="nf">get_val_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+<div class="viewcode-block" id="Param.get_val_str"><a class="viewcode-back" href="../../bayesim.html#bayesim.params.Param.get_val_str">[docs]</a>    <span class="k">def</span> <span class="nf">get_val_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
         <span class="n">tol_digits</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span><span class="p">))))</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">tol_digits</span><span class="p">))</span></div></div>
 
-<div class="viewcode-block" id="Fit_param"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.params.Fit_param">[docs]</a><span class="k">class</span> <span class="nc">Fit_param</span><span class="p">(</span><span class="n">Param</span><span class="p">):</span>
+<div class="viewcode-block" id="Fit_param"><a class="viewcode-back" href="../../bayesim.html#bayesim.params.Fit_param">[docs]</a><span class="k">class</span> <span class="nc">Fit_param</span><span class="p">(</span><span class="n">Param</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A bayesim fitting parameter. Because they will be initialized on a grid, each fitting parameter stores its full list of values as well as some other information such as the spacing between them and the minimum width of a box (used during grid subdivisions).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -277,7 +277,7 @@
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">val_range</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">val_range</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_tol_digits</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">val_range</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
 
-<div class="viewcode-block" id="Fit_param.get_tol_digits"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.params.Fit_param.get_tol_digits">[docs]</a>    <span class="k">def</span> <span class="nf">get_tol_digits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
+<div class="viewcode-block" id="Fit_param.get_tol_digits"><a class="viewcode-back" href="../../bayesim.html#bayesim.params.Fit_param.get_tol_digits">[docs]</a>    <span class="k">def</span> <span class="nf">get_tol_digits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Compute number of digits to round to. &#39;val&#39; must be provided if logspaced.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">spacing</span><span class="o">==</span><span class="s1">&#39;linear&#39;</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_digits</span>
@@ -287,7 +287,7 @@
             <span class="n">tol_val</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">val</span> <span class="o">-</span> <span class="n">val</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span><span class="p">)</span>
             <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">tol_val</span><span class="p">))))</span><span class="o">+</span><span class="mi">1</span></div>
 
-<div class="viewcode-block" id="Fit_param.get_closest_val"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.params.Fit_param.get_closest_val">[docs]</a>    <span class="k">def</span> <span class="nf">get_closest_val</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+<div class="viewcode-block" id="Fit_param.get_closest_val"><a class="viewcode-back" href="../../bayesim.html#bayesim.params.Fit_param.get_closest_val">[docs]</a>    <span class="k">def</span> <span class="nf">get_closest_val</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return closest value to val in this parameters current set of vals.&quot;&quot;&quot;</span>
         <span class="n">diffs</span> <span class="o">=</span> <span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">val</span><span class="o">-</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vals</span><span class="p">]</span>
         <span class="c1">#print(diffs)</span>
@@ -299,7 +299,7 @@
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The values </span><span class="si">%f</span><span class="s2"> and </span><span class="si">%f</span><span class="s2"> were pretty far apart for </span><span class="si">%s</span><span class="s2">...&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">closest_val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">closest_val</span></div>
 
-<div class="viewcode-block" id="Fit_param.get_val_str"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.params.Fit_param.get_val_str">[docs]</a>    <span class="k">def</span> <span class="nf">get_val_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+<div class="viewcode-block" id="Fit_param.get_val_str"><a class="viewcode-back" href="../../bayesim.html#bayesim.params.Fit_param.get_val_str">[docs]</a>    <span class="k">def</span> <span class="nf">get_val_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a string with this parameter&#39;s value, reasonably formatted.&quot;&quot;&quot;</span>
         <span class="c1"># determine if it should be in scientific notation</span>
         <span class="k">if</span> <span class="n">val</span><span class="o">&gt;</span><span class="mf">1e4</span> <span class="ow">or</span> <span class="n">val</span><span class="o">&lt;</span><span class="mf">1e-4</span><span class="p">:</span>
@@ -311,7 +311,7 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">return</span> <span class="s2">&quot;{0:.</span><span class="si">{1}</span><span class="s2">f}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">tol_digits</span><span class="p">)</span></div></div>
 
-<div class="viewcode-block" id="Measured_param"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.params.Measured_param">[docs]</a><span class="k">class</span> <span class="nc">Measured_param</span><span class="p">(</span><span class="n">Param</span><span class="p">):</span>
+<div class="viewcode-block" id="Measured_param"><a class="viewcode-back" href="../../bayesim.html#bayesim.params.Measured_param">[docs]</a><span class="k">class</span> <span class="nc">Measured_param</span><span class="p">(</span><span class="n">Param</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A bayesim measured parameter. Can be experimental input or output.&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -330,7 +330,7 @@
         <span class="k">if</span> <span class="s1">&#39;tolerance&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">argv</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">set_tolerance</span><span class="p">(</span><span class="mf">1e-6</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Param_list"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.params.Param_list">[docs]</a><span class="k">class</span> <span class="nc">Param_list</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Param_list"><a class="viewcode-back" href="../../bayesim.html#bayesim.params.Param_list">[docs]</a><span class="k">class</span> <span class="nc">Param_list</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Small class to facilitate listing and comparison of bayesim parameters.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -357,7 +357,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Measured_param</span><span class="p">(</span><span class="o">**</span><span class="n">o_var</span><span class="p">))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">ec_x_name</span> <span class="o">=</span> <span class="n">param_dict</span><span class="p">[</span><span class="s1">&#39;ec_x_name&#39;</span><span class="p">]</span>
 
-<div class="viewcode-block" id="Param_list.add_fit_param"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.params.Param_list.add_fit_param">[docs]</a>    <span class="k">def</span> <span class="nf">add_fit_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
+<div class="viewcode-block" id="Param_list.add_fit_param"><a class="viewcode-back" href="../../bayesim.html#bayesim.params.Param_list.add_fit_param">[docs]</a>    <span class="k">def</span> <span class="nf">add_fit_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a fitting parameter to the list.</span>
 
@@ -393,7 +393,7 @@
                 <span class="c1">#print(argv)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">fit_params</span><span class="p">[</span><span class="n">param_ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">Fit_param</span><span class="p">(</span><span class="o">**</span><span class="n">argv</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Param_list.add_ec"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.params.Param_list.add_ec">[docs]</a>    <span class="k">def</span> <span class="nf">add_ec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
+<div class="viewcode-block" id="Param_list.add_ec"><a class="viewcode-back" href="../../bayesim.html#bayesim.params.Param_list.add_ec">[docs]</a>    <span class="k">def</span> <span class="nf">add_ec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add an experimental condition.</span>
 
@@ -413,7 +413,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;It looks like you&#39;re trying to add a duplicate experimental condition, </span><span class="si">%s</span><span class="s2">!&quot;</span><span class="o">%</span><span class="n">argv</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="Param_list.set_ec_x"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.params.Param_list.set_ec_x">[docs]</a>    <span class="k">def</span> <span class="nf">set_ec_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="Param_list.set_ec_x"><a class="viewcode-back" href="../../bayesim.html#bayesim.params.Param_list.set_ec_x">[docs]</a>    <span class="k">def</span> <span class="nf">set_ec_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Set the x-variable for experimental conditions.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">param_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_names</span><span class="p">(</span><span class="s1">&#39;ec&#39;</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
@@ -425,10 +425,10 @@
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Overwriting previous ec_x variable (</span><span class="si">%s</span><span class="s2">) with </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ec_x_name</span><span class="p">,</span><span class="n">param_name</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ec_x_name</span> <span class="o">=</span> <span class="n">param_name</span></div>
 
-<div class="viewcode-block" id="Param_list.get_ec_x"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.params.Param_list.get_ec_x">[docs]</a>    <span class="k">def</span> <span class="nf">get_ec_x</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Param_list.get_ec_x"><a class="viewcode-back" href="../../bayesim.html#bayesim.params.Param_list.get_ec_x">[docs]</a>    <span class="k">def</span> <span class="nf">get_ec_x</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_param</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ec_x_name</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Param_list.add_output"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.params.Param_list.add_output">[docs]</a>    <span class="k">def</span> <span class="nf">add_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
+<div class="viewcode-block" id="Param_list.add_output"><a class="viewcode-back" href="../../bayesim.html#bayesim.params.Param_list.add_output">[docs]</a>    <span class="k">def</span> <span class="nf">add_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add an output variable.</span>
 
@@ -444,7 +444,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;It looks like you&#39;re trying to add a duplicate output variable, </span><span class="si">%s</span><span class="s2">!&quot;</span><span class="o">%</span><span class="n">argv</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="Param_list.param_names"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.params.Param_list.param_names">[docs]</a>    <span class="k">def</span> <span class="nf">param_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Param_list.param_names"><a class="viewcode-back" href="../../bayesim.html#bayesim.params.Param_list.param_names">[docs]</a>    <span class="k">def</span> <span class="nf">param_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a list of parameter names. If no arguments provided, output will be a dict, if a type is provided, output will be a list of just the parameter names of that type.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -459,11 +459,11 @@
                     <span class="s1">&#39;ec&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ec</span><span class="p">],</span>
                     <span class="s1">&#39;output&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="p">]}</span></div>
 
-<div class="viewcode-block" id="Param_list.all_params"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.params.Param_list.all_params">[docs]</a>    <span class="k">def</span> <span class="nf">all_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Param_list.all_params"><a class="viewcode-back" href="../../bayesim.html#bayesim.params.Param_list.all_params">[docs]</a>    <span class="k">def</span> <span class="nf">all_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a flat list of all parameters of any type.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_params</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">ecs</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="Param_list.param_present"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.params.Param_list.param_present">[docs]</a>    <span class="k">def</span> <span class="nf">param_present</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<div class="viewcode-block" id="Param_list.param_present"><a class="viewcode-back" href="../../bayesim.html#bayesim.params.Param_list.param_present">[docs]</a>    <span class="k">def</span> <span class="nf">param_present</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check that the param name isn&#39;t already present in a list.</span>
 
@@ -476,7 +476,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span></div>
 
-<div class="viewcode-block" id="Param_list.find_param"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.params.Param_list.find_param">[docs]</a>    <span class="k">def</span> <span class="nf">find_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<div class="viewcode-block" id="Param_list.find_param"><a class="viewcode-back" href="../../bayesim.html#bayesim.params.Param_list.find_param">[docs]</a>    <span class="k">def</span> <span class="nf">find_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the Param object with the given name.</span>
 
@@ -485,7 +485,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_params</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="o">==</span><span class="n">name</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="Param_list.vals_equal"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.params.Param_list.vals_equal">[docs]</a>    <span class="k">def</span> <span class="nf">vals_equal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">val1</span><span class="p">,</span> <span class="n">val2</span><span class="p">):</span>
+<div class="viewcode-block" id="Param_list.vals_equal"><a class="viewcode-back" href="../../bayesim.html#bayesim.params.Param_list.vals_equal">[docs]</a>    <span class="k">def</span> <span class="nf">vals_equal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">val1</span><span class="p">,</span> <span class="n">val2</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compare two values of a given param.</span>
 
@@ -502,17 +502,17 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span></div>
 
-<div class="viewcode-block" id="Param_list.set_tolerance"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.params.Param_list.set_tolerance">[docs]</a>    <span class="k">def</span> <span class="nf">set_tolerance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">tol</span><span class="p">):</span>
+<div class="viewcode-block" id="Param_list.set_tolerance"><a class="viewcode-back" href="../../bayesim.html#bayesim.params.Param_list.set_tolerance">[docs]</a>    <span class="k">def</span> <span class="nf">set_tolerance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">tol</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Set the tolerance value for the given parameter.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">find_param</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span><span class="o">.</span><span class="n">set_tolerance</span><span class="p">(</span><span class="n">tol</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Param_list.is_empty"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.params.Param_list.is_empty">[docs]</a>    <span class="k">def</span> <span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Param_list.is_empty"><a class="viewcode-back" href="../../bayesim.html#bayesim.params.Param_list.is_empty">[docs]</a>    <span class="k">def</span> <span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_params</span><span class="p">())</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">True</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span></div>
 
-<div class="viewcode-block" id="Param_list.as_dict"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.params.Param_list.as_dict">[docs]</a>    <span class="k">def</span> <span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Param_list.as_dict"><a class="viewcode-back" href="../../bayesim.html#bayesim.params.Param_list.as_dict">[docs]</a>    <span class="k">def</span> <span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">d</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;ec_x_name&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">ec_x_name</span><span class="p">}</span>
         <span class="n">d</span><span class="p">[</span><span class="s1">&#39;ecs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="vm">__dict__</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ecs</span><span class="p">]</span>
         <span class="n">d</span><span class="p">[</span><span class="s1">&#39;fit_params&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="vm">__dict__</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_params</span><span class="p">]</span>
@@ -540,7 +540,7 @@
     </p>
     <p>
         &copy; Copyright 2018, Rachel C Kurchin and Giuseppe Romano.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.6.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.9.<br/>
     </p>
   </div>
 </footer>

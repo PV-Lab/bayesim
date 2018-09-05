@@ -6,6 +6,9 @@ Examples
 
 This page is a (growing) list of example applications of ``bayesim``, attempting to showcase the variety of applicability as well as ways to run the code.
 
+
+.. _ID:
+
 Ideal diode solar cell
 ----------------------
 The most self-contained example. Available to run in two different ways:
@@ -36,6 +39,9 @@ To run from the command line:
 Kinematics
 ----------
 Probably the simplest example, explained on the :doc:`bayesics` page. It exists in the `Github repo <https://github.com/PV-Lab/bayesim>`_ under ``examples/kinematics/kinematics.py`` and you can run it all in one go from a terminal (``python kinematics.py``) or step-by-step in an IDE like Spyder.
+
+
+.. _SnS:
 
 Tin Sulfide (SnS) solar cell
 ----------------------------

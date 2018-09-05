@@ -125,7 +125,7 @@
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">platform</span>
 
-<div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.model.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../bayesim.html#bayesim.model.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The main workhorse class of bayesim. Stores the modeled and observed data as well as a Pmf object which maintains the current probability distribution and grid subdivisions.</span>
 
@@ -230,14 +230,14 @@
             <span class="c1"># run flag</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">is_run</span> <span class="o">=</span> <span class="kc">False</span>
 
-<div class="viewcode-block" id="Model.attach_params"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.model.Model.attach_params">[docs]</a>    <span class="k">def</span> <span class="nf">attach_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.attach_params"><a class="viewcode-back" href="../../bayesim.html#bayesim.model.Model.attach_params">[docs]</a>    <span class="k">def</span> <span class="nf">attach_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Attach a param_list object.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">is_empty</span><span class="p">():</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Overwriting preexiting parameter list with this new one.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">params</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">probs</span> <span class="o">=</span> <span class="n">Pmf</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">fit_params</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Model.attach_ecs"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.model.Model.attach_ecs">[docs]</a>    <span class="k">def</span> <span class="nf">attach_ecs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.attach_ecs"><a class="viewcode-back" href="../../bayesim.html#bayesim.model.Model.attach_ecs">[docs]</a>    <span class="k">def</span> <span class="nf">attach_ecs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Define parameters for experimental conditions.</span>
 
@@ -268,7 +268,7 @@
                 <span class="n">args</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">unit_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">add_ec</span><span class="p">(</span><span class="o">**</span><span class="n">args</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Model.attach_fit_params"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.model.Model.attach_fit_params">[docs]</a>    <span class="k">def</span> <span class="nf">attach_fit_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">params</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.attach_fit_params"><a class="viewcode-back" href="../../bayesim.html#bayesim.model.Model.attach_fit_params">[docs]</a>    <span class="k">def</span> <span class="nf">attach_fit_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">params</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Attach list of parameters to fit.</span>
 
@@ -278,7 +278,7 @@
         <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">add_fit_param</span><span class="p">(</span><span class="n">param</span><span class="o">=</span><span class="n">param</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Model.attach_observations"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.model.Model.attach_observations">[docs]</a>    <span class="k">def</span> <span class="nf">attach_observations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.attach_observations"><a class="viewcode-back" href="../../bayesim.html#bayesim.model.Model.attach_observations">[docs]</a>    <span class="k">def</span> <span class="nf">attach_observations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Attach measured dataset.</span>
 
@@ -287,13 +287,13 @@
 <span class="sd">            keep_all (`bool`): whether to keep all the data in the file (longer simulation times) or to clip out data points that are close to each other (defaults to False)</span>
 <span class="sd">            ec_x_var (`str`): required if keep_all is False, the experimental condition over which to measure differences (e.g. V for JV(Ti) curves in PV). It will also be used in plotting later.</span>
 <span class="sd">            max_ec_x_step (`float`): used if keep_all is False, largest step to take in the ec_x_var before keeping a point even if curve if &quot;flat&quot; (defaults to 0.05 * range of ec_x_var)</span>
-<span class="sd">            thresh_dif_frac (`float`): used if keep_all is False, threshold (as a percentage of the maximum value, defaults to 0.03)</span>
+<span class="sd">            thresh_dif_frac (`float`): used if keep_all is False, threshold (as a percentage of the range of values, defaults to 0.01)</span>
 <span class="sd">            fixed_unc (`float`): required if running in function mode or if file doesn&#39;t have an &#39;uncertainty&#39; column, value to use as uncertainty in measurement</span>
 <span class="sd">            output_column (`str`): optional, header of column containing output data (required if different from self.output_var)</span>
 <span class="sd">            verbose (`bool`): flag for verbosity, defaults to False</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">output_col</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;output_column&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_var</span><span class="p">)</span>
-        <span class="n">keep_all</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;keep_all&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">keep_all</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;keep_all&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
         <span class="n">thresh_dif_frac</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;thresh_dif_frac&#39;</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
         <span class="n">verbose</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
@@ -389,7 +389,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">ec_pts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ec_pts</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ec_names</span><span class="p">())</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Model.check_data_columns"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.model.Model.check_data_columns">[docs]</a>    <span class="k">def</span> <span class="nf">check_data_columns</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">argv</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.check_data_columns"><a class="viewcode-back" href="../../bayesim.html#bayesim.model.Model.check_data_columns">[docs]</a>    <span class="k">def</span> <span class="nf">check_data_columns</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Make sure the columns in imported data make sense.</span>
 
@@ -430,7 +430,7 @@
                         <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">add_fit_param</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">c</span><span class="p">,</span> <span class="n">vals</span><span class="o">=</span><span class="n">vals</span><span class="p">)</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Found fitting parameters: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_param_names</span><span class="p">())</span></div>
 
-<div class="viewcode-block" id="Model.check_ecs"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.model.Model.check_ecs">[docs]</a>    <span class="k">def</span> <span class="nf">check_ecs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">argv</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.check_ecs"><a class="viewcode-back" href="../../bayesim.html#bayesim.model.Model.check_ecs">[docs]</a>    <span class="k">def</span> <span class="nf">check_ecs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check that all experimental conditions are present at each parameter point in modeled data.</span>
 
@@ -454,7 +454,7 @@
                 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;there is a problem I need to fix the error message for!&#39;</span><span class="p">)</span>
                 <span class="k">return</span></div>
 
-<div class="viewcode-block" id="Model.calc_indices"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.model.Model.calc_indices">[docs]</a>    <span class="k">def</span> <span class="nf">calc_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.calc_indices"><a class="viewcode-back" href="../../bayesim.html#bayesim.model.Model.calc_indices">[docs]</a>    <span class="k">def</span> <span class="nf">calc_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute starting and ending indices in self.model_data for each point in self.probs.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -473,7 +473,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;start_ind&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">start_indices</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;end_ind&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">end_indices</span></div>
 
-<div class="viewcode-block" id="Model.attach_model"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.model.Model.attach_model">[docs]</a>    <span class="k">def</span> <span class="nf">attach_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">argv</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.attach_model"><a class="viewcode-back" href="../../bayesim.html#bayesim.model.Model.attach_model">[docs]</a>    <span class="k">def</span> <span class="nf">attach_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Attach the model for the data, either by feeding in a file of precomputed data or a function that does the computing.</span>
 
@@ -592,7 +592,7 @@
         <span class="k">if</span> <span class="n">calc_model_unc</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">calc_model_unc</span><span class="p">(</span><span class="o">**</span><span class="n">argv</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Model.comparison_plot"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.model.Model.comparison_plot">[docs]</a>    <span class="k">def</span> <span class="nf">comparison_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">argv</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.comparison_plot"><a class="viewcode-back" href="../../bayesim.html#bayesim.model.Model.comparison_plot">[docs]</a>    <span class="k">def</span> <span class="nf">comparison_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Plot observed data vs. highest-probability modeled data.</span>
 
@@ -601,6 +601,7 @@
 <span class="sd">            num_ecs (`int`): number of EC values to plot, defaults to 1 (ignored if ecs is provided)</span>
 <span class="sd">            num_param_pts (`int`): number of the most probable parameter space points to plot (defaults to 1)</span>
 <span class="sd">            ec_x_var (`str`): one of self.ec_names, will overwrite if this was provided before in attach_observations, required if it wasn&#39;t. If ec was provided, this will supercede that</span>
+<span class="sd">            return_avg_err (bool): whether or not to return average (absolute) error for highest probability model over all EC&#39;s plotted (defaults to False)</span>
 <span class="sd">            fpath (`str`): optional, path to save image to if desired</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="s1">&#39;ec_x_var&#39;</span> <span class="ow">in</span> <span class="n">argv</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
@@ -609,6 +610,9 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">ec_x_name</span><span class="o">==</span><span class="kc">None</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;You have not provided an x-variable from your experimental conditions against which to plot. Choosing the first one in the list, </span><span class="si">%s</span><span class="s1">.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ec_names</span><span class="p">()[</span><span class="mi">0</span><span class="p">]))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">set_ec_x</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ec_names</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">return_avg_err</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;return_avg_err&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">all_errs</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="n">other_ecs</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">ecs</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">c</span><span class="o">.</span><span class="n">name</span><span class="o">==</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">ec_x_name</span><span class="p">]</span>
         <span class="c1">#print(self.params.ec_x_name, [c.name for c in other_ecs])</span>
@@ -679,6 +683,9 @@
                         <span class="n">model_data</span> <span class="o">=</span>  <span class="n">model_data</span><span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">model_data</span><span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">-</span><span class="n">ecs_here</span><span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">name</span><span class="p">])</span><span class="o">&lt;=</span><span class="mf">10.</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">1.</span><span class="o">*</span><span class="n">c</span><span class="o">.</span><span class="n">tol_digits</span><span class="p">)]</span>
                 <span class="n">model_data</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">ec_x_name</span><span class="p">])</span>
                 <span class="n">errors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="n">model_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">output_var</span><span class="p">],</span> <span class="n">obs_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">output_var</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">c_ind</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span> <span class="c1">#take errors from highest probability</span>
+                    <span class="n">all_errs</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="nb">abs</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">errors</span><span class="p">])</span>
+
                 <span class="n">axs</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">model_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">ec_x_name</span><span class="p">],</span> <span class="n">model_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">output_var</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
                 <span class="n">axs</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">model_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">ec_x_name</span><span class="p">],</span> <span class="n">errors</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
                 <span class="n">leg_label</span> <span class="o">=</span> <span class="s1">&#39;modeled: &#39;</span>
@@ -714,9 +721,12 @@
 
         <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
         <span class="k">if</span> <span class="s1">&#39;fpath&#39;</span> <span class="ow">in</span> <span class="n">argv</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="s1">&#39;fpath&#39;</span><span class="p">])</span></div>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="s1">&#39;fpath&#39;</span><span class="p">])</span>
 
-<div class="viewcode-block" id="Model.run"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.model.Model.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">return_avg_err</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">all_errs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Model.run"><a class="viewcode-back" href="../../bayesim.html#bayesim.model.Model.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Do Bayes!</span>
 <span class="sd">        Will stop iterating through observations if/when &gt;= th_pm of probability mass is concentrated in &lt;= th_pv of boxes and decide it&#39;s time to subdivide. (completely arbitrary thresholding for now)</span>
@@ -838,7 +848,7 @@
             <span class="n">dd</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">pmf_folder</span><span class="o">+</span><span class="s1">&#39;sub</span><span class="si">%d</span><span class="s1">_PMF_final.h5&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">num_sub</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">is_run</span> <span class="o">=</span> <span class="kc">True</span></div>
 
-<div class="viewcode-block" id="Model.subdivide"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.model.Model.subdivide">[docs]</a>    <span class="k">def</span> <span class="nf">subdivide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.subdivide"><a class="viewcode-back" href="../../bayesim.html#bayesim.model.Model.subdivide">[docs]</a>    <span class="k">def</span> <span class="nf">subdivide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Subdivide the probability distribution and save the list of new sims to run to a file.</span>
 
@@ -863,7 +873,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">list_model_pts_to_run</span><span class="p">(</span><span class="n">fpath</span><span class="o">=</span><span class="n">filename</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;New model points to simulate are saved in the file </span><span class="si">%s</span><span class="s1">.&#39;</span><span class="o">%</span><span class="n">filename</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Model.list_model_pts_to_run"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.model.Model.list_model_pts_to_run">[docs]</a>    <span class="k">def</span> <span class="nf">list_model_pts_to_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fpath</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.list_model_pts_to_run"><a class="viewcode-back" href="../../bayesim.html#bayesim.model.Model.list_model_pts_to_run">[docs]</a>    <span class="k">def</span> <span class="nf">list_model_pts_to_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fpath</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate full list of model points that need to be run (not just parameter points but also all experimental conditions). Saves to HDF5 at fpath.</span>
 
@@ -891,7 +901,7 @@
         <span class="n">sim_pts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">pts</span><span class="p">,</span><span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span>
         <span class="n">dd</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span><span class="n">sim_pts</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Model.calc_model_unc"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.model.Model.calc_model_unc">[docs]</a>    <span class="k">def</span> <span class="nf">calc_model_unc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.calc_model_unc"><a class="viewcode-back" href="../../bayesim.html#bayesim.model.Model.calc_model_unc">[docs]</a>    <span class="k">def</span> <span class="nf">calc_model_unc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculates largest difference in modeled output along any parameter direction for each experimental condition, to be used for uncertainty in calculating likelihoods. Currently only works if data is on a grid.</span>
 
@@ -932,7 +942,7 @@
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Calculating model uncertainty took </span><span class="si">%.2f</span><span class="s1"> seconds.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">start_time</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="Model.save_state"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.model.Model.save_state">[docs]</a>    <span class="k">def</span> <span class="nf">save_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;bayesim_state.h5&#39;</span><span class="p">):</span> <span class="c1">#rewrite this!</span>
+<div class="viewcode-block" id="Model.save_state"><a class="viewcode-back" href="../../bayesim.html#bayesim.model.Model.save_state">[docs]</a>    <span class="k">def</span> <span class="nf">save_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;bayesim_state.h5&#39;</span><span class="p">):</span> <span class="c1">#rewrite this!</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Save the entire state of this model object to an HDF5 file so that work can be resumed later.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -959,7 +969,7 @@
         <span class="c1"># save the file</span>
         <span class="n">dd</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="n">state</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Model.visualize_grid"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.model.Model.visualize_grid">[docs]</a>    <span class="k">def</span> <span class="nf">visualize_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">argv</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.visualize_grid"><a class="viewcode-back" href="../../bayesim.html#bayesim.model.Model.visualize_grid">[docs]</a>    <span class="k">def</span> <span class="nf">visualize_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Visualize the current state of the grid.</span>
 
@@ -968,7 +978,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">visualize</span><span class="p">(</span><span class="n">just_grid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="o">**</span><span class="n">argv</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Model.visualize_probs"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.model.Model.visualize_probs">[docs]</a>    <span class="k">def</span> <span class="nf">visualize_probs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">argv</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.visualize_probs"><a class="viewcode-back" href="../../bayesim.html#bayesim.model.Model.visualize_probs">[docs]</a>    <span class="k">def</span> <span class="nf">visualize_probs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Visualize the PMF with a corner plot.</span>
 
@@ -1016,13 +1026,13 @@
 <span class="sd">            axs[i].set_title(plot_title)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Model.top_probs"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.model.Model.top_probs">[docs]</a>    <span class="k">def</span> <span class="nf">top_probs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.top_probs"><a class="viewcode-back" href="../../bayesim.html#bayesim.model.Model.top_probs">[docs]</a>    <span class="k">def</span> <span class="nf">top_probs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a DataFrame with the &#39;num&#39; most probable points and some of the less interesting columns hidden.&quot;&quot;&quot;</span>
         <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">most_probable</span><span class="p">(</span><span class="n">num</span><span class="p">)</span>
         <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">cs</span> <span class="ow">in</span> <span class="p">[[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_min&#39;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_max&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">fit_params</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cs</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">df</span><span class="p">[</span><span class="n">cols</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="Model.set_param_info"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.model.Model.set_param_info">[docs]</a>    <span class="k">def</span> <span class="nf">set_param_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.set_param_info"><a class="viewcode-back" href="../../bayesim.html#bayesim.model.Model.set_param_info">[docs]</a>    <span class="k">def</span> <span class="nf">set_param_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set additional info for parameter param_name (any type).</span>
 
@@ -1074,11 +1084,11 @@
                         <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">display_name</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="s1">&#39;display_name&#39;</span><span class="p">]</span></div>
 
 
-<div class="viewcode-block" id="Model.ec_names"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.model.Model.ec_names">[docs]</a>    <span class="k">def</span> <span class="nf">ec_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.ec_names"><a class="viewcode-back" href="../../bayesim.html#bayesim.model.Model.ec_names">[docs]</a>    <span class="k">def</span> <span class="nf">ec_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return list of experimental condition names.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">param_names</span><span class="p">(</span><span class="s1">&#39;ec&#39;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Model.fit_param_names"><a class="viewcode-back" href="../../source/bayesim.html#bayesim.model.Model.fit_param_names">[docs]</a>    <span class="k">def</span> <span class="nf">fit_param_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.fit_param_names"><a class="viewcode-back" href="../../bayesim.html#bayesim.model.Model.fit_param_names">[docs]</a>    <span class="k">def</span> <span class="nf">fit_param_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return list of fitting parameter names.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">param_names</span><span class="p">(</span><span class="s1">&#39;fit&#39;</span><span class="p">)</span></div></div>
 </pre></div>
@@ -1095,7 +1105,7 @@
     </p>
     <p>
         &copy; Copyright 2018, Rachel C Kurchin and Giuseppe Romano.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.6.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.9.<br/>
     </p>
   </div>
 </footer>

@@ -28,6 +28,14 @@ bayesim.pmf module
     :undoc-members:
     :show-inheritance:
 
+bayesim.utils module
+--------------------
+
+.. automodule:: bayesim.utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------
