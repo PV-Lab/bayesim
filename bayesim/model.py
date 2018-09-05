@@ -175,13 +175,13 @@ class Model(object):
             keep_all (`bool`): whether to keep all the data in the file (longer simulation times) or to clip out data points that are close to each other (defaults to False)
             ec_x_var (`str`): required if keep_all is False, the experimental condition over which to measure differences (e.g. V for JV(Ti) curves in PV). It will also be used in plotting later.
             max_ec_x_step (`float`): used if keep_all is False, largest step to take in the ec_x_var before keeping a point even if curve if "flat" (defaults to 0.05 * range of ec_x_var)
-            thresh_dif_frac (`float`): used if keep_all is False, threshold (as a percentage of the maximum value, defaults to 0.03)
+            thresh_dif_frac (`float`): used if keep_all is False, threshold (as a percentage of the range of values, defaults to 0.01)
             fixed_unc (`float`): required if running in function mode or if file doesn't have an 'uncertainty' column, value to use as uncertainty in measurement
             output_column (`str`): optional, header of column containing output data (required if different from self.output_var)
             verbose (`bool`): flag for verbosity, defaults to False
         """
         output_col = argv.get('output_column', self.output_var)
-        keep_all = argv.get('keep_all', True)
+        keep_all = argv.get('keep_all', False)
         thresh_dif_frac = argv.get('thresh_dif_frac', 0.01)
         verbose = argv.get('verbose', False)
 

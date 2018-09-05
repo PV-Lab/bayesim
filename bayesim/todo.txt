@@ -31,7 +31,9 @@ TO DO LIST FOR BAYESIM
 
 ~ include all options in argparser for command line
 
-~ maybe visualize model uncertainties?
+~ visualizing data with experimental and model uncertainty
+
+~ visualizing model uncertainty on parameter grid
 
 ~ speed up visualize_grid somehow (parallelize?)
 
@@ -55,6 +57,8 @@ TO DO LIST FOR BAYESIM
 
 
 - automate creation of composite image of PMF and errors through subdivision steps
+
+- interpolation for missing data
 
 - GUI!
 
