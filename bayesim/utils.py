@@ -2,6 +2,7 @@ from copy import deepcopy
 import numpy as np
 import pandas as pd
 import sys
+sys.path.append('../../')
 import bayesim.params as pm
 import bayesim.model as bym
 #import model as bym
