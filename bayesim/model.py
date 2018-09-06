@@ -1,3 +1,4 @@
+import sys
 sys.path.append('../../')
 from bayesim.pmf import Pmf
 import bayesim.params as pm
@@ -9,7 +10,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 import os
-import sys
 from joblib import Parallel, delayed, cpu_count
 import time
 import platform
