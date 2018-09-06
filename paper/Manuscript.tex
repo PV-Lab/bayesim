@@ -26,7 +26,10 @@ citecolor={blue},
 urlcolor={blue!80!black}}
 \lstset{basicstyle=\small\ttfamily,columns=flexible,breaklines=true}\newcommand{\fakesection}[1]{\par\refstepcounter{section}\sectionmark{#1}\addcontentsline{toc}{section}{\protect\numberline{\thesection}#1}}\def\equationautorefname~#1\null{#1\null}
 \raggedbottom\usepackage[bottom]{footmisc} \makeatletter \def\p@section{} \def\p@subsubsection{} \makeatother\begin{document}
-\title{\texttt{bayesim}: a tool for fast model fitting with Bayesian inference}
+
+
+\title{Bayesim: a tool for adaptive grid model fitting with Bayesian inference}
+
 \author{Rachel Kurchin}
 \affiliation{Department of Materials Science \& Engineering, Massachusetts Institute of Technology, 77 Massachusetts Avenue, Cambridge, MA 02139, USA}
 \author{Giuseppe Romano}
@@ -70,7 +73,7 @@ urlcolor={blue!80!black}}
    \end{split}
  \end{equation}
 
- In a multidimensional parameter estimation problem, each hypothesis $H$ is a tuple of possible values for the fitting parameters, i.e. a point in the parameter space, while the evidence $E$ is an observed output of a measurement as a function of various experimental conditions.
+ i.e. as each new piece of evidence is fed in, the posterior probability distribution is updated to accommodate it and should in general become more concentrated into one region of parameter space. In a multidimensional parameter estimation problem, each hypothesis $H$ is a tuple of possible values for the fitting parameters, i.e. a point in the parameter space, while the evidence $E$ is an observed output of a measurement as a function of various experimental conditions.
 
  In order to compute a likelihood, a model capable of simulating that observed output as a function of both the fitting parameters and the experimental conditions is required. In \texttt{bayesim}, likelihoods are calculated for each point in parameter space using a Gaussian where the argument is the difference between observed and simulated output at that point, and the standard deviation is the sum of experimental uncertainty and model uncertainty. The experimental uncertainty is a number provided by the user that quantifies any noise/irreproducibility inherent to the measurement, while the model uncertainty is calculated by \texttt{bayesim} and reflects the sparseness of the parameter space grid, i.e. how much simulated output changes from one grid point to another.
 
@@ -88,7 +91,7 @@ urlcolor={blue!80!black}}
     %\includegraphics[width=0.25\columnwidth]{structure.png}
     %\includegraphics[width=0.65\columnwidth]{flowchart.png}
     \includegraphics[width=0.95\columnwidth]{figure_2.png}
-    \caption{a) \texttt{bayesim} software structure. b) Detailed flowchart of use of \texttt{bayesim}, with calculation steps and various levels of iteration indicated.}
+    \caption{a) \texttt{bayesim} software structure. b) Detailed flowchart of use of \texttt{bayesim}, with calculation steps and various levels of iteration indicated. Boxes in blue indicate steps that can or must be done explicitly by the user, grey steps that are done by the code with behavior tunable by the user, orange diamonds control points for staying in or leaving a loop, and green the final output.}
     \label{structure}
   \end{figure}
 
@@ -96,11 +99,11 @@ urlcolor={blue!80!black}}
 
   ~\autoref{structure}b is a flowchart of using the code, with the main inference loop surrounded by a dotted line. One first needs to provide the observed and modeled data. Observed data is accepted in HDF5 format, while modeled data can be an HDF5 file (in which case \texttt{bayesimn} will determine the fitting parameter space grid from this file), or if the fitting parameter space has been predefined, one can also attach a Python function that computes the model data (e.g. an interface to a numerical model). Observed data should have associated experimental uncertainties, or the user can indicate a fixed value of uncertainty to use for all observations upon attaching the data.
 
-  \todo{do we need a figure for this?} Once modeled data is attached, model uncertainty can be computed. At each point in the space of experimental conditions, a matrix of the simulated output variable as a function of the fitting parameters is constructed and at each point in this matrix, the largest difference along any index is computed. This is set as the model uncertainty for this set of experimental conditions at this point in parameter space.
+  Once modeled data is attached, model uncertainty can be computed. At each point in the space of experimental conditions, a matrix of the simulated output variable as a function of the fitting parameters is constructed and at each point in this matrix, the largest difference along any index is computed. This is set as the model uncertainty for this set of experimental conditions at this point in parameter space.
 
-  At this point, the Bayesian inference loop can proceed. We start with a bounded prior distribution over the entire parameter space grid and the observed data in a randomized order. We feed in one piece of evidence (i.e. one observed data point) and compute the likelihood using a Gaussian. The standard deviation for each point in the parameter space is the sum of the experimental uncertainy of that observation and the model uncertainty at that point. The posterior distribution is computed as a Bayesian update on the prior. Next, we check whether the threshold condition for concentration of probability (defined as at least some percentage (by default 90\%) of the probability mass residing in at most some percentage (by default 5\%) of the parameter space volume. If this threshold is satisfied, the current posterior is stored and the prior reset to a uniform distribution. If not, the next observation is fed in. This procedure is repeated until the requisite number (by default, 80\%) of observed data points has been used, with the final posterior being the average of every stored posterior. The posterior is calculated in this way (rather than a Bayesian multiplication through every single observed point) to avoid numerical errors that can arise if very small numbers are multiplied together. This procedure of running the Bayesian loop multiple times until the desired number of pieces of evidence are used is encapsulated in the \texttt{Model.run()} function.
+  At this point, the Bayesian inference loop can proceed. We start with a bounded uniform prior distribution over the entire parameter space grid and the observed data in a randomized order. We feed in one piece of evidence (i.e. one observed data point) and compute the likelihood using a Gaussian. The standard deviation for each point in the parameter space is the sum of the experimental uncertainy of that observation and the model uncertainty at that point. The posterior distribution is computed as a Bayesian update on the prior. Next, we check whether the threshold condition for concentration of probability (defined as at least some percentage (by default 90\%) of the probability mass residing in at most some percentage (by default 5\%) of the parameter space volume. If this threshold is satisfied, the current posterior is stored and the prior reset to a uniform distribution. If not, the next observation is fed in. This procedure is repeated until the requisite number (by default, 80\%) of observed data points has been used, with the final posterior being the average of every stored posterior. The posterior is calculated in this way (rather than a Bayesian multiplication through every single observed point) to avoid numerical errors that can arise if very small numbers are multiplied together. This procedure of running the Bayesian loop multiple times until the desired number of pieces of evidence are used is encapsulated in the \texttt{Model.run()} function.
 
-  Now the grid can be subdivided. The user defines a threshold probability (by default 0.001) for a grid box to possess, and all boxes with greater than this probability, as well as all their immediate neighbors, are divided in two along every parameter. \texttt{bayesim} saves a list of the new model calculations that need to be done for inference to proceed again, and the user provides these, again either as a callable or an HDF5 file. For the next round of inference, the user can also define a ``bias" parameter from 0 to 0.5 (default 0) that will mix in some fraction of the posterior from the previous step with the uniform distribution over this new grid.
+  Now the grid can be subdivided. The user defines a threshold probability (by default 0.001) for a grid box to possess, and all boxes with greater than this probability, as well as all their immediate neighbors, are divided in two along every parameter. \texttt{bayesim} saves a list of the new model calculations that need to be done for inference to proceed again, and the user provides these, again either as a callable or an HDF5 file. For the next round of inference, the user can also define a ``relaxation" parameter from 0 to 1.0 (default 0) that will mix in some fraction of the posterior from the previous step with the uniform distribution over this new grid.
 
   This overall procedure can be repeated as many times as the user wishes to get a more precise fit -- eventually, the concentration of probability becomes limited by experimental rather than model uncertainty. There is also an option to define a minimum width for a box along any parameter direction, and if a box is already less than this width, \texttt{bayesim} will not subdivide in that direction.
 
@@ -127,33 +130,21 @@ urlcolor={blue!80!black}}
 
 
     \begin{figure}
-      \includegraphics[width=0.33\columnwidth]{diode_obs.png}
-      \includegraphics[width=0.45\columnwidth]{diode_obs_zoom.png}
-%      \includegraphics[width=0.3\columnwidth]{diode_pmf_1.png}
-%      \includegraphics[width=0.65\columnwidth]{diode_comp_1.png}
-%      \includegraphics[width=0.3\columnwidth]{diode_pmf_2.png}
-%      \includegraphics[width=0.65\columnwidth]{diode_comp_2.png}
-%      \includegraphics[width=0.3\columnwidth]{diode_pmf_3.png}
-%      \includegraphics[width=0.65\columnwidth]{diode_comp_3.png}
-%      \caption{a) ``Observations" generated by ideal diode model, Equation~\ref{ID_eqn}, b) Observed data saved by \texttt{bayesim}, with zoom to show where neglected data points were, Next three rows: PMF's, comparisons of highest three probability model points with observed data, and absolute errors thereof, on the initial grid, and after one and two subdivisions, respectively. ``True'' values for the parameters indicated on the PMF in red. (this figure is a giant data dump right now; I'm figuring out how to make it less terrifyingly overwhelming - like possibly overlaying all three PMF's onto one plot in different colors)}
-      \includegraphics[width=0.8\columnwidth]{diode_pmf_comp.png}
-      \caption{a) ``Observations" generated by ideal diode model, Equation~\ref{ID_eqn}, b) Observed data saved by \texttt{bayesim}, with zoom to show where neglected data points were, c) PMF's after the first inference run, second (one subdivision), and third (two subdivision), in blue, orange, and green, respectively. Values used to generate data indicated in red.}
+      \includegraphics[width=0.8\columnwidth]{figure_3.png}
+      \caption{a) ``Observations" generated by ideal diode model, Equation~\ref{ID_eqn}, with overlaid scatter to show which points were actually imported and used by \texttt{bayesim}, b) PMF's after the first inference run, second (one subdivision), and third (two subdivision), in blue, orange, and green, respectively. Values used to generate data indicated in red.}
       \label{ID_data}
     \end{figure}
 
-    As validation, we generate the ``observations" using the same model we'll use for fitting, with parameter values of $n=1.36$ and $B'=258$, and four temperature values of 150, 200, 250, and 300 K. These ``observations" are shown in ~\autoref{ID_data}a. When \texttt{bayesim} imports observed data, it can optionally discard data points that are very close by to each other in order to reduce computational load on modeling less informative points - this capacity is demonsrated in ~\autoref{ID_data}b.
-
-    %The next three rows of ~\autoref{ID_data} show the posterior distributions, comparison of JV data between observations and the three highest-probability model points, and absolute errors thereof, on the initial grid and after one and two rounds of subdivision. Note that the ranges on the parameter values get narrower as does the scale of absolute errors.
+    As validation, we generate the ``observations" using the same model we'll use for fitting, with parameter values of $n=1.36$ and $B'=258$, and four temperature values of 150, 200, 250, and 300 K. These ``observations" are shown in ~\autoref{ID_data}a. When \texttt{bayesim} imports observed data, it can optionally discard data points that are very close by to each other in order to reduce computational load on modeling less informative points -- the observed points that were actually imported (59 out of 305 total ``observations") are shown as overlaid scatter dots.
 
     The lower part of ~\autoref{ID_data} shows the posterior distributions after the first inference run and after each round of subdivision, demonstrating that \texttt{bayesim} gets progressively closer to the ``true" values as the loop continues iterating. In addition, on the first inference run (prior to any subdivision), an average of 43\% of grid points had larger model uncertainty than experimental uncertainty, while after the second subdivision, only 2\% did, while the average absolute error of the highest-probability model decreased from 0.03 after the first run to 0.007 after the second subdivision.
 
   \subsection{SnS Solar Cell}
-    This example aims to demonstrate a more realistic application of \texttt{bayesim}, i.e. when the model being used to compute likelihoods is more computationally expensive. In this case, we will repeat the analysis from Ref.~\cite{SnSJoule}, using SCAPS~\cite{SCAPS} as the model, which takes 10-15 core-seconds for a single J-V sweep.
+    This example aims to demonstrate a more realistic application of \texttt{bayesim}, i.e. when the model being used to compute likelihoods is more computationally expensive. In this case, we will repeat the analysis from Ref.~\cite{SnSJoule}, using SCAPS~\cite{SCAPS} (a coupled drift-diffusion/Poisson solver) as the model, which takes 10-15 core-seconds for a single J-V sweep.
 
     \begin{figure}
-      \includegraphics[width=0.7\columnwidth]{SnS_final_pmf.png}
-      \includegraphics[width=0.8\columnwidth]{SnS_probs_Joule}
-      \caption{Above: PMF produced by \texttt{bayesim}. Below: PMF from Reference~\cite{SnSJoule}. \hl{TBD if we'll actually reproduce the plot from the Joule paper directly vs. replotting the data somehow}}
+      \includegraphics[width=0.8\columnwidth]{figure_4.png}
+      \caption{a) PMFs produced by \texttt{bayesim}, after initial run and after one subdivision. Inset: device structure (illuminated from above) with bulk SnS ($\mu$,$\tau$ fit) and SnS/Zn(O,S) interface ($\Delta E_\text{c}$, $S_{\text{eff}}$ fit) indicated. b) PMF from Reference~\cite{SnSJoule}. \hl{TBD if we'll actually reproduce the plot from the Joule paper directly vs. replotting the data somehow}}
       \label{SnS_data}
     \end{figure}
 

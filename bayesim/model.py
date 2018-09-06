@@ -624,7 +624,7 @@ class Model(object):
             th_pm (`float`): threshold quantity of probability mass to be concentrated in th_pv fraction of parameter space to trigger the run to stop (defaults to 0.9)
             th_pv (`float`): threshold fraction of parameter space volume for th_pm fraction of probability to be concentrated into to trigger the run to stop (defaults to 0.05)
             min_num_pts (`int`): minimum number of observation points to use - if threshold is reached before this number of points has been used, it will start over and the final PMF will be the average of the number of runs needed to use sufficient points (defaults to 0.7 * the number of experimental measurements)
-            prob_bias (`float`): number from 0 to 0.5, fraction of PMF from previous step to mix into prior for this step (defaults to 0) - higher values will likely converge faster but possibly have larger errors, especially if min_num_pts is small
+            prob_relax (`float`): number from 0 to 1.0, fraction of PMF from previous step to mix into prior for this step (defaults to 0) - higher values will likely converge faster but possibly have larger errors, especially if min_num_pts is small
             verbose (`bool`): flag for verbosity, defaults to False
         """
         # read in options
@@ -633,10 +633,10 @@ class Model(object):
         th_pv = argv.get('th_pv', 0.05)
         min_num_pts = argv.get('min_num_pts', int(0.7*len(self.obs_data)))
         verbose = argv.get('verbose', False)
-        bias = argv.get('prob_bias', 0.0)
-        if bias < 0 or bias > 0.5:
-            print("Bias parameter must be between 0 and 0.5 - defaulting to 0.")
-            bias = 0
+        rel = argv.get('prob_relax', 0.0)
+        if rel < 0 or rel > 1.0:
+            print("Relaxation parameter must be between 0 and 1.0 - defaulting to 0.")
+            rel = 0
         if verbose:
             print('Running inference!\n')
 
@@ -666,7 +666,7 @@ class Model(object):
         uni_probs = deepcopy(self.probs)
         uni_probs.uniformize()
         start_probs = deepcopy(self.probs)
-        start_probs.points['prob'] = bias*old_probs.points['prob'] + (1-bias)*uni_probs.points['prob']
+        start_probs.points['prob'] = rel*old_probs.points['prob'] + (1-rel)*uni_probs.points['prob']
         start_probs.normalize()
 
         # randomize observation order
