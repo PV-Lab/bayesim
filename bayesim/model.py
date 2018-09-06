@@ -1,5 +1,3 @@
-import sys
-sys.path.append('../../')
 from bayesim.pmf import Pmf
 import bayesim.params as pm
 from bayesim.utils import calc_deltas
