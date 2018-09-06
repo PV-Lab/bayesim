@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 import sys
 import bayesim.params as pm
-#import bayesim.model as bym
-import model as bym
+import bayesim.model as bym
+#import model as bym
 import bayesim.pmf as pmf
 import matplotlib.pyplot as plt
 import matplotlib.patches as mplp
