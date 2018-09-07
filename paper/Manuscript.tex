@@ -107,7 +107,7 @@ urlcolor={blue!80!black}}
 
   This overall procedure can be repeated as many times as the user wishes to get a more precise fit -- eventually, the concentration of probability becomes limited by experimental rather than model uncertainty. There is also an option to define a minimum width for a box along any parameter direction, and if a box is already less than this width, \texttt{bayesim} will not subdivide in that direction.
 
-  The most flexible way to interact with \texttt{bayesim} is via Python scripting or through literate programming in a Jupyter notebook. There is also a command line interface (CLI) for users less familiar with coding in Python.
+  The most flexible way to interact with \texttt{bayesim} is via Python scripting or through literate programming in a Jupyter notebook. There is also a command line interface (CLI) for users less familiar with coding in Python planned for future release.
 
   \texttt{bayesim} relies on a variety of external open-source packages. These include \texttt{numpy}~\cite{numpy} and \texttt{scipy}~\cite{scipy} for a variety of mathematical functions and vectorized implementations, \texttt{joblib}~\cite{joblib} for simple parallelism, \texttt{deepdish}~\cite{deepdish} for saving and loading HDF5 files, \texttt{pandas}~\cite{pandas} for data manipulation, and \texttt{matplotlib}~\cite{mpl} for visualization.
 
@@ -144,11 +144,11 @@ urlcolor={blue!80!black}}
 
     \begin{figure}
       \includegraphics[width=0.8\columnwidth]{figure_4.png}
-      \caption{a) PMFs produced by \texttt{bayesim}, after initial run and after one subdivision. Inset: device structure (illuminated from above) with bulk SnS ($\mu$,$\tau$ fit) and SnS/Zn(O,S) interface ($\Delta E_\text{c}$, $S_{\text{eff}}$ fit) indicated. b) PMF from Reference~\cite{SnSJoule}. \hl{TBD if we'll actually reproduce the plot from the Joule paper directly vs. replotting the data somehow}}
+      \caption{PMFs produced by \texttt{bayesim}, after initial run and after one subdivision (Blue and green, respectively). In red, PMF from Reference~\cite{SnSJoule}. Inset: device structure (illuminated from above) with bulk SnS ($\mu$,$\tau$ fit) and SnS/Zn(O,S) interface ($\Delta E_\text{c}$, $S_{\text{eff}}$ fit) indicated.}
       \label{SnS_data}
     \end{figure}
 
-    We start on a significantly coarser grid than Ref.~\cite{SnSJoule} and show only one level of subdivision to make the example feasible to run on a personal computer. ~\autoref{SnS_data} shows the results from this fit done in \texttt{bayesim} compared to the higher-resolution grid analysis done previously. Note that the inference step in full-resolution grid took a few hours, while the adaptive grid fit takes a few minutes. While the fit precision is of course lower at only one level of subdivision, the extracted values are generally in agreement and more importantly, the relationship between the mobility and lifetime (namely, that the product, i.e. the diffusion length), is constrained, emerges just as clearly.
+    We start on a significantly coarser grid than Ref.~\cite{SnSJoule} and show only one level of subdivision to make the example feasible to run on a personal computer. \autoref{SnS_data} shows the results from this fit done in \texttt{bayesim} compared to the higher-resolution grid analysis done previously. Note that the inference step in full-resolution grid took a few hours, while the adaptive grid fit takes a few minutes. While the fit precision is of course lower at only one level of subdivision, the extracted values are generally in agreement and more importantly, the relationship between the mobility and lifetime (namely, that the product, i.e. the diffusion length), is constrained, emerges just as clearly.
 
 
 \section*{Conclusions}
@@ -157,16 +157,10 @@ urlcolor={blue!80!black}}
    \item a forward model that captures the relevant physics (particularly one that is relatively expensive to evaluate), and
    \item a set of measurements of the output of that model as a function of several experimental conditions
  \end{itemize}
- would be amenable to \texttt{bayesim}. The online documentation page~\cite{docs} maintains a list of examples which will grow as the authors become aware of/implement more. This website also hosts other useful information, such as detailed documentation of every class and function in \texttt{bayesim}, a more extensive technical background section than is included here, and an updated manual for usage of the code.
+ would be amenable to \texttt{bayesim}. The online documentation page~\cite{docs} maintains a list of examples which will grow as the authors become aware of/implement more, and the latest version of the code can always be found in the Github repository~\cite{gh}. The online documentation also hosts other useful information, such as detailed documentation of every class and function in \texttt{bayesim}, a more extensive technical background section than is included here, and an updated manual for usage of the code.
 
 \section*{Acknowledgements}
 R.C.K. acknowledges the funding of a Blue Waters Graduate Fellowship. The SnS work referenced in~\cite{SnSJoule} was funded by a Google Faculty Research Award, as well as the Center for Next Generation Materials by Design (CNGMD), an Energy Frontier Research Center funded by the U.S. Department of Energy, Office of Science, Basic Energy Sciences.
-
-\section*{Appendix}
- \begin{itemize}
-   \item include minimal code to run ideal diode example via CLI
-   \item link to Github repo (which has installation instructions and documentation as well as list of planned future features)
-  \end{itemize}
 
 \bibliography{biblio}
 \bibliographystyle{ieeetr}
