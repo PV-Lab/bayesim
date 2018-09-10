@@ -2,10 +2,10 @@ from copy import deepcopy
 import numpy as np
 import pandas as pd
 import sys
-#sys.path.append('../../')
+sys.path.append('../../')
 #import bayesim.params as pm
 #import bayesim.model as bym
-#import model as bym
+import model as bym
 #import bayesim.pmf as pmf
 import matplotlib.pyplot as plt
 import matplotlib.patches as mplp
@@ -74,11 +74,12 @@ def visualize_PMF_sequence(statefile_list, **argv):
                                 else:
                                     y = 0.8-(float(j)/float(len(axes_sets)))*0.7
                                 axes[rownum][colnum].add_patch(mplp.Rectangle((x,y), 0.1, 0.1, facecolor=colors[j]))
-                                axes[rownum][colnum].text(x+0.15, y, name_list[j], color='k', fontsize=20)
+                                axes[rownum][colnum].text(x+0.15, y+0.01, name_list[j], color='k', fontsize=20)
                             if plot_true_vals:
-                                axes[rownum][colnum].scatter([0.16],[0.1],200,'#FFFF00',marker='*')
-                                axes[rownum][colnum].scatter([0.25],[0.1],200,c="None",marker='o',linewidths=3,edgecolors='#FFFF00')
-                                axes[rownum][colnum].text(0.35, 0.1, 'true values', color='k', fontsize=20)
+                                axes[rownum][colnum].add_patch(mplp.Rectangle((0.13,0.06), 0.17, 0.08, facecolor='0.8'))
+                                axes[rownum][colnum].scatter([0.16],[0.1],200, '#FFFF00', marker='*', zorder=200)
+                                axes[rownum][colnum].scatter([0.25],[0.1],200, c="None", marker='o', linewidths=3, edgecolors='#FFFF00', zorder=200)
+                                axes[rownum][colnum].text(0.35, 0.08, 'ground truth', color='k', fontsize=20)
                         else:
                             fig.delaxes(axes[rownum][colnum])
                     else:
