@@ -482,7 +482,7 @@ class Pmf(object):
         return avgs
 
 
-    def project_1D(self, param):
+    def project_1D(self, param, dense_grid=None):
 
         """
         Project down to a one-dimensional PMF over the given parameter. Used by the visualize() method.
@@ -493,14 +493,18 @@ class Pmf(object):
         Returns:
             bins (:obj:`list` of :obj:`float`): bin edges for plotting with matplotlib.pyplot.hist (has length one more than next return list)
             probs (:obj:`list` of :obj:`float`): probability values for histogram-style plot - note that these technically have units of the inverse of whatever the parameter being plotted is (that is, they're probability densities)
+            dense_grid (matrix): optionally, pass precomputed dense grid to save time
         """
         ## first find bin edges
         # pull all bounds, then flatten, remove duplicates, and sort
         bins = sorted(list(set(list(self.points[param.name+'_min'])+list(self.points[param.name+'_max']))))
 
-        # generate dense grid and populate with probabilities
-        dense_grid = self.populate_dense_grid(df=self.points, col_to_pull='prob', make_ind_lists=False)
-        mat = dense_grid['mat']
+        if dense_grid==None:
+            # generate dense grid and populate with probabilities
+            dense_grid = self.populate_dense_grid(df=self.points, col_to_pull='prob', make_ind_lists=False)
+            mat = dense_grid['mat']
+        else:
+            mat = dense_grid
 
         # sum along all dimensions except the parameter of interest
         param_ind = self.param_names().index(param.name)
@@ -509,7 +513,7 @@ class Pmf(object):
 
         return bins, probs
 
-    def project_2D(self, x_param, y_param, no_probs=False):
+    def project_2D(self, x_param, y_param, no_probs=False, dense_grid=None):
 
         """
         Project down to two dimensions over the two parameters. This one doesn't actually need to sum, it just draws a bunch of (potentially overlapping) rectangles with transparencies according to their probability densities (as a fraction of the normalized area). Used by the visualize() method.
@@ -517,63 +521,43 @@ class Pmf(object):
         Args:
             x_param (dict): one of `self.params`, to be the x-axis of the 2D joint plot
             y_param (dict): one of `self.params`, to be the y-axis of the 2D joint plot
+            no_probs (bool): whether to just show the grid boxes or include probability as determiner of transparency
+            dense_grid (matrix): optionally, pass precomputed dense grid to save time
 
         Returns:
             (:obj:`list` of :obj:`matplotlib.patches.Rectangle`): patches for plotting the 2D joint probability distribution
         """
-        """
-        x_name = x_param.name
-        y_name = y_param.name
-        max_prob = max(self.points['prob'])
-        patches = []
+        if dense_grid==None:
+            # generate dense grid and populate with probabilities
+            dense_grid = self.populate_dense_grid(df=self.points, col_to_pull='prob', make_ind_lists=False)
+            mat = dense_grid['mat']
+        else:
+            mat = dense_grid
 
-        for row in self.points.iterrows():
-            x_min = row[1][x_name+'_min']
-            x_width = row[1][x_name+'_max'] - x_min
-            y_min = row[1][y_name+'_min']
-            y_width = row[1][y_name+'_max'] - y_min
-            if no_probs:
-                patches.append(mpl.patches.Rectangle((x_min,y_min),x_width,y_width,fill=False,ec='k'))
-            else:
-                alpha = row[1]['prob']/max_prob
-                if alpha>1e-3: #this speeds it up a lot
-                    patches.append(mpl.patches.Rectangle((x_min,y_min),x_width,y_width,alpha=alpha))
-
-        # here lies the so-far failed attempt to speed this up with grids
-        """
-        # generate dense grid and populate with probabilities
-        dense_grid = self.populate_dense_grid(df=self.points, col_to_pull='prob', make_ind_lists=False)
-        mat = dense_grid['mat']
         max_prob = max(self.points['prob'])
         #param_vals = dense_grid['param_vals']
         param_edges = {p.name:p.edges for p in self.params}
 
         # sum along all dimensions except the parameter of interest
-        #param_names = [p['name'] for p in self.params]
-        #param_inds = [param_names.index(p['name']) for p in self.params]
         inds_to_sum_along = tuple([i for i in range(len(mat.shape)) if not self.params[i].name in [x_param.name,y_param.name]])
-        dense_probs = np.sum(mat, axis=inds_to_sum_along)
+        dense_probs = np.nansum(mat, axis=inds_to_sum_along)
 
-        # generate list of patch parameters - first need every pair of indices
-        ind_pairs = product(*[range(i) for i in dense_probs.shape])
-        patches = []
-        for pr in ind_pairs:
-            x_min = param_edges[x_param.name][pr[0]]
-            x_width = param_edges[x_param.name][pr[0]+1] - x_min
-            y_min = param_edges[y_param.name][pr[1]]
-            y_width = param_edges[y_param.name][pr[1]+1] - y_min
-            if no_probs:
-                fill = False
-                ec = 'k'
-                alpha = 0
-            else:
-                alpha = dense_probs[pr]/max_prob
-                ec = 'None'
-                fill=True
-            if alpha>1e-3:
-                patches.append(mpl.patches.Rectangle((x_min,y_min), x_width, y_width, fill=fill, ec=ec, alpha=alpha))
+        if no_probs:
+            # generate list of patch parameters - first need every pair of indices
+            ind_pairs = product(*[range(i) for i in dense_probs.shape])
+            patches = []
+            for pr in ind_pairs:
+                x_min = param_edges[x_param.name][pr[0]]
+                x_width = param_edges[x_param.name][pr[0]+1] - x_min
+                y_min = param_edges[y_param.name][pr[1]]
+                y_width = param_edges[y_param.name][pr[1]+1] - y_min
+                if not dense_probs[pr]==np.nan:
+                    patches.append(mpl.patches.Rectangle((x_min,y_min), x_width, y_width, fill=False, ec='k'))
 
-        return patches
+            return patches
+
+        else:
+            return dense_probs
 
     def visualize(self, **argv):
         """
@@ -626,6 +610,10 @@ class Pmf(object):
         time1 = round(check1-start_time,2)
         #print('setup finished in ' + str(time1) + ' seconds')
 
+        dense_probs = self.populate_dense_grid(df=self.points, col_to_pull='prob', make_ind_lists=False, return_edges=True)['mat']
+
+        param_ticks = self.pick_ticks(plot_ranges)
+
         for rownum in range(0,len(self.params)):
             for colnum in range(0,len(self.params)):
                 x_param = self.params[colnum]
@@ -637,30 +625,32 @@ class Pmf(object):
                 axes[rownum][colnum].set_xlim(x_min, x_max)
                 axes[rownum][colnum].set_axisbelow(True)
                 # force four x-ticks to avoid numbers overlapping...hopefully
-                round_digits = -1*(int(math.floor(np.log10(x_max-x_min)))) + 1
-                if round((x_max-x_min)/5.0, round_digits) == 0:
-                    round_digits = round_digits + 1
-                tick_spacing = round((x_max-x_min)/5., round_digits)
-                axes[rownum][colnum].xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
+                #round_digits = -1*(int(math.floor(np.log10(x_max-x_min)))) + 1
+                #if round((x_max-x_min)/5.0, round_digits) == 0:
+                #    round_digits = round_digits + 1
+                #tick_spacing = round((x_max-x_min)/5., round_digits)
+                #axes[rownum][colnum].xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
 
                 for item in ([axes[rownum][colnum].xaxis.label, axes[rownum][colnum].yaxis.label] +axes[rownum][colnum].get_xticklabels() + axes[rownum][colnum].get_yticklabels()):
                     item.set_fontsize(20)
-
-                if x_param.spacing=='log':
-                    axes[rownum][colnum].set_xscale('log')
 
                 if rownum==colnum: #diagonal - single-variable histogram
                     if just_grid:
                         fig.delaxes(axes[rownum][colnum])
                     else:
                         diag_start = timeit.default_timer()
-                        bins, probs = self.project_1D(x_param)
+                        bins, probs = self.project_1D(x_param, dense_grid=deepcopy(dense_probs))
                         checkpoint = round(timeit.default_timer()-diag_start,2)
                         #print('project_1D took ' + str(checkpoint) + ' seconds')
                         if x_param.spacing=='log':
+                            axes[rownum][colnum].set_xscale('log')
+                            xtick_locs = [10**tick for tick in param_ticks[x_param.name]['locs']]
                             vals = [math.sqrt(bins[i]*bins[i+1]) for i in range(len(probs))]
                         elif x_param.spacing=='linear':
+                            xtick_locs = param_ticks[x_param.name]['locs']
                             vals = [0.5*(bins[i]+bins[i+1]) for i in range(len(probs))]
+                        axes[rownum][colnum].set_xticks(xtick_locs)
+                        axes[rownum][colnum].set_xticklabels(param_ticks[x_param.name]['labels'])
                         axes[rownum][colnum].hist(vals, weights=probs, bins=bins, edgecolor='k', linewidth=1.0)
 
                         # formatting
@@ -685,21 +675,30 @@ class Pmf(object):
                     offdiag_start = timeit.default_timer()
                     if just_grid:
                         patches = self.project_2D(x_param, y_param, no_probs=True)
-                        #patch_params = self.project_2D(x_param, y_param, no_probs=True)
                         axes[rownum][colnum].grid(False)
                     else:
-                        patches = self.project_2D(x_param, y_param)
-                        #patch_params = self.project_2D(x_param, y_param)
+                        dense_probs_here = self.project_2D(x_param, y_param, dense_grid=deepcopy(dense_probs))
+
+                        if x_param.spacing=='log':
+                            axes[rownum][colnum].set_xscale('linear')
+                            x_min = np.log10(plot_ranges[x_param.name][0])
+                            x_max = np.log10(plot_ranges[x_param.name][1])
+                            axes[rownum][colnum].set_xlim([x_min, x_max])
+                        if y_param.spacing=='log':
+                            y_min = np.log10(plot_ranges[y_param.name][0])
+                            y_max = np.log10(plot_ranges[y_param.name][1])
+                        else:
+                            y_min = plot_ranges[y_param.name][0]
+                            y_max = plot_ranges[y_param.name][1]
+                        axes[rownum][colnum].set_xticks(param_ticks[x_param.name]['locs'])
+                        axes[rownum][colnum].set_xticklabels(param_ticks[x_param.name]['labels'])
+                        axes[rownum][colnum].set_yticks(param_ticks[y_param.name]['locs'])
+                        axes[rownum][colnum].set_yticklabels(param_ticks[y_param.name]['labels'])
+                        axes[rownum][colnum].set_ylim([y_min, y_max])
+                        axes[rownum][colnum].imshow(dense_probs_here.transpose(), aspect='auto', origin='lower', extent=(x_min, x_max, y_min, y_max), cmap=plt.get_cmap('Blues'))
+
                     checkpoint = round(timeit.default_timer()-offdiag_start,2)
                     #print('project_2D took ' + str(checkpoint) + ' seconds')
-                    for patch in patches:
-                    #for patch in patch_params:
-                        axes[rownum][colnum].add_patch(patch)
-                        #axes[rownum][colnum].add_patch(mpl.patches.Rectangle(*patch['args'],**patch['kwargs']))
-                    # formatting
-                    axes[rownum][colnum].set_ylim(plot_ranges[y_param.name][0],plot_ranges[y_param.name][1])
-                    if y_param.spacing=='log':
-                        axes[rownum][colnum].set_yscale('log')
 
                     if plot_true_vals:
                         true_x = [true_vals[x_param.name]]
@@ -732,3 +731,42 @@ class Pmf(object):
 
         else:
             plt.show()
+
+
+    def pick_ticks(self, plot_ranges):
+        """Helper function for visualize."""
+        param_ticks = {}
+        for p in self.params:
+            param_ticks[p.name] = {'locs':[], 'labels':[]}
+            min_val = plot_ranges[p.name][0]
+            max_val = plot_ranges[p.name][1]
+            if p.spacing=='linear':
+                p_range = max_val-min_val
+                tick_spacing = round(p_range/4.5, -1*int(round(np.log10(0.1*p_range))))
+                first_tick = int(min_val/tick_spacing)*tick_spacing
+                if first_tick < min_val:
+                    first_tick = first_tick+tick_spacing
+                tick_locs = np.arange(first_tick, 0.01*p_range+max_val, tick_spacing)
+                param_ticks[p.name]['locs'] = tick_locs
+                if tick_spacing>2:
+                    param_ticks[p.name]['labels'] = [str(int(loc)) for loc in tick_locs]
+                else:
+                    param_ticks[p.name]['labels'] = [str(loc) for loc in tick_locs]
+            elif p.spacing=='log':
+                p_range = np.log10(max_val)-np.log10(min_val)
+                if p_range<3.0:
+                    tick_spacing = 0.5
+                elif p_range<=6.0:
+                    tick_spacing = 1.0
+                else:
+                    tick_spacing = 2.0
+                first_tick = int(np.log10(min_val)/tick_spacing)*tick_spacing
+                if first_tick < np.log10(min_val):
+                    first_tick = first_tick + tick_spacing
+                tick_locs = np.arange(first_tick, 0.01*p_range+np.log10(max_val), tick_spacing)
+                param_ticks[p.name]['locs'] = tick_locs
+                if tick_spacing==0.5:
+                    param_ticks[p.name]['labels'] = [r'10$^{%s}$'%str(round(loc,1)) for loc in tick_locs]
+                else:
+                    param_ticks[p.name]['labels'] = [r'10$^{%s}$'%int(loc) for loc in tick_locs]
+        return param_ticks
