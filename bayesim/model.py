@@ -1,6 +1,6 @@
 from bayesim.pmf import Pmf
 import bayesim.params as pm
-from bayesim.utils import calc_deltas
+from bayesim.utils import calc_deltas, get_closest_val
 import pandas as pd
 import deepdish as dd
 from copy import deepcopy
@@ -463,9 +463,12 @@ class Model(object):
         # round fit params - actually just force them to be members of the vals lists
         print("Rounding model data...")
         for p in self.params.fit_params:
-            self.model_data[p.name] = [p.get_closest_val(val) for val in self.model_data[p.name]]
+            #self.model_data[p.name] = [p.get_closest_val(val) for val in self.model_data[p.name]]
+            self.model_data[p.name] = Parallel(n_jobs=cpu_count())(delayed(get_closest_val)(val, p.vals) for val in self.model_data[p.name])
 
         # generate groups
+        if verbose:
+            print("Grouping model data...")
         self.model_data_ecgrps = self.model_data.groupby(self.ec_names())
         self.model_data_grps = self.model_data.groupby(by=self.fit_param_names())
 
@@ -474,6 +477,8 @@ class Model(object):
 
         # update flag and indices
         self.needs_new_model_data = False
+        if verbose:
+            print("Indexing model data...")
         self.calc_indices()
 
         if calc_model_unc:

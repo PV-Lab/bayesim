@@ -3,13 +3,10 @@ import numpy as np
 import pandas as pd
 import sys
 sys.path.append('../../')
-#import bayesim.params as pm
-#import bayesim.model as bym
-import model as bym
-#import bayesim.pmf as pmf
 import matplotlib.pyplot as plt
 import matplotlib.patches as mplp
 from matplotlib import colors as mcolors
+from bisect import bisect_left
 
 def visualize_PMF_sequence(statefile_list, **argv):
     """
@@ -21,6 +18,7 @@ def visualize_PMF_sequence(statefile_list, **argv):
         true_vals (`dict`): optional, set of param values to highlight on PMF
         fpath (str): optional, path to save image to
     """
+    import model as bym
 
     # get legend names
     if 'name_list' in argv.keys():
@@ -115,6 +113,19 @@ def visualize_PMF_sequence(statefile_list, **argv):
     else:
         plt.show()
 
+def get_closest_val(val, val_list):
+    """Return closest value to val in a list."""
+    pos = bisect_left(val_list, val)
+    if pos == 0:
+        return val_list[0]
+    if pos == len(val_list):
+        return val_list[-1]
+    before = val_list[pos - 1]
+    after = val_list[pos]
+    if after - val < val - before:
+       return after
+    else:
+       return before
 
 def calc_deltas(grp, inds, param_lengths, model_data, fit_param_names, probs, output_var):
     # construct matrix of output_var({fit_params})
@@ -123,8 +134,9 @@ def calc_deltas(grp, inds, param_lengths, model_data, fit_param_names, probs, ou
     subset.drop_duplicates(subset=fit_param_names, inplace=True)
     subset.sort_values(fit_param_names, inplace=True)
     subset.reset_index(inplace=True)
-    if not len(subset.index)==len(probs.points.index):
-        raise ValueError("Subset at EC's %s does not match probability grid!"%str(grp))
+    # removing this check for now and hopefully the missing data filters will handle it
+    #if not len(subset.index)==len(probs.points.index):
+        #raise ValueError("Subset at EC's %s does not match probability grid!"%str(grp))
 
     # check if on a grid
     if not len(subset)==np.product(param_lengths):

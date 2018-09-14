@@ -379,7 +379,10 @@ class Pmf(object):
             model_val = float(model_pt[output_col])
             if not np.isnan(model_val):
                 model_err = float(model_pt['uncertainty'])
-                err = model_err + meas_err
+                if np.isnan(model_err):
+                    err = 2*meas_err #janky but whatev
+                else:
+                    err = model_err + meas_err
 
                 # tally how many times deltas were bigger
                 if model_err > meas_err:
@@ -397,6 +400,7 @@ class Pmf(object):
         if abs(np.sum(new_probs))<1e-12:
             print('likelihood has no probability! :(')
         if any(np.isnan(np.array(self.points['prob']))):
+            print(self.points[self.points.isnull().any(axis=1)])
             raise ValueError('Uh-oh, some probability is NaN!')
         lkl.normalize()
         return lkl, delta_count, nan_count

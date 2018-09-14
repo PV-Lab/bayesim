@@ -25,6 +25,10 @@ TO DO LIST FOR BAYESIM
 
 ~ add calc_errors that takes a point in PMF (by index? as a dict?) and calculates average absolute and relative errors between model and observations for those parameters
 
+~ parallelize model data rounding
+
+~ uncertainty ending up as NaN in corners and maybe other places too?
+
 ~ change model.attach_params to call attach_ecs and attach_fit_params
 
 ~ either move true_vals star to x-axis or use a vertical line (and add legend for them)
