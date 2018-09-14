@@ -423,7 +423,6 @@ class Pmf(object):
             df (`obj`:DataFrame): DataFrame to populate from (should have columns for every param)
             col_to_pull (`str`): name of the column to use when populating grid points
             make_ind_lists (`bool`): whether to return a list of indices corresponding to the first in every slice (used by bayesim.model.calc_model_gradients)
-            return_edges (`bool`): whether to return list of edge values also (used by bayesim.pmf.project_2D)
 
         Returns:
             a dict with keys for each thing requested
@@ -432,7 +431,6 @@ class Pmf(object):
         df = argv['df']
         col_to_pull = argv['col_to_pull']
         make_ind_lists = argv.get('make_ind_lists',True)
-        return_edges = argv.get('return_edges',False)
 
         # initialize things
         mat_shape = []
@@ -471,8 +469,7 @@ class Pmf(object):
         return_dict = {'mat':mat}
         if make_ind_lists:
             return_dict['ind_lists'] = ind_lists
-        if return_edges:
-            return_dict['param_edges'] = param_edges
+
         return return_dict
 
     def weighted_avgs(self):
@@ -524,7 +521,7 @@ class Pmf(object):
         Returns:
             (:obj:`list` of :obj:`matplotlib.patches.Rectangle`): patches for plotting the 2D joint probability distribution
         """
-
+        """
         x_name = x_param.name
         y_name = y_param.name
         max_prob = max(self.points['prob'])
@@ -545,38 +542,37 @@ class Pmf(object):
         # here lies the so-far failed attempt to speed this up with grids
         """
         # generate dense grid and populate with probabilities
-        dense_grid = self.populate_dense_grid(self.points,'prob',False,False,return_edges=True)
+        dense_grid = self.populate_dense_grid(df=self.points, col_to_pull='prob', make_ind_lists=False)
         mat = dense_grid['mat']
-        param_vals = dense_grid['param_vals']
-        param_edges = dense_grid['param_edges']
+        max_prob = max(self.points['prob'])
+        #param_vals = dense_grid['param_vals']
+        param_edges = {p.name:p.edges for p in self.params}
 
         # sum along all dimensions except the parameter of interest
-        param_names = [p['name'] for p in self.params]
-        param_inds = [param_names.index(p['name']) for p in self.params]
-        inds_to_sum_along = tuple([i for i in range(len(mat.shape)) if not i in param_inds])
-        dense_probs_list = np.sum(mat,axis=inds_to_sum_along)
-        print(dense_probs_list.shape)
+        #param_names = [p['name'] for p in self.params]
+        #param_inds = [param_names.index(p['name']) for p in self.params]
+        inds_to_sum_along = tuple([i for i in range(len(mat.shape)) if not self.params[i].name in [x_param.name,y_param.name]])
+        dense_probs = np.sum(mat, axis=inds_to_sum_along)
 
         # generate list of patch parameters - first need every pair of indices
-        ind_pairs = product(*[range(i) for i in dense_probs_list.shape])
-        patch_params = []
+        ind_pairs = product(*[range(i) for i in dense_probs.shape])
+        patches = []
         for pr in ind_pairs:
-            x_min = param_edges[x_name][pr[0]]
-            x_width = param_edges[x_name][pr[0]+1] - x_min
-            y_min = param_edges[y_name][pr[1]]
-            y_width = param_edges[y_name][pr[1]+1] - y_min
+            x_min = param_edges[x_param.name][pr[0]]
+            x_width = param_edges[x_param.name][pr[0]+1] - x_min
+            y_min = param_edges[y_param.name][pr[1]]
+            y_width = param_edges[y_param.name][pr[1]+1] - y_min
             if no_probs:
                 fill = False
                 ec = 'k'
                 alpha = 0
             else:
-                alpha = dense_probs_list[pr]/max_prob
+                alpha = dense_probs[pr]/max_prob
                 ec = 'None'
                 fill=True
-            patch_params.append({'args':[(x_min,y_min),x_width,y_width],'kwargs':{'fill':fill,'ec':ec,'alpha':alpha}})
+            if alpha>1e-3:
+                patches.append(mpl.patches.Rectangle((x_min,y_min), x_width, y_width, fill=fill, ec=ec, alpha=alpha))
 
-        return patch_params
-        """
         return patches
 
     def visualize(self, **argv):
