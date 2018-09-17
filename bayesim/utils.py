@@ -35,19 +35,21 @@ def visualize_PMF_sequence(statefile_list, **argv):
     # load the models one by one (to save RAM) and get visualizations
     figs = []
     axes_sets = []
-    for statefile in statefile_list:
+    for i in range(len(statefile_list)):
+        statefile = statefile_list[i]
         m = bym.Model(load_state=True, state_file=statefile)
         if plot_true_vals:
-            f, a = m.probs.visualize(return_plots=True, true_vals=true_vals)
+            f, a = m.probs.visualize(return_plots=True, true_vals=true_vals, color_index=i)
         else:
-            f, a = m.probs.visualize(return_plots=True)
+            f, a = m.probs.visualize(return_plots=True, color_index=i)
         figs.append(f)
         axes_sets.append(a)
     num_params = len(m.params.fit_params)
 
-    # get color cycle
+    # get color cycle and colormaps (just pull five)
     prop_cycle = plt.rcParams['axes.prop_cycle']
-    colors = prop_cycle.by_key()['color']
+    colors = prop_cycle.by_key()['color'][:5]
+    cmap_name_list = ['Blues','Greens','Reds','Purples','Oranges']
 
     # initialize the figure
     fig, axes = plt.subplots(nrows=num_params, ncols=num_params, figsize=(5*num_params, 5*num_params))
@@ -105,7 +107,8 @@ def visualize_PMF_sequence(statefile_list, **argv):
                             item.set_fontsize(20)
 
                 for patch in patches:
-                    axes[rownum][colnum].add_patch(mplp.Rectangle((patch._x, patch._y), patch._width, patch._height, facecolor=color, alpha=patch._alpha, zorder=i+1))
+                    #axes[rownum][colnum].add_patch(mplp.Rectangle((patch._x, patch._y), patch._width, patch._height, facecolor=color, alpha=patch._alpha, zorder=i+1))
+                    axes[rownum][colnum].add_patch(mplp.Rectangle((patch._x, patch._y), patch._width, patch._height, alpha=patch._alpha, zorder=i+1))
 
     if 'fpath' in argv.keys():
         plt.savefig(argv['fpath'])

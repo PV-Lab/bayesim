@@ -569,6 +569,7 @@ class Pmf(object):
             fpath (`str`): optional, path to save image to
             true_vals (`dict`): optional, set of param values to highlight on PMF
             return_plots (bool): whether to return figure and axes (used by visualize_PMF_sequence in utils), default False
+            color_index (int): from 0 to 4, choose from blue, green, red, purple, orange (defaults to 0)
         """
         # read in options
         frac_points = argv.get('frac_points', 1.0)
@@ -576,6 +577,7 @@ class Pmf(object):
         return_plots = argv.get('return_plots', False)
         if return_plots:
             plt.ioff()
+        color_index = argv.get('color_index',0)
 
         if 'fpath' in argv.keys():
             fpath = argv['fpath']
@@ -594,6 +596,13 @@ class Pmf(object):
                 plot_true_vals = True
         else:
             plot_true_vals = False
+
+        # get color cycle and colormaps (just pull five)
+        prop_cycle = plt.rcParams['axes.prop_cycle']
+        colors = prop_cycle.by_key()['color'][:5]
+        cmap_name_list = ['Blues','Greens','Reds','Purples','Oranges']
+        color = colors[color_index]
+        cmap_name = cmap_name_list[color_index]
 
         start_time = timeit.default_timer()
 
@@ -651,7 +660,7 @@ class Pmf(object):
                             vals = [0.5*(bins[i]+bins[i+1]) for i in range(len(probs))]
                         axes[rownum][colnum].set_xticks(xtick_locs)
                         axes[rownum][colnum].set_xticklabels(param_ticks[x_param.name]['labels'])
-                        axes[rownum][colnum].hist(vals, weights=probs, bins=bins, edgecolor='k', linewidth=1.0)
+                        axes[rownum][colnum].hist(vals, weights=probs, bins=bins, edgecolor='k', linewidth=1.0, color=color)
 
                         # formatting
                         axes[rownum][colnum].set_ylim(0,1)
@@ -679,6 +688,7 @@ class Pmf(object):
                     else:
                         dense_probs_here = self.project_2D(x_param, y_param, dense_grid=deepcopy(dense_probs))
 
+                        # formatting axes ranges and ticks
                         if x_param.spacing=='log':
                             axes[rownum][colnum].set_xscale('linear')
                             x_min = np.log10(plot_ranges[x_param.name][0])
@@ -695,7 +705,16 @@ class Pmf(object):
                         axes[rownum][colnum].set_yticks(param_ticks[y_param.name]['locs'])
                         axes[rownum][colnum].set_yticklabels(param_ticks[y_param.name]['labels'])
                         axes[rownum][colnum].set_ylim([y_min, y_max])
-                        axes[rownum][colnum].imshow(dense_probs_here.transpose(), aspect='auto', origin='lower', extent=(x_min, x_max, y_min, y_max), cmap=plt.get_cmap('Blues'))
+
+                        # generating the colormap and transparency
+                        cmap = plt.get_cmap(cmap_name)
+                        alphas = dense_probs_here.transpose()
+                        # clip to average of max prob and 1.0
+                        colors = mpl.colors.Normalize(0.0, (1.0+max(self.points['prob']))/2.0, clip=True)(alphas)
+                        colors = cmap(colors)
+                        colors[..., -1] = alphas
+                        # plot the data
+                        axes[rownum][colnum].imshow(colors, aspect='auto', origin='lower', extent=(x_min, x_max, y_min, y_max))
 
                     checkpoint = round(timeit.default_timer()-offdiag_start,2)
                     #print('project_2D took ' + str(checkpoint) + ' seconds')
