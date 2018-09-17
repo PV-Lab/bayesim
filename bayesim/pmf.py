@@ -751,7 +751,8 @@ class Pmf(object):
                 if tick_spacing>2:
                     param_ticks[p.name]['labels'] = [str(int(loc)) for loc in tick_locs]
                 else:
-                    param_ticks[p.name]['labels'] = [str(loc) for loc in tick_locs]
+                    num_digits = int(round(-np.log10(tick_locs[0])+1))
+                    param_ticks[p.name]['labels'] = [str(round(loc,num_digits)) for loc in tick_locs]
             elif p.spacing=='log':
                 p_range = np.log10(max_val)-np.log10(min_val)
                 if p_range<3.0:
