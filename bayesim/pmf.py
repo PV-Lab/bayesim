@@ -577,6 +577,7 @@ class Pmf(object):
         return_plots = argv.get('return_plots', False)
         if return_plots:
             plt.ioff()
+            data = {i:{} for i in range(len(self.params))}
         color_index = argv.get('color_index',0)
 
         if 'fpath' in argv.keys():
@@ -633,12 +634,6 @@ class Pmf(object):
                 x_max = plot_ranges[x_param.name][1]
                 axes[rownum][colnum].set_xlim(x_min, x_max)
                 axes[rownum][colnum].set_axisbelow(True)
-                # force four x-ticks to avoid numbers overlapping...hopefully
-                #round_digits = -1*(int(math.floor(np.log10(x_max-x_min)))) + 1
-                #if round((x_max-x_min)/5.0, round_digits) == 0:
-                #    round_digits = round_digits + 1
-                #tick_spacing = round((x_max-x_min)/5., round_digits)
-                #axes[rownum][colnum].xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
 
                 for item in ([axes[rownum][colnum].xaxis.label, axes[rownum][colnum].yaxis.label] +axes[rownum][colnum].get_xticklabels() + axes[rownum][colnum].get_yticklabels()):
                     item.set_fontsize(20)
@@ -658,11 +653,18 @@ class Pmf(object):
                         elif x_param.spacing=='linear':
                             xtick_locs = param_ticks[x_param.name]['locs']
                             vals = [0.5*(bins[i]+bins[i+1]) for i in range(len(probs))]
-                        axes[rownum][colnum].set_xticks(xtick_locs)
-                        axes[rownum][colnum].set_xticklabels(param_ticks[x_param.name]['labels'])
-                        axes[rownum][colnum].hist(vals, weights=probs, bins=bins, edgecolor='k', linewidth=1.0, color=color)
 
-                        # formatting
+                        # plot the data
+                        axes[rownum][colnum].hist(vals, weights=probs, bins=bins, edgecolor='k', linewidth=1.0, color=color)
+                        if return_plots:
+                            data[rownum][colnum]={'vals':vals,'weights':probs,'bins':bins,'color':color}
+
+                        # formatting...
+                        # turn the ticks off and on (was having some stray minor ticks show up sometimes)
+                        axes[rownum][colnum].tick_params(axis='x',which='both',bottom=False,labelbottom=False)
+                        axes[rownum][colnum].tick_params(axis='x',which='major',bottom=True,labelbottom=True)
+                        axes[rownum][colnum].set_xticks(xtick_locs, minor=False)
+                        axes[rownum][colnum].set_xticklabels(param_ticks[x_param.name]['labels'])
                         axes[rownum][colnum].set_ylim(0,1)
                         axes[rownum][colnum].yaxis.set_label_position("right")
                         axes[rownum][colnum].yaxis.tick_right()
@@ -674,7 +676,7 @@ class Pmf(object):
                         # add true value if desired
                         if plot_true_vals:
                             true_x = [true_vals[x_param.name]]
-                            axes[rownum][colnum].scatter(true_x,[min([max(probs)+0.05,0.95])],200,'r',marker='*')
+                            axes[rownum][colnum].scatter(true_x,0.05,200,'#FFFF00',marker='*',zorder=100)
 
                         diag_finish = timeit.default_timer()
                         diag_time = round(diag_finish-diag_start,2)
@@ -708,13 +710,17 @@ class Pmf(object):
 
                         # generating the colormap and transparency
                         cmap = plt.get_cmap(cmap_name)
-                        alphas = dense_probs_here.transpose()
-                        # clip to average of max prob and 1.0
-                        colors = mpl.colors.Normalize(0.0, (1.0+max(self.points['prob']))/2.0, clip=True)(alphas)
+                        probs = dense_probs_here.transpose()
+                        scaled_probs = probs/np.amax(probs)
+                        alpha_weight = 0.5+0.1*color_index
+                        alphas = alpha_weight*scaled_probs + (1-alpha_weight)*probs
+                        colors = mpl.colors.Normalize(0.0, 1.0)(alphas)
                         colors = cmap(colors)
                         colors[..., -1] = alphas
                         # plot the data
-                        axes[rownum][colnum].imshow(colors, aspect='auto', origin='lower', extent=(x_min, x_max, y_min, y_max))
+                        axes[rownum][colnum].imshow(colors, aspect='auto', origin='lower', extent=(x_min, x_max, y_min, y_max), zorder=1)
+                        if return_plots:
+                            data[rownum][colnum]={'image':colors,'extent':(x_min, x_max, y_min, y_max)}
 
                     checkpoint = round(timeit.default_timer()-offdiag_start,2)
                     #print('project_2D took ' + str(checkpoint) + ' seconds')
@@ -722,7 +728,11 @@ class Pmf(object):
                     if plot_true_vals:
                         true_x = [true_vals[x_param.name]]
                         true_y = [true_vals[y_param.name]]
-                        axes[rownum][colnum].scatter(true_x,true_y,200,c="None",marker='o',linewidths=3,edgecolors='r',zorder=20)
+                        if x_param.spacing=='log':
+                            true_x = np.log10(true_x)
+                        if y_param.spacing=='log':
+                            true_y = np.log10(true_y)
+                        axes[rownum][colnum].scatter(true_x,true_y,200,c="None",marker='o',linewidths=3,edgecolors='#FFFF00',zorder=100)
                     #axes[rownum][colnum].grid(False)
                     offdiag_finish = timeit.default_timer()
                     offdiag_time = round(offdiag_finish-offdiag_start,2)
@@ -745,7 +755,7 @@ class Pmf(object):
             plt.savefig(fpath)
 
         if return_plots:
-            return fig, axes
+            return {'fig':fig, 'axes':axes, 'data':data}
             plt.close()
 
         else:
@@ -770,11 +780,13 @@ class Pmf(object):
                 if tick_spacing>2:
                     param_ticks[p.name]['labels'] = [str(int(loc)) for loc in tick_locs]
                 else:
-                    num_digits = int(round(-np.log10(tick_locs[0])+1))
+                    num_digits = int(round(-np.log10(tick_locs[-1]-tick_locs[0])+1))
                     param_ticks[p.name]['labels'] = [str(round(loc,num_digits)) for loc in tick_locs]
             elif p.spacing=='log':
                 p_range = np.log10(max_val)-np.log10(min_val)
-                if p_range<3.0:
+                if p_range<1.0:
+                    tick_spacing=0.2
+                elif p_range<3.0:
                     tick_spacing = 0.5
                 elif p_range<=6.0:
                     tick_spacing = 1.0
@@ -785,7 +797,7 @@ class Pmf(object):
                     first_tick = first_tick + tick_spacing
                 tick_locs = np.arange(first_tick, 0.01*p_range+np.log10(max_val), tick_spacing)
                 param_ticks[p.name]['locs'] = tick_locs
-                if tick_spacing==0.5:
+                if tick_spacing<1.0:
                     param_ticks[p.name]['labels'] = [r'10$^{%s}$'%str(round(loc,1)) for loc in tick_locs]
                 else:
                     param_ticks[p.name]['labels'] = [r'10$^{%s}$'%int(loc) for loc in tick_locs]

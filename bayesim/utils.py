@@ -35,31 +35,42 @@ def visualize_PMF_sequence(statefile_list, **argv):
     # load the models one by one (to save RAM) and get visualizations
     figs = []
     axes_sets = []
+    data_sets = []
     for i in range(len(statefile_list)):
         statefile = statefile_list[i]
         m = bym.Model(load_state=True, state_file=statefile)
         if plot_true_vals:
-            f, a = m.probs.visualize(return_plots=True, true_vals=true_vals, color_index=i)
+            d = m.probs.visualize(return_plots=True, true_vals=true_vals, color_index=i)
         else:
-            f, a = m.probs.visualize(return_plots=True, color_index=i)
-        figs.append(f)
-        axes_sets.append(a)
+            d = m.probs.visualize(return_plots=True, color_index=i)
+        figs.append(d['fig'])
+        axes_sets.append(d['axes'])
+        data_sets.append(d['data'])
     num_params = len(m.params.fit_params)
 
     # get color cycle and colormaps (just pull five)
     prop_cycle = plt.rcParams['axes.prop_cycle']
     colors = prop_cycle.by_key()['color'][:5]
-    cmap_name_list = ['Blues','Greens','Reds','Purples','Oranges']
+    #cmap_name_list = ['Blues','Greens','Reds','Purples','Oranges']
 
     # initialize the figure
     fig, axes = plt.subplots(nrows=num_params, ncols=num_params, figsize=(5*num_params, 5*num_params))
 
     for rownum in range(num_params):
         for colnum in range(num_params):
+            x_param = m.params.fit_params[colnum]
+            y_param = m.params.fit_params[rownum]
+            if plot_true_vals:
+                true_x = true_vals[x_param.name]
+                true_y = true_vals[y_param.name]
+                if x_param.spacing=='log':
+                    true_x = np.log10(true_x)
+                if y_param.spacing=='log':
+                    true_y = np.log10(true_y)
             for i in range(len(figs)):
                 old_ax = axes_sets[i][rownum][colnum]
-                color = colors[i]
-                patches = old_ax.patches
+                #color = colors[i]
+                #patches = old_ax.patches
                 if i==0: # formatting stuff
                     if rownum<colnum: # build the legend here
                         if rownum==0 and colnum==num_params-1:
@@ -82,33 +93,42 @@ def visualize_PMF_sequence(statefile_list, **argv):
                                 axes[rownum][colnum].text(0.35, 0.08, 'ground truth', color='k', fontsize=20)
                         else:
                             fig.delaxes(axes[rownum][colnum])
-                    else:
+                    else: # set up the axes for plotting
                         axes[rownum][colnum].set_xlim(old_ax.get_xlim())
                         axes[rownum][colnum].set_ylim(old_ax.get_ylim())
                         axes[rownum][colnum].set_xlabel(old_ax.get_xlabel(), fontsize=24)
                         axes[rownum][colnum].set_xscale(old_ax.get_xscale())
                         axes[rownum][colnum].set_yscale(old_ax.get_yscale())
+                        axes[rownum][colnum].set_xticks(old_ax.get_xticks())
+                        axes[rownum][colnum].set_yticks(old_ax.get_yticks())
+                        axes[rownum][colnum].set_xticklabels(old_ax.get_xticklabels())
+                        axes[rownum][colnum].set_yticklabels(old_ax.get_yticklabels())
                         axes[rownum][colnum].set_axisbelow(True)
 
                         if rownum==colnum:
                             axes[rownum][colnum].yaxis.set_label_position("right")
                             axes[rownum][colnum].set_ylabel(old_ax.get_ylabel(), rotation=270, labelpad=24, fontsize=24)
                             if plot_true_vals:
-                                true_x, true_y = old_ax.collections[0]._offsets[0]
-                                axes[rownum][colnum].scatter(true_x,0.05,200,'#FFFF00',marker='*',zorder=100)
+                                if x_param.spacing=='log':
+                                    axes[rownum][colnum].scatter(10.0**true_x,0.05,200,'#FFFF00',marker='*',zorder=100)
+                                elif x_param.spacing=='linear':
+                                    axes[rownum][colnum].scatter(true_x,0.05,200,'#FFFF00',marker='*',zorder=100)
 
-                        else:
+                        elif rownum > colnum:
                             axes[rownum][colnum].set_ylabel(old_ax.get_ylabel(), fontsize=24)
                             if plot_true_vals:
-                                true_x, true_y = old_ax.collections[0]._offsets[0]
+                                #true_x, true_y = old_ax.collections[0]._offsets[0]
                                 axes[rownum][colnum].scatter(true_x,true_y,200,c="None",marker='o',linewidths=3,edgecolors='#FFFF00',zorder=100)
 
                         for item in (axes[rownum][colnum].get_xticklabels() + axes[rownum][colnum].get_yticklabels()):
                             item.set_fontsize(20)
 
-                for patch in patches:
-                    #axes[rownum][colnum].add_patch(mplp.Rectangle((patch._x, patch._y), patch._width, patch._height, facecolor=color, alpha=patch._alpha, zorder=i+1))
-                    axes[rownum][colnum].add_patch(mplp.Rectangle((patch._x, patch._y), patch._width, patch._height, alpha=patch._alpha, zorder=i+1))
+                if rownum==colnum:
+                    hist_data = data_sets[i][rownum][colnum]
+                    axes[rownum][colnum].hist(hist_data['vals'], weights=hist_data['weights'], bins=hist_data['bins'], color=hist_data['color'],zorder=50+i)
+                elif rownum > colnum:
+                    img_data = data_sets[i][rownum][colnum]
+                    axes[rownum][colnum].imshow(img_data['image'], aspect='auto', origin='lower', extent=img_data['extent'], zorder=50+i)
 
     if 'fpath' in argv.keys():
         plt.savefig(argv['fpath'])
