@@ -11,6 +11,7 @@ Welcome to bayesim's documentation!
    bayesics
    manual
    examples
+   futurefeatures
    citingbayesim
 
 .. image:: img/overview_figure.png

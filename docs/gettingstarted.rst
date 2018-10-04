@@ -32,8 +32,4 @@ If you are comfortable coding in Python, these examples will also make it clear 
 Command line
 ^^^^^^^^^^^^
 
-We have also developed a command line interface which can be invoked as follows:
-
-.. code-block:: shell
-
-  bayesim yadda yadda yadda...
+A command line interface will be implemented in a future release!

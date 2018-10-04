@@ -61,6 +61,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../bayesics.html">Technical Background</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../futurefeatures.html">Future Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../citingbayesim.html">Citing bayesim</a></li>
 </ul>
 </ul>
@@ -112,7 +113,7 @@
   <h1>Source code for bayesim.model</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">bayesim.pmf</span> <span class="k">import</span> <span class="n">Pmf</span>
 <span class="kn">import</span> <span class="nn">bayesim.params</span> <span class="k">as</span> <span class="nn">pm</span>
-<span class="kn">from</span> <span class="nn">bayesim.utils</span> <span class="k">import</span> <span class="n">calc_deltas</span>
+<span class="kn">from</span> <span class="nn">bayesim.utils</span> <span class="k">import</span> <span class="n">calc_deltas</span><span class="p">,</span> <span class="n">get_closest_val</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">deepdish</span> <span class="k">as</span> <span class="nn">dd</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
@@ -120,7 +121,6 @@
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">random</span>
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">from</span> <span class="nn">joblib</span> <span class="k">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span><span class="p">,</span> <span class="n">cpu_count</span>
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">platform</span>
@@ -576,9 +576,12 @@
         <span class="c1"># round fit params - actually just force them to be members of the vals lists</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Rounding model data...&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">fit_params</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">get_closest_val</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">]]</span>
+            <span class="c1">#self.model_data[p.name] = [p.get_closest_val(val) for val in self.model_data[p.name]]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">cpu_count</span><span class="p">())(</span><span class="n">delayed</span><span class="p">(</span><span class="n">get_closest_val</span><span class="p">)(</span><span class="n">val</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">vals</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>
 
         <span class="c1"># generate groups</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Grouping model data...&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ec_names</span><span class="p">())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_data_grps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_param_names</span><span class="p">())</span>
 
@@ -587,6 +590,8 @@
 
         <span class="c1"># update flag and indices</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">needs_new_model_data</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Indexing model data...&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">calc_indices</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">calc_model_unc</span><span class="p">:</span>
@@ -736,7 +741,7 @@
 <span class="sd">            th_pm (`float`): threshold quantity of probability mass to be concentrated in th_pv fraction of parameter space to trigger the run to stop (defaults to 0.9)</span>
 <span class="sd">            th_pv (`float`): threshold fraction of parameter space volume for th_pm fraction of probability to be concentrated into to trigger the run to stop (defaults to 0.05)</span>
 <span class="sd">            min_num_pts (`int`): minimum number of observation points to use - if threshold is reached before this number of points has been used, it will start over and the final PMF will be the average of the number of runs needed to use sufficient points (defaults to 0.7 * the number of experimental measurements)</span>
-<span class="sd">            prob_bias (`float`): number from 0 to 0.5, fraction of PMF from previous step to mix into prior for this step (defaults to 0) - higher values will likely converge faster but possibly have larger errors, especially if min_num_pts is small</span>
+<span class="sd">            prob_relax (`float`): number from 0 to 1.0, fraction of PMF from previous step to mix into prior for this step (defaults to 0) - higher values will likely converge faster but possibly have larger errors, especially if min_num_pts is small</span>
 <span class="sd">            verbose (`bool`): flag for verbosity, defaults to False</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># read in options</span>
@@ -745,10 +750,10 @@
         <span class="n">th_pv</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;th_pv&#39;</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span>
         <span class="n">min_num_pts</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;min_num_pts&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.7</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_data</span><span class="p">)))</span>
         <span class="n">verbose</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-        <span class="n">bias</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;prob_bias&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">bias</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">bias</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Bias parameter must be between 0 and 0.5 - defaulting to 0.&quot;</span><span class="p">)</span>
-            <span class="n">bias</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">rel</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;prob_relax&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rel</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">rel</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Relaxation parameter must be between 0 and 1.0 - defaulting to 0.&quot;</span><span class="p">)</span>
+            <span class="n">rel</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Running inference!</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
@@ -778,7 +783,7 @@
         <span class="n">uni_probs</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="p">)</span>
         <span class="n">uni_probs</span><span class="o">.</span><span class="n">uniformize</span><span class="p">()</span>
         <span class="n">start_probs</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="p">)</span>
-        <span class="n">start_probs</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bias</span><span class="o">*</span><span class="n">old_probs</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">bias</span><span class="p">)</span><span class="o">*</span><span class="n">uni_probs</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span>
+        <span class="n">start_probs</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rel</span><span class="o">*</span><span class="n">old_probs</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">rel</span><span class="p">)</span><span class="o">*</span><span class="n">uni_probs</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span>
         <span class="n">start_probs</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
 
         <span class="c1"># randomize observation order</span>

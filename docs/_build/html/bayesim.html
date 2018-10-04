@@ -61,6 +61,7 @@
 <li class="toctree-l1"><a class="reference internal" href="bayesics.html">Technical Background</a></li>
 <li class="toctree-l1"><a class="reference internal" href="manual.html">Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="futurefeatures.html">Future Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citingbayesim.html">Citing bayesim</a></li>
 </ul>
 </ul>
@@ -351,7 +352,7 @@ Will stop iterating through observations if/when &gt;= th_pm of probability mass
 <li><strong>th_pm</strong> (<cite>float</cite>) – threshold quantity of probability mass to be concentrated in th_pv fraction of parameter space to trigger the run to stop (defaults to 0.9)</li>
 <li><strong>th_pv</strong> (<cite>float</cite>) – threshold fraction of parameter space volume for th_pm fraction of probability to be concentrated into to trigger the run to stop (defaults to 0.05)</li>
 <li><strong>min_num_pts</strong> (<cite>int</cite>) – minimum number of observation points to use - if threshold is reached before this number of points has been used, it will start over and the final PMF will be the average of the number of runs needed to use sufficient points (defaults to 0.7 * the number of experimental measurements)</li>
-<li><strong>prob_bias</strong> (<cite>float</cite>) – number from 0 to 0.5, fraction of PMF from previous step to mix into prior for this step (defaults to 0) - higher values will likely converge faster but possibly have larger errors, especially if min_num_pts is small</li>
+<li><strong>prob_relax</strong> (<cite>float</cite>) – number from 0 to 1.0, fraction of PMF from previous step to mix into prior for this step (defaults to 0) - higher values will likely converge faster but possibly have larger errors, especially if min_num_pts is small</li>
 <li><strong>verbose</strong> (<cite>bool</cite>) – flag for verbosity, defaults to False</li>
 </ul>
 </td>
@@ -758,6 +759,12 @@ space</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="bayesim.pmf.Pmf.pick_ticks">
+<code class="descname">pick_ticks</code><span class="sig-paren">(</span><em>plot_ranges</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/pmf.html#Pmf.pick_ticks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.pmf.Pmf.pick_ticks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function for visualize.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="bayesim.pmf.Pmf.populate_dense_grid">
 <code class="descname">populate_dense_grid</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/pmf.html#Pmf.populate_dense_grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.pmf.Pmf.populate_dense_grid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Populate a grid such as the one created by make_dense_grid.</p>
@@ -769,7 +776,6 @@ space</p>
 <li><strong>(</strong><strong>obj</strong> (<em>df</em>) – DataFrame): DataFrame to populate from (should have columns for every param)</li>
 <li><strong>col_to_pull</strong> (<cite>str</cite>) – name of the column to use when populating grid points</li>
 <li><strong>make_ind_lists</strong> (<cite>bool</cite>) – whether to return a list of indices corresponding to the first in every slice (used by bayesim.model.calc_model_gradients)</li>
-<li><strong>return_edges</strong> (<cite>bool</cite>) – whether to return list of edge values also (used by bayesim.pmf.project_2D)</li>
 </ul>
 </td>
 </tr>
@@ -782,7 +788,7 @@ space</p>
 
 <dl class="method">
 <dt id="bayesim.pmf.Pmf.project_1D">
-<code class="descname">project_1D</code><span class="sig-paren">(</span><em>param</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/pmf.html#Pmf.project_1D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.pmf.Pmf.project_1D" title="Permalink to this definition">¶</a></dt>
+<code class="descname">project_1D</code><span class="sig-paren">(</span><em>param</em>, <em>dense_grid=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/pmf.html#Pmf.project_1D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.pmf.Pmf.project_1D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Project down to a one-dimensional PMF over the given parameter. Used by the visualize() method.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -791,7 +797,8 @@ space</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>param</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">Fit_param</span></code>) – one of <cite>self.params</cite></td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">bin edges for plotting with matplotlib.pyplot.hist (has length one more than next return list)
-probs (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code></a> of <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>): probability values for histogram-style plot - note that these technically have units of the inverse of whatever the parameter being plotted is (that is, they’re probability densities)</td>
+probs (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code></a> of <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>): probability values for histogram-style plot - note that these technically have units of the inverse of whatever the parameter being plotted is (that is, they’re probability densities)
+dense_grid (matrix): optionally, pass precomputed dense grid to save time</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">bins (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code></a> of <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a>)</td>
 </tr>
@@ -801,7 +808,7 @@ probs (<a class="reference external" href="https://docs.python.org/3/library/std
 
 <dl class="method">
 <dt id="bayesim.pmf.Pmf.project_2D">
-<code class="descname">project_2D</code><span class="sig-paren">(</span><em>x_param</em>, <em>y_param</em>, <em>no_probs=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/pmf.html#Pmf.project_2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.pmf.Pmf.project_2D" title="Permalink to this definition">¶</a></dt>
+<code class="descname">project_2D</code><span class="sig-paren">(</span><em>x_param</em>, <em>y_param</em>, <em>no_probs=False</em>, <em>dense_grid=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/pmf.html#Pmf.project_2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.pmf.Pmf.project_2D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Project down to two dimensions over the two parameters. This one doesn’t actually need to sum, it just draws a bunch of (potentially overlapping) rectangles with transparencies according to their probability densities (as a fraction of the normalized area). Used by the visualize() method.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -810,6 +817,8 @@ probs (<a class="reference external" href="https://docs.python.org/3/library/std
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>x_param</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – one of <cite>self.params</cite>, to be the x-axis of the 2D joint plot</li>
 <li><strong>y_param</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – one of <cite>self.params</cite>, to be the y-axis of the 2D joint plot</li>
+<li><strong>no_probs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – whether to just show the grid boxes or include probability as determiner of transparency</li>
+<li><strong>dense_grid</strong> (<em>matrix</em>) – optionally, pass precomputed dense grid to save time</li>
 </ul>
 </td>
 </tr>
@@ -864,6 +873,7 @@ Useful for rerunning whole inference after subdividing.</p>
 <li><strong>fpath</strong> (<cite>str</cite>) – optional, path to save image to</li>
 <li><strong>true_vals</strong> (<cite>dict</cite>) – optional, set of param values to highlight on PMF</li>
 <li><strong>return_plots</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – whether to return figure and axes (used by visualize_PMF_sequence in utils), default False</li>
+<li><strong>color_index</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – from 0 to 4, choose from blue, green, red, purple, orange (defaults to 0)</li>
 </ul>
 </td>
 </tr>
@@ -886,6 +896,12 @@ Useful for rerunning whole inference after subdividing.</p>
 <dt id="bayesim.utils.calc_deltas">
 <code class="descclassname">bayesim.utils.</code><code class="descname">calc_deltas</code><span class="sig-paren">(</span><em>grp</em>, <em>inds</em>, <em>param_lengths</em>, <em>model_data</em>, <em>fit_param_names</em>, <em>probs</em>, <em>output_var</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/utils.html#calc_deltas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.utils.calc_deltas" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="function">
+<dt id="bayesim.utils.get_closest_val">
+<code class="descclassname">bayesim.utils.</code><code class="descname">get_closest_val</code><span class="sig-paren">(</span><em>val</em>, <em>val_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/utils.html#get_closest_val"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.utils.get_closest_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return closest value to val in a list.</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="bayesim.utils.visualize_PMF_sequence">
