@@ -41,8 +41,6 @@ urlcolor={blue!80!black}}
 
 \begin{abstract}
   Bayesian inference is a widely used and powerful analytical technique in fields such as astronomy and particle physics but has historically been underutilized in some other disciplines including semiconductor devices. In this work, we introduce \texttt{bayesim}, a Python package that utilizes adaptive grid sampling to efficiently generate a probability distribution over multiple input parameters to a forward model using a collection of experimental measurements. We discuss the implementation choices made in the code, showcase two examples in photovoltaics, and discuss general prerequisites for the approach to apply to other systems.
-
-  [Target journal: Computer Physics Communications]
 \end{abstract}
 
 \maketitle
@@ -61,7 +59,7 @@ urlcolor={blue!80!black}}
  \begin{equation}
    \begin{split}
      \label{Eq:1001}
-     P(H|E)=\frac{P(H)P(E|H)}{P(E)}
+     P(H|E)=\frac{P(H)P(E|H)}{P(E)},
    \end{split}
  \end{equation}
 
@@ -70,7 +68,7 @@ urlcolor={blue!80!black}}
  \begin{equation}
    \begin{split}
      \label{Eq:2}
-     P(H|\{E_1,E_2,...E_n\}) = \frac{P(H|\{E_1,E_2...E_{n-1}\})P(E_n|H)}{P(E_n)}
+     P(H|\{E_1,E_2,...E_n\}) = \frac{P(H|\{E_1,E_2...E_{n-1}\})P(E_n|H)}{P(E_n)},
    \end{split}
  \end{equation}
 
@@ -84,7 +82,7 @@ urlcolor={blue!80!black}}
    \label{fig1}
  \end{figure}
 
- A high-level summary of what \texttt{bayesim} does is shown in ~\autoref{fig1}. Part (a) is a flowchart showing that observed (as a function of experimental conditions $\{C\}$ and simulated (as a function of fitting parameters $\{P\}$ and experimental conditions $\{C\}$) outputs are compared to produce a probability distribution over $\{P\}$. Part (b) schematically indicates the adaptive grid sampling approach for a hypothetical two-dimensional parameter space, wherein grid boxes exceeding some threshold probability are subdivided and lower-probability regions discarded, allowing attainment of a high fitting precision without needing to sample the entire parameter space at the same high density.
+ A high-level summary of what \texttt{bayesim} does is shown in ~\autoref{fig1}a. The flowchart shows that observed (as a function of experimental conditions $\{C\}$ and simulated (as a function of fitting parameters $\{P\}$ and experimental conditions $\{C\}$) outputs are compared to produce a probability distribution over $\{P\}$. ~\autoref{fig1}b schematically indicates the adaptive grid sampling approach for a hypothetical two-dimensional parameter space, wherein grid boxes exceeding some threshold probability are subdivided and lower-probability regions discarded, allowing attainment of a high fitting precision without needing to sample the entire parameter space at the same high density.
 
 \section*{Software Architecture and Interface}
 
@@ -117,14 +115,14 @@ urlcolor={blue!80!black}}
     As a first example, we fit a simple two-parameter model of solar cell current density $J$ (as a function of voltage $V$ and temperature $T$) known as the ideal diode model:
 
     \begin{equation}
-      J(V,T) = J_L+J_0\left(\exp{\frac{qV}{nkT}}-1\right)
+      J(V,T) = J_L+J_0\left(\exp{\frac{qV}{nkT}}-1\right),
       \label{ID_eqn}
     \end{equation}
 
     where $k=8.61733\times 10^{-5}$ eV/K is Boltzmann's constant, by convention $J_L$ (the light current) is negative and $J_0$ (the saturation current) is positive but strongly dependent on temperature, a dependence we can approximate as:
 
     \begin{equation}
-      J_0 \approx B'T^{3/n}\exp{\left(\frac{-E_{g0}}{nkT}\right)}
+      J_0 \approx B'T^{3/n}\exp{\left(\frac{-E_{g0}}{nkT}\right)},
     \end{equation}
 
     where $E_{g0}$ is the zero-temperature bandgap of the material. For this example, we will set this to 1.2 eV and $J_L$ to -0.03 mA/cm$^2$. There are thus two parameters to be fit, the coefficient $B'$ (which can range over a wide variety of values) and the ideality factor $n$ (which is by definition between 1 and 2).
@@ -138,7 +136,9 @@ urlcolor={blue!80!black}}
 
     As validation, we generate the ``observations" using the same model we'll use for fitting, with parameter values of $n=1.36$ and $B'=258$, and four temperature values of 150, 200, 250, and 300 K. These ``observations" are shown in ~\autoref{ID_data}a. When \texttt{bayesim} imports observed data, it can optionally discard data points that are very close by to each other in order to reduce computational load on modeling less informative points -- the observed points that were actually imported (59 out of 305 total ``observations") are shown as overlaid scatter dots.
 
-    The lower part of ~\autoref{ID_data} shows the posterior distributions after the first inference run and after each round of subdivision, demonstrating that \texttt{bayesim} gets progressively closer to the ``true" values as the loop continues iterating. In addition, on the first inference run (prior to any subdivision), an average of 45\% of grid points had larger model uncertainty than experimental uncertainty, while after the second subdivision, only 1.9\% did, while the average absolute error of the highest-probability model decreased from 0.03 after the first run to 0.007 after the second subdivision. In addition, the initial grid had 400 boxes, the singly subdivided grid 164, and the final grid (4x initial resolution) had 144, meaning the overall additional computational effort to quadruple the fit precision was less than producing the initial simulation set.
+    The lower part of ~\autoref{ID_data} shows the posterior distributions after the first inference run and after each round of subdivision, demonstrating that \texttt{bayesim} gets progressively closer to the ``true" values as the loop continues iterating. In addition, on the first inference run (prior to any subdivision), an average of 45\% of grid points had larger model uncertainty than experimental uncertainty, while after the second subdivision, only 1.9\% did, while the average absolute error of the highest-probability model decreased from 0.03 after the first run to 0.007 after the second subdivision.
+
+    In addition, the initial grid had 400 boxes, the singly subdivided grid 164, and the final grid (4x initial resolution) had 144, meaning the overall additional computational effort to quadruple the fit precision was less than producing the initial simulation set. In comparison, using a ``brute-force'' grid approach, reaching 4x precision would take $4^n$ times the computational load in $n$ dimensions, i.e. 16x for this case. The exact factor of improvement is problem-dependent, but in all cases the load is significantly less than the exponential scaling of the prior approach.
 
   \subsection{SnS Solar Cell}
     This example demonstrates a more realistic application of \texttt{bayesim}, i.e. when the model being used to compute likelihoods is more computationally expensive. In this case, we will repeat the analysis from Ref.~\cite{SnSJoule}, using SCAPS~\cite{SCAPS} (a coupled drift-diffusion/Poisson solver) as the model, which takes 10-15 core-seconds for a single J-V sweep.
@@ -149,7 +149,7 @@ urlcolor={blue!80!black}}
       \label{SnS_data}
     \end{figure}
 
-    We start on a significantly coarser grid than Ref.~\cite{SnSJoule} and show only one level of subdivision to make the example feasible to run on a personal computer. \autoref{SnS_data} shows the results from this fit done in \texttt{bayesim} compared to the higher-resolution grid analysis done previously. Note that the inference step in full-resolution grid took a few hours, while the adaptive grid fit takes a few minutes. While the fit precision is of course lower at only one level of subdivision, the extracted values are generally in agreement and more importantly, the relationship between the mobility and lifetime (namely, that the product, i.e. the diffusion length), is constrained, emerges just as clearly.
+    We start on a significantly coarser grid than Ref.~\cite{SnSJoule} and show only one level of subdivision to make the example feasible to run on a personal computer. \autoref{SnS_data} shows the results from this fit done in \texttt{bayesim} compared to the higher-resolution grid analysis done previously. Note that the inference step in full-resolution grid took a few hours, while the adaptive grid fit takes a few minutes. While the fit precision is of course lower at only one level of subdivision, the extracted values are generally in agreement and more importantly, the relationship between the mobility and lifetime (namely, that the product, i.e. the diffusion length), is constrained, emerges just as clearly. The differences in fitted values stem from the fact that the prior published analysis didn't account for model uncertainty, while this feature is included in \texttt{bayesim}. For more details on this, see the Supporting Information.
 
 
 \section*{Conclusions}
@@ -164,6 +164,6 @@ urlcolor={blue!80!black}}
 R.C.K. acknowledges the funding of a Blue Waters Graduate Fellowship. This work was supported by a TOTAL SA research grant funded through MIT\text{ei}, the MIT Energy Initiative.
 
 \bibliography{biblio}
-\bibliographystyle{ieeetr}
+\bibliographystyle{plainurl}
 
 \end{document}
