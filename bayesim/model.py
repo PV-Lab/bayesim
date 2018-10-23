@@ -569,11 +569,11 @@ class Model(object):
             # plot modeled data and errors
             for pt in param_pts.iterrows():
                 color = colors[c_ind]
-                model_data = self.model_data.loc[self.model_data_grps.groups[tuple([pt[1][n] for n in self.fit_param_names()])]]
+                model_data = deepcopy(self.model_data.loc[self.model_data_grps.groups[tuple([pt[1][n] for n in self.fit_param_names()])]])
                 if not one_ec:
                     for c in other_ecs:
                         model_data =  model_data[abs(model_data[c.name]-ecs_here[c.name])<=10.**(-1.*c.tol_digits)]
-                model_data.sort_values(by=[self.params.ec_x_name])
+                model_data.sort_values(by=[self.params.ec_x_name], inplace=True)
                 errors = np.subtract(model_data[self.output_var], obs_data[self.output_var])
                 if c_ind==1: #take errors from highest probability
                     all_errs.extend([abs(e) for e in errors])
