@@ -11,7 +11,8 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"extensions": ["color.js"]})</script>
     <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../../_static/bootstrap-2.3.2/js/bootstrap.min.js"></script>
@@ -263,7 +264,7 @@
     <span class="k">else</span><span class="p">:</span>
        <span class="k">return</span> <span class="n">before</span></div>
 
-<div class="viewcode-block" id="calc_deltas"><a class="viewcode-back" href="../../bayesim.html#bayesim.utils.calc_deltas">[docs]</a><span class="k">def</span> <span class="nf">calc_deltas</span><span class="p">(</span><span class="n">grp</span><span class="p">,</span> <span class="n">inds</span><span class="p">,</span> <span class="n">param_lengths</span><span class="p">,</span> <span class="n">model_data</span><span class="p">,</span> <span class="n">fit_param_names</span><span class="p">,</span> <span class="n">probs</span><span class="p">,</span> <span class="n">output_var</span><span class="p">):</span>
+<div class="viewcode-block" id="calc_deltas"><a class="viewcode-back" href="../../bayesim.html#bayesim.utils.calc_deltas">[docs]</a><span class="k">def</span> <span class="nf">calc_deltas</span><span class="p">(</span><span class="n">grp</span><span class="p">,</span> <span class="n">inds</span><span class="p">,</span> <span class="n">param_lengths</span><span class="p">,</span> <span class="n">model_data</span><span class="p">,</span> <span class="n">fit_param_names</span><span class="p">,</span> <span class="n">probs</span><span class="p">,</span> <span class="n">output_var</span><span class="p">,</span> <span class="n">take_average</span><span class="p">):</span>
     <span class="c1"># construct matrix of output_var({fit_params})</span>
     <span class="n">subset</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">model_data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">inds</span><span class="p">])</span>
     <span class="c1"># sort and reset index of subset to match probs so we can use the find_neighbor_boxes function if needed</span>
@@ -307,7 +308,10 @@
         <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">invalid</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">):</span>
             <span class="n">winners</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">fmax</span><span class="p">(</span><span class="n">deltas_here</span><span class="p">[</span><span class="nb">tuple</span><span class="p">([</span><span class="bp">Ellipsis</span><span class="p">]</span><span class="o">+</span><span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="n">mat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="kc">None</span><span class="p">)]</span><span class="o">+</span><span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)]</span><span class="o">*</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mat</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">-</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">))],</span><span class="n">deltas_here</span><span class="p">[</span><span class="nb">tuple</span><span class="p">([</span><span class="bp">Ellipsis</span><span class="p">]</span><span class="o">+</span><span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">mat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="kc">None</span><span class="p">)]</span><span class="o">+</span><span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)]</span><span class="o">*</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mat</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">-</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">))])</span>
 
-    <span class="n">grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">winners</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">winners</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">take_average</span><span class="p">:</span>
+        <span class="n">avg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">grad</span><span class="p">)</span> <span class="c1"># compute average</span>
+        <span class="n">grad</span> <span class="o">=</span> <span class="n">avg</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">grad</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="c1"># replace every entry with average</span>
 
     <span class="c1"># save these values to the appropriate indices in the vector</span>
     <span class="k">if</span> <span class="n">is_grid</span><span class="p">:</span>
@@ -329,7 +333,7 @@
     </p>
     <p>
         &copy; Copyright 2018, Rachel C Kurchin and Giuseppe Romano.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.9.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
     </p>
   </div>
 </footer>

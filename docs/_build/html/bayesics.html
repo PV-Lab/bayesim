@@ -11,7 +11,8 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"extensions": ["color.js"]})</script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-2.3.2/js/bootstrap.min.js"></script>
@@ -163,7 +164,7 @@
 <p>Most of the examples used to explain Bayes’ Theorem have two hypotheses to disginguish between (e.g. “is it raining?”: yes or no). However, to use Bayes’ Theorem for <em>parameter estimation</em>, which is the problem of interest here, we need to generalize to many more than two hypotheses, and those hypotheses may be about the values of multiple different parameters. In addition, we would like to incorporate many pieces of evidence, necessitating many iterations of the Bayesian calculation. These and other factors can make it confusing to conceptualize how to generalize the types of computations we do to estimate the probability of the answer to a yes-or-no question or a dice roll to a problem statement relevant to a more general scientific/modeling inquiry. I will walk through these factors here.</p>
 <div class="section" id="many-hypotheses-in-multiple-dimensions">
 <h3>Many hypotheses, in multiple dimensions<a class="headerlink" href="#many-hypotheses-in-multiple-dimensions" title="Permalink to this headline">¶</a></h3>
-<p>The first step is let our hypotheses <span class="math notranslate nohighlight">\(H\)</span> range over more than two values. That is, rather than having <span class="math notranslate nohighlight">\(H_1\)</span> = “yes, it is raining” and <span class="math notranslate nohighlight">\(H_2\)</span> = “no, it is not raining”, we would instead have something like <span class="math notranslate nohighlight">\(H_1\)</span> = “the value of parameter <span class="math notranslate nohighlight">\(A\)</span> is <span class="math notranslate nohighlight">\(a_1\)</span>“, <span class="math notranslate nohighlight">\(H_2\)</span> = “the value of parameter <span class="math notranslate nohighlight">\(A\)</span> is <span class="math notranslate nohighlight">\(a_2\)</span>“, etc. for as many <span class="math notranslate nohighlight">\(a_n\)</span> as we wanted to consider. While we could then in principle enumerate many different statements of Bayes’ Theorem of the form</p>
+<p>The first step is let our hypotheses <span class="math notranslate nohighlight">\(H\)</span> range over more than two values. That is, rather than having <span class="math notranslate nohighlight">\(H_1\)</span> = “yes, it is raining” and <span class="math notranslate nohighlight">\(H_2\)</span> = “no, it is not raining”, we would instead have something like <span class="math notranslate nohighlight">\(H_1\)</span> = “the value of parameter <span class="math notranslate nohighlight">\(A\)</span> is <span class="math notranslate nohighlight">\(a_1\)</span>”, <span class="math notranslate nohighlight">\(H_2\)</span> = “the value of parameter <span class="math notranslate nohighlight">\(A\)</span> is <span class="math notranslate nohighlight">\(a_2\)</span>”, etc. for as many <span class="math notranslate nohighlight">\(a_n\)</span> as we wanted to consider. While we could then in principle enumerate many different statements of Bayes’ Theorem of the form</p>
 <div class="math notranslate nohighlight" id="equation-bayesics-1">
 <span class="eqno">(2)<a class="headerlink" href="#equation-bayesics-1" title="Permalink to this equation">¶</a></span>\[\begin{split}\begin{eqnarray}
 P(A=a_1|E) &amp;=&amp; \frac{P(A=a_1)P(E|A=a_1)}{P(E)} \\
@@ -281,7 +282,7 @@ P(v_0, g | y(2)=3 \pm 0.2) &amp; \propto &amp; \exp\left({-\frac{(M(v_0,g;2)-3)^
     </p>
     <p>
         &copy; Copyright 2018, Rachel C Kurchin and Giuseppe Romano.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.9.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
     </p>
   </div>
 </footer>
