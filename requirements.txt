@@ -1,0 +1,5 @@
+pandas
+scipy
+matplotlib
+joblib
+git+https://github.com/rkurchin/deepdish@master#egg=deepdish
