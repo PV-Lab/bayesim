@@ -2,4 +2,4 @@ pandas
 scipy
 matplotlib
 joblib
-tables
+tables<=3.5.1
