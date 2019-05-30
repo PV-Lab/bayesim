@@ -28,7 +28,7 @@ author = 'Rachel C Kurchin and Giuseppe Romano'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.9.5'
+release = '0.9.16'
 
 
 # -- General configuration ---------------------------------------------------

@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>bayesim.model &#8212; bayesim 0.9.5 documentation</title>
+    <title>bayesim.model &#8212; bayesim 0.9.16 documentation</title>
     <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
@@ -112,11 +112,13 @@
     <div class="span12 content">
       
   <h1>Source code for bayesim.model</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">bayesim.pmf</span> <span class="k">import</span> <span class="n">Pmf</span>
+<span></span><span class="c1">#import sys</span>
+<span class="c1">#sys.path.append(&#39;../&#39;)</span>
+<span class="kn">from</span> <span class="nn">bayesim.pmf</span> <span class="k">import</span> <span class="n">Pmf</span>
 <span class="kn">import</span> <span class="nn">bayesim.params</span> <span class="k">as</span> <span class="nn">pm</span>
 <span class="kn">from</span> <span class="nn">bayesim.utils</span> <span class="k">import</span> <span class="n">calc_deltas</span><span class="p">,</span> <span class="n">get_closest_val</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">deepdish</span> <span class="k">as</span> <span class="nn">dd</span>
+<span class="kn">import</span> <span class="nn">bayesim.hdf5io</span> <span class="k">as</span> <span class="nn">dd</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
@@ -159,7 +161,7 @@
         <span class="k">if</span> <span class="n">load_state</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Loading bayesim state from </span><span class="si">%s</span><span class="s1">...</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">state_file</span><span class="p">)</span>
-            <span class="n">state</span> <span class="o">=</span> <span class="n">dd</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">state_file</span><span class="p">)</span>
+            <span class="n">state</span> <span class="o">=</span> <span class="n">dd</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">state_file</span><span class="p">)</span>
 
             <span class="c1"># variables</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">ec_pts</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;ec_pts&#39;</span><span class="p">]</span>
@@ -306,7 +308,7 @@
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Attaching measured data...</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">obs_data</span> <span class="o">=</span> <span class="n">dd</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="s1">&#39;obs_data_path&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obs_data</span> <span class="o">=</span> <span class="n">dd</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="s1">&#39;obs_data_path&#39;</span><span class="p">])</span>
         <span class="c1"># get EC names if necessary</span>
         <span class="n">cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_data</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">output_col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">:</span>
@@ -463,6 +465,7 @@
         <span class="n">end_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">points</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
         <span class="c1">#print(list(self.model_data_grps.groups.keys())[:5])</span>
         <span class="k">for</span> <span class="n">pt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="c1">#print(pt[1])</span>
             <span class="c1">#print(tuple(pt[1][self.fit_param_names()].tolist()))</span>
             <span class="n">subset_inds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data_grps</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">pt</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_param_names</span><span class="p">()]</span><span class="o">.</span><span class="n">tolist</span><span class="p">())]</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">subset_inds</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
@@ -496,7 +499,7 @@
 
         <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;file&#39;</span><span class="p">:</span>
             <span class="c1"># import and sort data on parameter values</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span> <span class="o">=</span> <span class="n">dd</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="s1">&#39;model_data_path&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span> <span class="o">=</span> <span class="n">dd</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="s1">&#39;model_data_path&#39;</span><span class="p">])</span>
 
             <span class="c1"># Check that columns match EC&#39;s and parameter names</span>
             <span class="c1"># (and determine parameter names if need be)</span>
@@ -510,15 +513,21 @@
             <span class="n">param_points</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_records</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">param_points_grps</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">keys</span><span class="p">()],</span><span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_param_names</span><span class="p">())</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_param_names</span><span class="p">())</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
             <span class="c1"># if PMF has been populated, check that points match</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">is_empty</span><span class="p">:</span>
-                <span class="c1">#print(len(param_points),len(self.probs.points[self.fit_param_names()]))</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">param_points</span><span class="o">==</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_param_names</span><span class="p">()]):</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Your previously populated PMF does not have the same set of parameter space points as your model data. Proceeding using the points from the model data.&#39;</span><span class="p">)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">probs</span> <span class="o">=</span> <span class="n">Pmf</span><span class="p">()</span>
-
+            <span class="c1"># this check is broken (&quot;Can only compare identically-labeled...&quot;)</span>
+            <span class="c1"># FIX ME</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            if not self.probs.is_empty:</span>
+<span class="sd">                #print(len(param_points),len(self.probs.points[self.fit_param_names()]))</span>
+<span class="sd">                if not all(param_points==self.probs.points[self.fit_param_names()]):</span>
+<span class="sd">                    print(&#39;Your previously populated PMF does not have the same set of parameter space points as your model data. Proceeding using the points from the model data.&#39;)</span>
+<span class="sd">                    self.probs = Pmf()</span>
+<span class="sd">            &quot;&quot;&quot;</span>
             <span class="c1">## check that all EC&#39;s are present at all model points</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">check_ecs</span><span class="p">(</span><span class="n">gb</span><span class="o">=</span><span class="n">param_points_grps</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
-
+            <span class="c1"># turned this off temporarily...</span>
+            <span class="c1"># FIX ME (&quot;can only compare identically-labelled...&quot;)</span>
+            <span class="c1"># (e.g. in 3.4.3 of nb8)</span>
+            
             <span class="c1"># Generate self.probs if necessary</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">is_empty</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
@@ -574,22 +583,30 @@
             <span class="c1">#self.model_data[p.name] = [p.get_closest_val(val) for val in self.model_data[p.name]]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">cpu_count</span><span class="p">())(</span><span class="n">delayed</span><span class="p">(</span><span class="n">get_closest_val</span><span class="p">)(</span><span class="n">val</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">vals</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>
 
+        <span class="c1">#print(&#39;At line 467...&#39;)</span>
+        <span class="c1">#print(self.model_data.head())</span>
 
         <span class="c1"># drop any modeled data at EC&#39;s not measured</span>
-        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Removing modeled EC&#39;s that weren&#39;t measured...&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ec_names</span><span class="p">())</span>
-        <span class="n">model_ecs</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_records</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ec_names</span><span class="p">())</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ec_names</span><span class="p">())</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">merged_ecs</span> <span class="o">=</span> <span class="n">model_ecs</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ec_pts</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ec_names</span><span class="p">(),</span> <span class="n">how</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span> <span class="n">indicator</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">extra_pts</span> <span class="o">=</span> <span class="n">merged_ecs</span><span class="p">[</span><span class="n">merged_ecs</span><span class="o">.</span><span class="n">_merge</span><span class="o">==</span><span class="s1">&#39;left_only&#39;</span><span class="p">]</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;there are &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">extra_pts</span><span class="p">))</span><span class="o">+</span><span class="s1">&#39; extra points...here are a few:&#39;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">extra_pts</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
-        <span class="n">extra_data</span> <span class="o">=</span> <span class="n">merged_ecs</span><span class="p">[</span><span class="n">merged_ecs</span><span class="o">.</span><span class="n">_merge</span><span class="o">==</span><span class="s1">&#39;right_only&#39;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">extra_data</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;There seem to be data EC&#39;s that weren&#39;t modeled...&quot;</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">extra_data</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="n">extra_pts</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
+        <span class="c1"># this was making mistakes previously so is commented out for now</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        if verbose:</span>
+<span class="sd">            print(&quot;Removing modeled EC&#39;s that weren&#39;t measured...&quot;)</span>
+<span class="sd">        self.model_data_ecgrps = self.model_data.groupby(self.ec_names())</span>
+<span class="sd">        model_ecs = pd.DataFrame.from_records(data=list(self.model_data_ecgrps.groups.keys()), columns=self.ec_names()).sort_values(by=self.ec_names()).reset_index(drop=True)</span>
+<span class="sd">        merged_ecs = model_ecs.merge(self.ec_pts, on=self.ec_names(), how=&#39;left&#39;, indicator=True)</span>
+<span class="sd">        extra_pts = merged_ecs[merged_ecs._merge==&#39;left_only&#39;]</span>
+<span class="sd">        print(&#39;there are &#39;+str(len(extra_pts))+&#39; extra points...here are a few:&#39;)</span>
+<span class="sd">        print(extra_pts.head())</span>
+<span class="sd">        extra_data = merged_ecs[merged_ecs._merge==&#39;right_only&#39;]</span>
+<span class="sd">        if len(extra_data)&gt;0:</span>
+<span class="sd">            print(&quot;There seem to be data EC&#39;s that weren&#39;t modeled...&quot;)</span>
+<span class="sd">            print(extra_data)</span>
+<span class="sd">        print(extra_pts.index)</span>
+<span class="sd">        self.model_data.drop(labels=extra_pts.index, axis=0, inplace=True)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#print(&#39;at line 485...&#39;)</span>
+        <span class="c1">#print(self.model_data.head())</span>
+        
         <span class="c1"># reset index to avoid duplication</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -698,6 +715,11 @@
                     <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">other_ecs</span><span class="p">:</span>
                         <span class="n">model_data</span> <span class="o">=</span>  <span class="n">model_data</span><span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">model_data</span><span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">-</span><span class="n">ecs_here</span><span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">name</span><span class="p">])</span><span class="o">&lt;=</span><span class="mf">10.</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">1.</span><span class="o">*</span><span class="n">c</span><span class="o">.</span><span class="n">tol_digits</span><span class="p">)]</span>
                 <span class="n">model_data</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">ec_x_name</span><span class="p">],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">model_data</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="c1"># get the modeled values only at the observed points</span>
+                <span class="n">x_vals</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">obs_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">ec_x_name</span><span class="p">])</span>
+                <span class="n">model_data_drop</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">model_data</span><span class="p">))</span> <span class="k">if</span> <span class="n">model_data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">ec_x_name</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">x_vals</span><span class="p">]</span>
+                <span class="n">model_data</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="n">model_data_drop</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
                 <span class="n">errors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="n">model_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">output_var</span><span class="p">],</span> <span class="n">obs_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">output_var</span><span class="p">])</span>
                 <span class="k">if</span> <span class="n">c_ind</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span> <span class="c1">#take errors from highest probability</span>
                     <span class="n">all_errs</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="nb">abs</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">errors</span><span class="p">])</span>
@@ -804,14 +826,14 @@
         <span class="n">probs_lists</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">delta_count_list</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">nan_count_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">skip_total</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">while</span> <span class="n">num_pts_used</span> <span class="o">&lt;</span> <span class="n">min_num_pts</span><span class="p">:</span>
             <span class="n">prev_used_pts</span> <span class="o">=</span> <span class="n">num_pts_used</span>
             <span class="n">num_runs</span> <span class="o">=</span> <span class="n">num_runs</span> <span class="o">+</span> <span class="mi">1</span>
             <span class="n">obs_indices</span> <span class="o">=</span> <span class="p">[]</span>
-
-            <span class="bp">self</span><span class="o">.</span><span class="n">probs</span> <span class="o">=</span> <span class="n">start_probs</span>
-
+            <span class="bp">self</span><span class="o">.</span><span class="n">probs</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">start_probs</span><span class="p">)</span>
             <span class="n">done</span><span class="o">=</span><span class="kc">False</span>
+            
             <span class="k">while</span> <span class="ow">not</span> <span class="n">done</span><span class="p">:</span>
                 <span class="c1"># check if we&#39;ve gone through all the points</span>
                 <span class="k">if</span> <span class="n">num_pts_used</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_data</span><span class="p">):</span>
@@ -833,27 +855,32 @@
                     <span class="c1">#print(len(model_here))</span>
 
                     <span class="c1"># compute likelihood and do a Bayesian update</span>
-                    <span class="n">lkl</span><span class="p">,</span> <span class="n">delta_count</span><span class="p">,</span> <span class="n">nan_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">likelihood</span><span class="p">(</span><span class="n">meas</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span> <span class="n">model_at_ec</span><span class="o">=</span><span class="n">model_here</span><span class="p">,</span><span class="n">output_col</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">output_var</span><span class="p">)</span>
+                    <span class="c1">#print(obs, model_here)</span>
+                    <span class="c1">#print()</span>
+                    <span class="n">lkl</span><span class="p">,</span> <span class="n">delta_count</span><span class="p">,</span> <span class="n">nan_count</span><span class="p">,</span> <span class="n">skip_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">likelihood</span><span class="p">(</span><span class="n">meas</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span> <span class="n">model_at_ec</span><span class="o">=</span><span class="n">model_here</span><span class="p">,</span> <span class="n">output_col</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">output_var</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">lkl</span><span class="p">)</span>
                     <span class="n">num_pts_used</span> <span class="o">=</span> <span class="n">num_pts_used</span> <span class="o">+</span> <span class="mi">1</span>
                     <span class="n">delta_count_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">delta_count</span><span class="p">)</span>
                     <span class="n">nan_count_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nan_count</span><span class="p">)</span>
+                    <span class="n">skip_total</span> <span class="o">=</span> <span class="n">skip_total</span> <span class="o">+</span> <span class="n">skip_count</span>
 
                     <span class="c1"># save intermediate PMF if necessary</span>
                     <span class="k">if</span> <span class="n">save_step</span> <span class="o">&gt;</span><span class="mi">0</span> <span class="ow">and</span> <span class="p">(</span><span class="n">num_pts_used</span><span class="o">-</span><span class="n">prev_used_pts</span><span class="p">)</span> <span class="o">%</span> <span class="n">save_step</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                        <span class="n">dd</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">pmf_folder</span><span class="o">+</span><span class="s1">&#39;sub</span><span class="si">%d</span><span class="s1">_run</span><span class="si">%d</span><span class="s1">_PMF_</span><span class="si">%d</span><span class="s1">.h5&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">num_sub</span><span class="p">,</span><span class="n">num_runs</span><span class="p">,</span><span class="n">num_pts_used</span><span class="o">-</span><span class="n">prev_used_pts</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
+                        <span class="n">dd</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">pmf_folder</span><span class="o">+</span><span class="s1">&#39;sub</span><span class="si">%d</span><span class="s1">_run</span><span class="si">%d</span><span class="s1">_PMF_</span><span class="si">%d</span><span class="s1">.h5&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">num_sub</span><span class="p">,</span><span class="n">num_runs</span><span class="p">,</span><span class="n">num_pts_used</span><span class="o">-</span><span class="n">prev_used_pts</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
 
                     <span class="c1"># check if threshold probability concentration has been reached</span>
                     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">most_probable</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">th_pv</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">points</span><span class="p">)))[</span><span class="s1">&#39;prob&#39;</span><span class="p">])</span><span class="o">&gt;</span><span class="n">th_pm</span><span class="p">:</span>
                         <span class="n">done</span> <span class="o">=</span> <span class="kc">True</span>
-
+                        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;done, points so far: &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">num_pts_used</span><span class="p">))</span>
+                        
                 <span class="k">if</span> <span class="n">done</span><span class="p">:</span>
                     <span class="n">probs_lists</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]))</span>
                     <span class="k">if</span> <span class="n">save_step</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
-                        <span class="n">dd</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">pmf_folder</span><span class="o">+</span><span class="s1">&#39;sub</span><span class="si">%d</span><span class="s1">_run</span><span class="si">%d</span><span class="s1">_PMF_final.h5&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">num_sub</span><span class="p">,</span><span class="n">num_runs</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
+                        <span class="n">dd</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">pmf_folder</span><span class="o">+</span><span class="s1">&#39;sub</span><span class="si">%d</span><span class="s1">_run</span><span class="si">%d</span><span class="s1">_PMF_final.h5&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">num_sub</span><span class="p">,</span><span class="n">num_runs</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
                     <span class="n">at_threshold</span><span class="o">=</span><span class="kc">True</span>
-                    <span class="n">dd</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">obs_list_folder</span><span class="o">+</span><span class="s1">&#39;sub</span><span class="si">%d</span><span class="s1">_run</span><span class="si">%d</span><span class="s1">_obs_list.h5&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">num_sub</span><span class="p">,</span><span class="n">num_runs</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">obs_indices</span><span class="p">])</span>
+                    <span class="n">dd</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">obs_list_folder</span><span class="o">+</span><span class="s1">&#39;sub</span><span class="si">%d</span><span class="s1">_run</span><span class="si">%d</span><span class="s1">_obs_list.h5&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">num_sub</span><span class="p">,</span><span class="n">num_runs</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">obs_indices</span><span class="p">])</span>
 
+    
         <span class="n">probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">probs_lists</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">probs</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Did a total of </span><span class="si">%d</span><span class="s1"> runs to use a total of </span><span class="si">%d</span><span class="s1"> observations.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">num_runs</span><span class="p">,</span><span class="n">num_pts_used</span><span class="p">))</span>
@@ -861,9 +888,10 @@
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">An average of </span><span class="si">%d</span><span class="s1"> / </span><span class="si">%d</span><span class="s1"> probability points had larger model uncertainty than experimental uncertainty during this run.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">delta_count_list</span><span class="p">))),</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">points</span><span class="p">)))</span>
 
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">An average of </span><span class="si">%.2f</span><span class="s1"> / </span><span class="si">%d</span><span class="s1"> probability points were affected by missing/NaN simulation data.</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">nan_count_list</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">points</span><span class="p">)))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="si">%d</span><span class="s1"> points were skipped.</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">skip_total</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">save_step</span> <span class="o">&gt;=</span><span class="mi">0</span><span class="p">:</span>
-            <span class="n">dd</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">pmf_folder</span><span class="o">+</span><span class="s1">&#39;sub</span><span class="si">%d</span><span class="s1">_PMF_final.h5&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">num_sub</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
+            <span class="n">dd</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">pmf_folder</span><span class="o">+</span><span class="s1">&#39;sub</span><span class="si">%d</span><span class="s1">_PMF_final.h5&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">num_sub</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">is_run</span> <span class="o">=</span> <span class="kc">True</span></div>
 
 <div class="viewcode-block" id="Model.subdivide"><a class="viewcode-back" href="../../bayesim.html#bayesim.model.Model.subdivide">[docs]</a>    <span class="k">def</span> <span class="nf">subdivide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
@@ -871,9 +899,11 @@
 <span class="sd">        Subdivide the probability distribution and save the list of new sims to run to a file.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            threshold_prob (`float`): minimum probability of box to (keep and) subdivide (default 0.001)</span>
+<span class="sd">            threshold_prob (`float`): minimum probability of box to (keep and) subdivide (default value is the uniform distribution probability)</span>
+<span class="sd">            new_sim_list_fpath (`str`): filename for file containing list of new simulations to be run (optional)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">threshold_prob</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;threshold_prob&#39;</span><span class="p">,</span><span class="mf">0.001</span><span class="p">)</span>
+        <span class="n">threshold_prob</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;threshold_prob&#39;</span><span class="p">,</span><span class="mf">1.0</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">points</span><span class="p">))</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;new_sim_list_fpath&#39;</span><span class="p">,</span> <span class="s1">&#39;new_sim_points_</span><span class="si">%d</span><span class="s1">.h5&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">num_sub</span><span class="p">))</span>
         <span class="n">new_boxes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">subdivide</span><span class="p">(</span><span class="n">threshold_prob</span><span class="p">)</span>
         <span class="c1">#dropped_inds = list(dropped_boxes.index)</span>
 
@@ -886,8 +916,7 @@
         <span class="c1"># update flags</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">needs_new_model_data</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">is_run</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="c1">#dd.io.save(filename,new_boxes)</span>
-        <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;new_sim_points_</span><span class="si">%d</span><span class="s1">.h5&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">num_sub</span><span class="p">)</span>
+        <span class="c1">#dd.save(filename,new_boxes)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">list_model_pts_to_run</span><span class="p">(</span><span class="n">fpath</span><span class="o">=</span><span class="n">filename</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;New model points to simulate are saved in the file </span><span class="si">%s</span><span class="s1">.&#39;</span><span class="o">%</span><span class="n">filename</span><span class="p">)</span></div>
 
@@ -917,7 +946,7 @@
             <span class="k">for</span> <span class="n">ecpt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ec_pts</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
                 <span class="n">pts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">ppt</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">+</span><span class="nb">list</span><span class="p">(</span><span class="n">ecpt</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
         <span class="n">sim_pts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">pts</span><span class="p">,</span><span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span>
-        <span class="n">dd</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span><span class="n">sim_pts</span><span class="p">)</span></div>
+        <span class="n">dd</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span><span class="n">sim_pts</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Model.calc_model_unc"><a class="viewcode-back" href="../../bayesim.html#bayesim.model.Model.calc_model_unc">[docs]</a>    <span class="k">def</span> <span class="nf">calc_model_unc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -929,12 +958,20 @@
 <span class="sd">            verbose (`bool`): flag for verbosity, defaults to False</span>
 <span class="sd">            model_unc_factor (`float`): multiplier on deltas to give uncertainty, defaults to 0.5 - smaller probably means faster convergence, but also higher chance to miss &quot;hot spots&quot;</span>
 <span class="sd">            take_average (`bool`): flag for whether to use average model uncertainty at each measurement condition or the parameter-resolved version. Defaults to True if any parameters are logarithmically spaced, and False otherwise.</span>
+<span class="sd">            min_unc_frac (`float`): minimum uncertainty as a fraction of the output variable value, defaults to 0.01</span>
+<span class="sd">            min_unc_val (`float`): minimum uncertainty as an absolute number, defaults to 0.0</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            If both `min_unc_frac` and `min_unc_val` are specified, the uncertainty will be set to the larger of the two in each case</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">factor</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;model_unc_factor&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
         <span class="n">verbose</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Calculating model uncertainty...&#39;</span><span class="p">)</span>
+        <span class="n">min_unc_frac</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;min_unc_frac&#39;</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
+        <span class="n">min_unc_val</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;min_unc_val&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
 
         <span class="c1"># check if any parameters are log-spaced</span>
         <span class="n">has_log</span> <span class="o">=</span> <span class="kc">False</span>
@@ -954,15 +991,28 @@
             <span class="k">for</span> <span class="n">grp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>
                 <span class="n">deltas_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc_deltas</span><span class="p">(</span><span class="n">grp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="n">grp</span><span class="p">],</span> <span class="n">param_lengths</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_param_names</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_var</span><span class="p">,</span> <span class="n">take_average</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># parallalize!</span>
+            <span class="c1"># parallelize!</span>
             <span class="n">deltas_list</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">cpu_count</span><span class="p">())(</span><span class="n">delayed</span><span class="p">(</span><span class="n">calc_deltas</span><span class="p">)(</span><span class="n">grp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="n">grp</span><span class="p">],</span> <span class="n">param_lengths</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_param_names</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_var</span><span class="p">,</span> <span class="n">take_average</span><span class="p">)</span> <span class="k">for</span> <span class="n">grp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span>
+
 
         <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">deltas_list</span><span class="p">:</span>
             <span class="n">inds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="n">entry</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
             <span class="n">deltas</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span> <span class="o">=</span> <span class="n">entry</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
-        <span class="c1"># trying 0.5 instead of 1.0</span>
+        <span class="c1"># check for NaNs</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">deltas</span><span class="p">)):</span>
+            <span class="c1"># there is a problem</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Some uncertainties came out to NaN! Help!&quot;</span><span class="p">)</span>
+            
+        <span class="c1"># multiply by the factor</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="p">[</span><span class="s1">&#39;uncertainty&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">factor</span> <span class="o">*</span> <span class="n">deltas</span>
+
+        <span class="c1"># adjust upward for any minimum values</span>
+        <span class="n">unc</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="n">min_unc</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">min_unc_val</span><span class="p">,</span> <span class="n">min_unc_frac</span><span class="o">*</span><span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">output_var</span><span class="p">])</span>
+            <span class="n">unc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">min_unc</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;uncertainty&#39;</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="p">[</span><span class="s1">&#39;uncertainty&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">unc</span>
 
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Calculating model uncertainty took </span><span class="si">%.2f</span><span class="s1"> seconds.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">start_time</span><span class="p">))</span></div>
@@ -992,7 +1042,7 @@
         <span class="n">state</span><span class="p">[</span><span class="s1">&#39;is_run&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_run</span>
 
         <span class="c1"># save the file</span>
-        <span class="n">dd</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="n">state</span><span class="p">)</span></div>
+        <span class="n">dd</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="n">state</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Model.visualize_grid"><a class="viewcode-back" href="../../bayesim.html#bayesim.model.Model.visualize_grid">[docs]</a>    <span class="k">def</span> <span class="nf">visualize_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>

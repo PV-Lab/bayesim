@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>bayesim package &#8212; bayesim 0.9.5 documentation</title>
+    <title>bayesim package &#8212; bayesim 0.9.16 documentation</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -244,11 +244,17 @@
 <li><strong>verbose</strong> (<cite>bool</cite>) – flag for verbosity, defaults to False</li>
 <li><strong>model_unc_factor</strong> (<cite>float</cite>) – multiplier on deltas to give uncertainty, defaults to 0.5 - smaller probably means faster convergence, but also higher chance to miss “hot spots”</li>
 <li><strong>take_average</strong> (<cite>bool</cite>) – flag for whether to use average model uncertainty at each measurement condition or the parameter-resolved version. Defaults to True if any parameters are logarithmically spaced, and False otherwise.</li>
+<li><strong>min_unc_frac</strong> (<cite>float</cite>) – minimum uncertainty as a fraction of the output variable value, defaults to 0.01</li>
+<li><strong>min_unc_val</strong> (<cite>float</cite>) – minimum uncertainty as an absolute number, defaults to 0.0</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If both <cite>min_unc_frac</cite> and <cite>min_unc_val</cite> are specified, the uncertainty will be set to the larger of the two in each case</p>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -398,7 +404,11 @@ Will stop iterating through observations if/when &gt;= th_pm of probability mass
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>threshold_prob</strong> (<cite>float</cite>) – minimum probability of box to (keep and) subdivide (default 0.001)</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>threshold_prob</strong> (<cite>float</cite>) – minimum probability of box to (keep and) subdivide (default value is the uniform distribution probability)</li>
+<li><strong>new_sim_list_fpath</strong> (<cite>str</cite>) – filename for file containing list of new simulations to be run (optional)</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
