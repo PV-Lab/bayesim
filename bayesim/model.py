@@ -1,8 +1,10 @@
+#import sys
+#sys.path.append('../')
 from bayesim.pmf import Pmf
 import bayesim.params as pm
 from bayesim.utils import calc_deltas, get_closest_val
 import pandas as pd
-import deepdish as dd
+import bayesim.hdf5io as dd
 from copy import deepcopy
 import numpy as np
 import matplotlib.pyplot as plt
@@ -45,7 +47,7 @@ class Model(object):
         if load_state:
             if verbose:
                 print('Loading bayesim state from %s...\n'%state_file)
-            state = dd.io.load(state_file)
+            state = dd.load(state_file)
 
             # variables
             self.ec_pts = state['ec_pts']
@@ -192,7 +194,7 @@ class Model(object):
         if verbose:
             print('Attaching measured data...\n')
 
-        self.obs_data = dd.io.load(argv['obs_data_path'])
+        self.obs_data = dd.load(argv['obs_data_path'])
         # get EC names if necessary
         cols = list(self.obs_data.columns)
         if output_col not in cols:
@@ -349,6 +351,7 @@ class Model(object):
         end_indices = np.zeros(len(self.probs.points),dtype=int)
         #print(list(self.model_data_grps.groups.keys())[:5])
         for pt in self.probs.points.iterrows():
+            #print(pt[1])
             #print(tuple(pt[1][self.fit_param_names()].tolist()))
             subset_inds = self.model_data_grps.groups[tuple(pt[1][self.fit_param_names()].tolist())]
             if len(subset_inds)==0:
@@ -382,7 +385,7 @@ class Model(object):
 
         if mode == 'file':
             # import and sort data on parameter values
-            self.model_data = dd.io.load(argv['model_data_path'])
+            self.model_data = dd.load(argv['model_data_path'])
 
             # Check that columns match EC's and parameter names
             # (and determine parameter names if need be)
@@ -396,15 +399,21 @@ class Model(object):
             param_points = pd.DataFrame.from_records(data=[list(k) for k in param_points_grps.groups.keys()],columns=self.fit_param_names()).sort_values(self.fit_param_names()).reset_index(drop=True)
 
             # if PMF has been populated, check that points match
+            # this check is broken ("Can only compare identically-labeled...")
+            # FIX ME
+            """
             if not self.probs.is_empty:
                 #print(len(param_points),len(self.probs.points[self.fit_param_names()]))
                 if not all(param_points==self.probs.points[self.fit_param_names()]):
                     print('Your previously populated PMF does not have the same set of parameter space points as your model data. Proceeding using the points from the model data.')
                     self.probs = Pmf()
-
+            """
             ## check that all EC's are present at all model points
             self.check_ecs(gb=param_points_grps, verbose=verbose)
-
+            # turned this off temporarily...
+            # FIX ME ("can only compare identically-labelled...")
+            # (e.g. in 3.4.3 of nb8)
+            
             # Generate self.probs if necessary
             if self.probs.is_empty:
                 if verbose:
@@ -460,12 +469,16 @@ class Model(object):
             #self.model_data[p.name] = [p.get_closest_val(val) for val in self.model_data[p.name]]
             self.model_data[p.name] = Parallel(n_jobs=cpu_count())(delayed(get_closest_val)(val, p.vals) for val in self.model_data[p.name])
 
+        #print('At line 467...')
+        #print(self.model_data.head())
 
         # drop any modeled data at EC's not measured
+        # this was making mistakes previously so is commented out for now
+        """
         if verbose:
             print("Removing modeled EC's that weren't measured...")
         self.model_data_ecgrps = self.model_data.groupby(self.ec_names())
-        model_ecs = pd.DataFrame.from_records(data=self.model_data_ecgrps.groups.keys(), columns=self.ec_names()).sort_values(by=self.ec_names()).reset_index(drop=True)
+        model_ecs = pd.DataFrame.from_records(data=list(self.model_data_ecgrps.groups.keys()), columns=self.ec_names()).sort_values(by=self.ec_names()).reset_index(drop=True)
         merged_ecs = model_ecs.merge(self.ec_pts, on=self.ec_names(), how='left', indicator=True)
         extra_pts = merged_ecs[merged_ecs._merge=='left_only']
         print('there are '+str(len(extra_pts))+' extra points...here are a few:')
@@ -474,8 +487,12 @@ class Model(object):
         if len(extra_data)>0:
             print("There seem to be data EC's that weren't modeled...")
             print(extra_data)
+        print(extra_pts.index)
         self.model_data.drop(labels=extra_pts.index, axis=0, inplace=True)
-
+        """
+        #print('at line 485...')
+        #print(self.model_data.head())
+        
         # reset index to avoid duplication
         self.model_data.reset_index(inplace=True,drop=True)
 
@@ -584,6 +601,11 @@ class Model(object):
                     for c in other_ecs:
                         model_data =  model_data[abs(model_data[c.name]-ecs_here[c.name])<=10.**(-1.*c.tol_digits)]
                 model_data.sort_values(by=[self.params.ec_x_name], inplace=True)
+                model_data.reset_index(drop=True, inplace=True)
+                # get the modeled values only at the observed points
+                x_vals = list(obs_data[self.params.ec_x_name])
+                model_data_drop = [i for i in range(len(model_data)) if model_data.loc[i][self.params.ec_x_name] not in x_vals]
+                model_data.drop(labels=model_data_drop, axis=0, inplace=True)
                 errors = np.subtract(model_data[self.output_var], obs_data[self.output_var])
                 if c_ind==1: #take errors from highest probability
                     all_errs.extend([abs(e) for e in errors])
@@ -690,14 +712,14 @@ class Model(object):
         probs_lists = []
         delta_count_list = []
         nan_count_list = []
+        skip_total = 0
         while num_pts_used < min_num_pts:
             prev_used_pts = num_pts_used
             num_runs = num_runs + 1
             obs_indices = []
-
-            self.probs = start_probs
-
+            self.probs = deepcopy(start_probs)
             done=False
+            
             while not done:
                 # check if we've gone through all the points
                 if num_pts_used == len(self.obs_data):
@@ -719,27 +741,32 @@ class Model(object):
                     #print(len(model_here))
 
                     # compute likelihood and do a Bayesian update
-                    lkl, delta_count, nan_count = self.probs.likelihood(meas=obs, model_at_ec=model_here,output_col=self.output_var)
+                    #print(obs, model_here)
+                    #print()
+                    lkl, delta_count, nan_count, skip_count = self.probs.likelihood(meas=obs, model_at_ec=model_here, output_col=self.output_var, verbose=verbose)
                     self.probs.multiply(lkl)
                     num_pts_used = num_pts_used + 1
                     delta_count_list.append(delta_count)
                     nan_count_list.append(nan_count)
+                    skip_total = skip_total + skip_count
 
                     # save intermediate PMF if necessary
                     if save_step >0 and (num_pts_used-prev_used_pts) % save_step == 0:
-                        dd.io.save(pmf_folder+'sub%d_run%d_PMF_%d.h5'%(self.probs.num_sub,num_runs,num_pts_used-prev_used_pts),self.probs.points)
+                        dd.save(pmf_folder+'sub%d_run%d_PMF_%d.h5'%(self.probs.num_sub,num_runs,num_pts_used-prev_used_pts),self.probs.points)
 
                     # check if threshold probability concentration has been reached
                     if np.sum(self.probs.most_probable(int(th_pv*len(self.probs.points)))['prob'])>th_pm:
                         done = True
-
+                        print('done, points so far: '+str(num_pts_used))
+                        
                 if done:
                     probs_lists.append(np.array(self.probs.points['prob']))
                     if save_step >= 0:
-                        dd.io.save(pmf_folder+'sub%d_run%d_PMF_final.h5'%(self.probs.num_sub,num_runs),self.probs.points)
+                        dd.save(pmf_folder+'sub%d_run%d_PMF_final.h5'%(self.probs.num_sub,num_runs),self.probs.points)
                     at_threshold=True
-                    dd.io.save(obs_list_folder+'sub%d_run%d_obs_list.h5'%(self.probs.num_sub,num_runs),self.obs_data.iloc[obs_indices])
+                    dd.save(obs_list_folder+'sub%d_run%d_obs_list.h5'%(self.probs.num_sub,num_runs),self.obs_data.iloc[obs_indices])
 
+    
         probs = np.mean(probs_lists,axis=0)
         self.probs.points['prob'] = probs
         print('Did a total of %d runs to use a total of %d observations.\n'%(num_runs,num_pts_used))
@@ -747,9 +774,10 @@ class Model(object):
         print('\nAn average of %d / %d probability points had larger model uncertainty than experimental uncertainty during this run.\n'%(int(round(np.mean(delta_count_list))),len(self.probs.points)))
 
         print('\nAn average of %.2f / %d probability points were affected by missing/NaN simulation data.\n' %(np.mean(nan_count_list), len(self.probs.points)))
+        print('\n%d points were skipped.\n' %skip_total)
 
         if save_step >=0:
-            dd.io.save(pmf_folder+'sub%d_PMF_final.h5'%(self.probs.num_sub),self.probs.points)
+            dd.save(pmf_folder+'sub%d_PMF_final.h5'%(self.probs.num_sub),self.probs.points)
         self.is_run = True
 
     def subdivide(self, **argv):
@@ -757,9 +785,11 @@ class Model(object):
         Subdivide the probability distribution and save the list of new sims to run to a file.
 
         Args:
-            threshold_prob (`float`): minimum probability of box to (keep and) subdivide (default 0.001)
+            threshold_prob (`float`): minimum probability of box to (keep and) subdivide (default value is the uniform distribution probability)
+            new_sim_list_fpath (`str`): filename for file containing list of new simulations to be run (optional)
         """
-        threshold_prob = argv.get('threshold_prob',0.001)
+        threshold_prob = argv.get('threshold_prob',1.0/len(self.probs.points))
+        filename = argv.get('new_sim_list_fpath', 'new_sim_points_%d.h5'%(self.probs.num_sub))
         new_boxes = self.probs.subdivide(threshold_prob)
         #dropped_inds = list(dropped_boxes.index)
 
@@ -772,8 +802,7 @@ class Model(object):
         # update flags
         self.needs_new_model_data = True
         self.is_run = False
-        #dd.io.save(filename,new_boxes)
-        filename = 'new_sim_points_%d.h5'%(self.probs.num_sub)
+        #dd.save(filename,new_boxes)
         self.list_model_pts_to_run(fpath=filename)
         print('New model points to simulate are saved in the file %s.'%filename)
 
@@ -803,7 +832,7 @@ class Model(object):
             for ecpt in self.ec_pts.iterrows():
                 pts.append(list(ppt[1])+list(ecpt[1]))
         sim_pts = pd.DataFrame(data=pts,columns=columns)
-        dd.io.save(fpath,sim_pts)
+        dd.save(fpath,sim_pts)
 
     def calc_model_unc(self, **argv):
         """
@@ -815,12 +844,20 @@ class Model(object):
             verbose (`bool`): flag for verbosity, defaults to False
             model_unc_factor (`float`): multiplier on deltas to give uncertainty, defaults to 0.5 - smaller probably means faster convergence, but also higher chance to miss "hot spots"
             take_average (`bool`): flag for whether to use average model uncertainty at each measurement condition or the parameter-resolved version. Defaults to True if any parameters are logarithmically spaced, and False otherwise.
+            min_unc_frac (`float`): minimum uncertainty as a fraction of the output variable value, defaults to 0.01
+            min_unc_val (`float`): minimum uncertainty as an absolute number, defaults to 0.0
+
+        Note:
+            If both `min_unc_frac` and `min_unc_val` are specified, the uncertainty will be set to the larger of the two in each case
+
         """
 
         factor = argv.get('model_unc_factor', 0.5)
         verbose = argv.get('verbose', False)
         if verbose:
             print('Calculating model uncertainty...')
+        min_unc_frac = argv.get('min_unc_frac', 0.01)
+        min_unc_val = argv.get('min_unc_val', 0.0)
 
         # check if any parameters are log-spaced
         has_log = False
@@ -840,15 +877,28 @@ class Model(object):
             for grp in self.model_data_ecgrps.groups:
                 deltas_list.append(calc_deltas(grp, self.model_data_ecgrps.groups[grp], param_lengths, self.model_data, self.fit_param_names(), self.probs, self.output_var, take_average))
         else:
-            # parallalize!
+            # parallelize!
             deltas_list = Parallel(n_jobs=cpu_count())(delayed(calc_deltas)(grp, self.model_data_ecgrps.groups[grp], param_lengths, self.model_data, self.fit_param_names(), self.probs, self.output_var, take_average) for grp in self.model_data_ecgrps.groups)
+
 
         for entry in deltas_list:
             inds = self.model_data_ecgrps.groups[entry[0]]
             deltas[inds] = entry[1]
 
-        # trying 0.5 instead of 1.0
+        # check for NaNs
+        if np.any(np.isnan(deltas)):
+            # there is a problem
+            raise ValueError("Some uncertainties came out to NaN! Help!")
+            
+        # multiply by the factor
         self.model_data['uncertainty'] = factor * deltas
+
+        # adjust upward for any minimum values
+        unc = []
+        for row in self.model_data.iterrows():
+            min_unc = max(min_unc_val, min_unc_frac*row[1][self.output_var])
+            unc.append(max(min_unc, row[1]['uncertainty']))
+        self.model_data['uncertainty'] = unc
 
         if verbose:
             print('Calculating model uncertainty took %.2f seconds.\n'%(time.time()-start_time))
@@ -878,7 +928,7 @@ class Model(object):
         state['is_run'] = self.is_run
 
         # save the file
-        dd.io.save(filename,state)
+        dd.save(filename,state)
 
     def visualize_grid(self,**argv):
         """

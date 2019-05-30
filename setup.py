@@ -42,12 +42,8 @@ for item in requirements:
     if req:
         requires.append(str(req))
 
-print(requires)
-print()
-print(links)
-
 setup(name='bayesim',
-      version='0.9.15',
+      version='0.9.16',
       description='Fast model fitting via Bayesian inference',
       author='Rachel Kurchin, Giuseppe Romano',
       author_email='rkurchin@mit.edu, romanog@mit.edu',
