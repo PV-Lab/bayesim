@@ -97,12 +97,14 @@ class Pmf(object):
         d['params'] = [p.__dict__ for p in self.params]
         return d
 
-    def normalize(self):
+    def normalize(self, **argv):
         """Normalize overall PMF."""
         norm_const = self.points['prob'].sum()
+        verbose = argv.get('verbose', False)
         #print(norm_const,type(norm_const))
         if abs(norm_const)<1e-12:
-            print("Somehow the normalization constant was zero! To play it safe, I won't do anything.")
+            if verbose:
+                print("Somehow the normalization constant was zero! To play it safe, I won't do anything.")
         else:
             self.points['prob'] = [p/norm_const for p in self.points['prob']]
 
@@ -216,7 +218,7 @@ class Pmf(object):
         inds_to_drop.extend(all_out_check.index)
         return neighbor_points.drop(labels=inds_to_drop)
 
-    def subdivide(self, threshold_prob, include_neighbors=True):
+    def subdivide(self, threshold_prob, include_neighbors=True, **argv):
         """
         Subdivide all boxes with P > threshold_prob and assign "locally uniform" probabilities within each box. If include_neighbors is true, also subdivide all boxes neighboring those boxes.
 
@@ -225,9 +227,12 @@ class Pmf(object):
         Args:
             threshold_prob (`float`): probability above which a box should be retained
             include_neighbors (`bool`): whether to also subdivide all immediate neighbors to boxes meeting the threshold
+            verbose (`bool`): Verbosity, default false
         """
         num_divs = {p.name:2 for p in self.params} #dummy for now
 
+        verbose = argv.get('verbose', False)
+        
         # pick out the boxes that will be subdivided
         to_subdivide = self.points[self.points['prob']>threshold_prob]
         #print(len(to_subdivide))
@@ -260,7 +265,8 @@ class Pmf(object):
             if this_width <= p.min_width:
                 # don't divide along this direction
                 num_divs[p.name] = 1
-                print('Minimum width/factor of %s already satisfied for parameter %s, not subdividing in that direction!'%(p.get_val_str(p.min_width), p.name))
+                if verbose:
+                    print('Minimum width/factor of %s already satisfied for parameter %s, not subdividing in that direction!'%(p.get_val_str(p.min_width), p.name))
 
         # create new boxes (and delete old ones)
         new_boxes = []
@@ -300,7 +306,7 @@ class Pmf(object):
         self.points = self.points.reset_index(drop=True)
 
         # should be normalized already, but just in case:
-        self.normalize()
+        self.normalize(verbose=verbose)
 
         # increment subdivide count
         self.num_sub = self.num_sub + 1
@@ -309,7 +315,7 @@ class Pmf(object):
 
         return new_boxes
 
-    def multiply(self, other_pmf):
+    def multiply(self, other_pmf, **argv):
         """
         Compute and store renormalized product of this Pmf with other_pmf.
 
@@ -317,6 +323,8 @@ class Pmf(object):
             other_pmf (:class:`.Pmf`): PMF to multiply by
         """
 
+        verbose = argv.get('verbose', False)
+        
         # check for silliness
         assert isinstance(other_pmf, Pmf), "You didn't feed in a Pmf object!"
         assert len(self.points) == len(other_pmf.points), "Pmf's are over different numbers of points. Can't exactly do a pointwise multiplication on that, can I?"
@@ -335,10 +343,11 @@ class Pmf(object):
 
         # check if there's any probability there...
         if abs(np.sum(new_probs))<1e-12:
-            print("You're gonna have a bad time...not multiplying")
+            if verbose:
+                print("You're gonna have a bad time...not multiplying")
         else:
             self.points['prob'] = new_probs
-            self.normalize()
+            self.normalize(verbose=verbose)
 
     def likelihood(self, **argv):
         """
@@ -353,6 +362,7 @@ class Pmf(object):
             meas: one output value e.g. J
             unc: uncertainty in measured value (stdev of a Gaussian)
             model_func: should accept one dict of params and one of conditions and output measurement (might deprecate)
+            verbose (`bool`): be verbose or not
         """
 
         # read in and process inputs
@@ -363,6 +373,7 @@ class Pmf(object):
         output_col = argv['output_col']
         meas_val = meas[output_col]
         meas_err = meas['uncertainty']
+        verbose = argv.get('verbose', False)
 
         # set up likelihood DF
         lkl = deepcopy(self)
@@ -370,40 +381,52 @@ class Pmf(object):
 
         delta_count = 0
         nan_count = 0
+        skip_count = 0
+        
+        # check that lengths match
+        if len(lkl.points)==len(model_data):
+            # here's the actual loop that computes the likelihoods
+            for point in lkl.points.iterrows():
+                #print(ec, point[1])
+                #model_val = model_func(ec, dict(point[1]))
+                model_pt = model_data.iloc[point[0]]
+                model_val = float(model_pt[output_col])
+                if not np.isnan(model_val):
+                    model_err = float(model_pt['uncertainty'])
+                    if np.isnan(model_err):
+                        err = 2*meas_err #janky but whatev
+                    else:
+                        err = model_err + meas_err
 
-        # here's the actual loop that computes the likelihoods
-        for point in lkl.points.iterrows():
-            #print(ec, point[1])
-            #model_val = model_func(ec, dict(point[1]))
-            model_pt = model_data.iloc[point[0]]
-            model_val = float(model_pt[output_col])
-            if not np.isnan(model_val):
-                model_err = float(model_pt['uncertainty'])
-                if np.isnan(model_err):
-                    err = 2*meas_err #janky but whatev
+                    # tally how many times deltas were bigger
+                    if model_err > meas_err:
+                        delta_count = delta_count + 1
+
+                    new_probs[point[0]] = norm.pdf(meas_val, loc=model_val, scale=abs(err))
                 else:
-                    err = model_err + meas_err
+                    new_probs[point[0]] = 1.0/len(lkl.points)
+                    nan_count = nan_count + 1
+            
+            # copy these values in
+            lkl.points['prob'] = new_probs
 
-                # tally how many times deltas were bigger
-                if model_err > meas_err:
-                    delta_count = delta_count + 1
+            # make sure that the likelihood isn't zero everywhere...
+            if abs(np.sum(new_probs))<1e-12:
+                if verbose:
+                    print('likelihood has no probability! :(')
+                skip_count = skip_count + 1
+            if any(np.isnan(np.array(self.points['prob']))):
+                print(self.points[self.points.isnull().any(axis=1)])
+                raise ValueError('Uh-oh, some probability is NaN!')
 
-                new_probs[point[0]] = norm.pdf(meas_val, loc=model_val, scale=abs(err))
-            else:
-                new_probs[point[0]] = 1.0/len(lkl.points)
-                nan_count = nan_count + 1
+        else:
+            if verbose:
+                print('Missing model data for ')
+                print(meas)
+                print('Skipping likelihood calculation here.\n')
 
-        # copy these values in
-        lkl.points['prob'] = new_probs
-
-        # make sure that the likelihood isn't zero everywhere...
-        if abs(np.sum(new_probs))<1e-12:
-            print('likelihood has no probability! :(')
-        if any(np.isnan(np.array(self.points['prob']))):
-            print(self.points[self.points.isnull().any(axis=1)])
-            raise ValueError('Uh-oh, some probability is NaN!')
-        lkl.normalize()
-        return lkl, delta_count, nan_count
+        lkl.normalize()        
+        return lkl, delta_count, nan_count, skip_count
 
     def most_probable(self, n):
         """Return the n largest probabilities in a new DataFrame.
@@ -513,7 +536,7 @@ class Pmf(object):
 
         return bins, probs
 
-    def project_2D(self, x_param, y_param, no_probs=False, dense_grid=None):
+    def project_2D(self, x_param, y_param, no_probs=False, dense_grid=[]):
 
         """
         Project down to two dimensions over the two parameters. This one doesn't actually need to sum, it just draws a bunch of (potentially overlapping) rectangles with transparencies according to their probability densities (as a fraction of the normalized area). Used by the visualize() method.
@@ -684,29 +707,33 @@ class Pmf(object):
 
                 elif rownum > colnum: # below diagonal
                     offdiag_start = timeit.default_timer()
+                    # formatting axes ranges and ticks
+                    if x_param.spacing=='log':
+                        axes[rownum][colnum].set_xscale('linear')
+                        x_min = np.log10(plot_ranges[x_param.name][0])
+                        x_max = np.log10(plot_ranges[x_param.name][1])
+                        axes[rownum][colnum].set_xlim([x_min, x_max])
+                    if y_param.spacing=='log':
+                        y_min = np.log10(plot_ranges[y_param.name][0])
+                        y_max = np.log10(plot_ranges[y_param.name][1])
+                    else:
+                        y_min = plot_ranges[y_param.name][0]
+                        y_max = plot_ranges[y_param.name][1]
+                    axes[rownum][colnum].set_xticks(param_ticks[x_param.name]['locs'])
+                    axes[rownum][colnum].set_xticklabels(param_ticks[x_param.name]['labels'])
+                    axes[rownum][colnum].set_yticks(param_ticks[y_param.name]['locs'])
+                    axes[rownum][colnum].set_yticklabels(param_ticks[y_param.name]['labels'])
+                    axes[rownum][colnum].set_ylim([y_min, y_max])
+
+
                     if just_grid:
                         patches = self.project_2D(x_param, y_param, no_probs=True)
                         axes[rownum][colnum].grid(False)
+                        for patch in patches:
+                            axes[rownum][colnum].add_patch(patch)
                     else:
                         dense_probs_here = self.project_2D(x_param, y_param, dense_grid=deepcopy(dense_probs))
 
-                        # formatting axes ranges and ticks
-                        if x_param.spacing=='log':
-                            axes[rownum][colnum].set_xscale('linear')
-                            x_min = np.log10(plot_ranges[x_param.name][0])
-                            x_max = np.log10(plot_ranges[x_param.name][1])
-                            axes[rownum][colnum].set_xlim([x_min, x_max])
-                        if y_param.spacing=='log':
-                            y_min = np.log10(plot_ranges[y_param.name][0])
-                            y_max = np.log10(plot_ranges[y_param.name][1])
-                        else:
-                            y_min = plot_ranges[y_param.name][0]
-                            y_max = plot_ranges[y_param.name][1]
-                        axes[rownum][colnum].set_xticks(param_ticks[x_param.name]['locs'])
-                        axes[rownum][colnum].set_xticklabels(param_ticks[x_param.name]['labels'])
-                        axes[rownum][colnum].set_yticks(param_ticks[y_param.name]['locs'])
-                        axes[rownum][colnum].set_yticklabels(param_ticks[y_param.name]['labels'])
-                        axes[rownum][colnum].set_ylim([y_min, y_max])
 
                         # generating the colormap and transparency
                         cmap = plt.get_cmap(cmap_name)

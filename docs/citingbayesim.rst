@@ -2,6 +2,4 @@
 Citing bayesim
 ==============
 
-If you use the code, please consider citing
-
-[placeholder]
+If you use the code, please cite `this paper <https://www.sciencedirect.com/science/article/pii/S0010465519300414?via%3Dihub>`_.

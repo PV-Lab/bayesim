@@ -18,4 +18,4 @@ Information
 :Authors:
     Rachel C. Kurchin and Giuseppe Romano
 
-:Version: 0.9.4 as of September 2018
+:Version: 0.9.7 as of May 2019

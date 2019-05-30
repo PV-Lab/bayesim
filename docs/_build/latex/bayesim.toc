@@ -1,0 +1,45 @@
+\select@language {english}
+\contentsline {chapter}{\numberline {1}Getting Started}{1}{chapter.1}
+\contentsline {section}{\numberline {1.1}Prerequisites}{1}{section.1.1}
+\contentsline {section}{\numberline {1.2}Download}{1}{section.1.2}
+\contentsline {section}{\numberline {1.3}Usage}{1}{section.1.3}
+\contentsline {subsection}{\numberline {1.3.1}Python / Jupyter}{1}{subsection.1.3.1}
+\contentsline {subsection}{\numberline {1.3.2}Command line}{1}{subsection.1.3.2}
+\contentsline {chapter}{\numberline {2}Why bayesim?}{3}{chapter.2}
+\contentsline {section}{\numberline {2.1}Probability distributions are nice}{3}{section.2.1}
+\contentsline {section}{\numberline {2.2}Simulations are expensive}{3}{section.2.2}
+\contentsline {chapter}{\numberline {3}Technical Background}{7}{chapter.3}
+\contentsline {section}{\numberline {3.1}Bayes\IeC {\textquoteright } Theorem}{7}{section.3.1}
+\contentsline {section}{\numberline {3.2}Bayesian Inference and Parameter Estimation}{7}{section.3.2}
+\contentsline {subsection}{\numberline {3.2.1}Many hypotheses, in multiple dimensions}{8}{subsection.3.2.1}
+\contentsline {subsection}{\numberline {3.2.2}Iterative Bayesian updates}{8}{subsection.3.2.2}
+\contentsline {subsection}{\numberline {3.2.3}Where does the likelihood come from?!? Data modeling!}{8}{subsection.3.2.3}
+\contentsline {subsection}{\numberline {3.2.4}Experimental Uncertainty}{9}{subsection.3.2.4}
+\contentsline {subsection}{\numberline {3.2.5}Model Uncertainty}{9}{subsection.3.2.5}
+\contentsline {section}{\numberline {3.3}An illustrative example: Kinematics}{10}{section.3.3}
+\contentsline {chapter}{\numberline {4}Manual}{15}{chapter.4}
+\contentsline {section}{\numberline {4.1}Overview}{15}{section.4.1}
+\contentsline {section}{\numberline {4.2}Attaching Observations}{16}{section.4.2}
+\contentsline {section}{\numberline {4.3}Defining Parameters}{16}{section.4.3}
+\contentsline {section}{\numberline {4.4}Attaching Modeled Data}{18}{section.4.4}
+\contentsline {section}{\numberline {4.5}Performing the Inference}{18}{section.4.5}
+\contentsline {section}{\numberline {4.6}Visualizing the Output}{19}{section.4.6}
+\contentsline {subsection}{\numberline {4.6.1}Plotting the PMF}{19}{subsection.4.6.1}
+\contentsline {subsection}{\numberline {4.6.2}Visualizing the Grid}{19}{subsection.4.6.2}
+\contentsline {subsection}{\numberline {4.6.3}Comparing the Data}{19}{subsection.4.6.3}
+\contentsline {section}{\numberline {4.7}Subdividing the Grid}{19}{section.4.7}
+\contentsline {section}{\numberline {4.8}Miscellaneous}{20}{section.4.8}
+\contentsline {subsection}{\numberline {4.8.1}Saving a state file}{20}{subsection.4.8.1}
+\contentsline {subsection}{\numberline {4.8.2}Handling missing data}{20}{subsection.4.8.2}
+\contentsline {chapter}{\numberline {5}Examples}{21}{chapter.5}
+\contentsline {section}{\numberline {5.1}Ideal diode solar cell}{21}{section.5.1}
+\contentsline {subsection}{\numberline {5.1.1}Jupyter notebook}{21}{subsection.5.1.1}
+\contentsline {subsection}{\numberline {5.1.2}Command line}{21}{subsection.5.1.2}
+\contentsline {section}{\numberline {5.2}Kinematics}{21}{section.5.2}
+\contentsline {section}{\numberline {5.3}Tin Sulfide (SnS) solar cell}{21}{section.5.3}
+\contentsline {chapter}{\numberline {6}Future Features}{23}{chapter.6}
+\contentsline {section}{\numberline {6.1}Visualization}{23}{section.6.1}
+\contentsline {section}{\numberline {6.2}Other New Capabilities}{23}{section.6.2}
+\contentsline {section}{\numberline {6.3}Efficiency/Speedup}{23}{section.6.3}
+\contentsline {section}{\numberline {6.4}Interfaces}{24}{section.6.4}
+\contentsline {chapter}{\numberline {7}Citing bayesim}{25}{chapter.7}

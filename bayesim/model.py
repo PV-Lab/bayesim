@@ -378,7 +378,7 @@ class Model(object):
         calc_model_unc = argv.get('calc_model_unc', False)
 
         if verbose:
-            print('Attaching simulated data...\n')
+            print('Attaching simulated data...')
 
         if mode == 'file':
             # import and sort data on parameter values
@@ -403,8 +403,7 @@ class Model(object):
                     self.probs = Pmf()
 
             ## check that all EC's are present at all model points
-            # first get list of EC points from observed data (round off and sort values before comparison)
-            self.check_ecs(gb=param_points_grps)
+            self.check_ecs(gb=param_points_grps, verbose=verbose)
 
             # Generate self.probs if necessary
             if self.probs.is_empty:
@@ -450,30 +449,41 @@ class Model(object):
 
             self.model_data = pd.DataFrame.from_dict(vecs)
 
-        # reset index to avoid duplication
-        self.model_data.reset_index(inplace=True,drop=True)
-
-        #print('before rounding')
-        #print(self.model_data.head())
-
         # round EC's and generate groups
         rd_dct = {c.name:c.tol_digits for c in self.params.ecs}
         self.model_data = self.model_data.round(rd_dct)
 
         # round fit params - actually just force them to be members of the vals lists
-        print("Rounding model data...")
+        if verbose:
+            print("Rounding model data...")
         for p in self.params.fit_params:
             #self.model_data[p.name] = [p.get_closest_val(val) for val in self.model_data[p.name]]
             self.model_data[p.name] = Parallel(n_jobs=cpu_count())(delayed(get_closest_val)(val, p.vals) for val in self.model_data[p.name])
 
-        # generate groups
+
+        # drop any modeled data at EC's not measured
+        if verbose:
+            print("Removing modeled EC's that weren't measured...")
+        self.model_data_ecgrps = self.model_data.groupby(self.ec_names())
+        model_ecs = pd.DataFrame.from_records(data=self.model_data_ecgrps.groups.keys(), columns=self.ec_names()).sort_values(by=self.ec_names()).reset_index(drop=True)
+        merged_ecs = model_ecs.merge(self.ec_pts, on=self.ec_names(), how='left', indicator=True)
+        extra_pts = merged_ecs[merged_ecs._merge=='left_only']
+        print('there are '+str(len(extra_pts))+' extra points...here are a few:')
+        print(extra_pts.head())
+        extra_data = merged_ecs[merged_ecs._merge=='right_only']
+        if len(extra_data)>0:
+            print("There seem to be data EC's that weren't modeled...")
+            print(extra_data)
+        self.model_data.drop(labels=extra_pts.index, axis=0, inplace=True)
+
+        # reset index to avoid duplication
+        self.model_data.reset_index(inplace=True,drop=True)
+
+        # (re-)generate groups
         if verbose:
             print("Grouping model data...")
         self.model_data_ecgrps = self.model_data.groupby(self.ec_names())
         self.model_data_grps = self.model_data.groupby(by=self.fit_param_names())
-
-        #print('before index calc')
-        #print(self.model_data.head())
 
         # update flag and indices
         self.needs_new_model_data = False
@@ -696,6 +706,7 @@ class Model(object):
                 else:
                     # get observed and modeled data
                     obs = self.obs_data.iloc[num_pts_used]
+                    #print(obs)
                     obs_indices.append(num_pts_used)
                     ec = obs[self.ec_names()]
                     if len(self.ec_names())>1:
@@ -705,6 +716,7 @@ class Model(object):
                     #print(ecpt)
                     #print(self.model_data_ecgrps.groups.keys())
                     model_here = deepcopy(self.model_data.loc[self.model_data_ecgrps.groups[ecpt]])
+                    #print(len(model_here))
 
                     # compute likelihood and do a Bayesian update
                     lkl, delta_count, nan_count = self.probs.likelihood(meas=obs, model_at_ec=model_here,output_col=self.output_var)
@@ -802,12 +814,19 @@ class Model(object):
         Args:
             verbose (`bool`): flag for verbosity, defaults to False
             model_unc_factor (`float`): multiplier on deltas to give uncertainty, defaults to 0.5 - smaller probably means faster convergence, but also higher chance to miss "hot spots"
+            take_average (`bool`): flag for whether to use average model uncertainty at each measurement condition or the parameter-resolved version. Defaults to True if any parameters are logarithmically spaced, and False otherwise.
         """
 
         factor = argv.get('model_unc_factor', 0.5)
         verbose = argv.get('verbose', False)
         if verbose:
             print('Calculating model uncertainty...')
+
+        # check if any parameters are log-spaced
+        has_log = False
+        if any([p.spacing=='log' for p in self.params.fit_params]):
+            has_log = True
+        take_average = argv.get('take_average', has_log)
 
         param_lengths = [p.length for p in self.params.fit_params]
 
@@ -819,10 +838,10 @@ class Model(object):
             # need to do it in serial
             deltas_list = []
             for grp in self.model_data_ecgrps.groups:
-                deltas_list.append(calc_deltas(grp, self.model_data_ecgrps.groups[grp], param_lengths, self.model_data, self.fit_param_names(), self.probs, self.output_var))
+                deltas_list.append(calc_deltas(grp, self.model_data_ecgrps.groups[grp], param_lengths, self.model_data, self.fit_param_names(), self.probs, self.output_var, take_average))
         else:
             # parallalize!
-            deltas_list = Parallel(n_jobs=cpu_count())(delayed(calc_deltas)(grp, self.model_data_ecgrps.groups[grp], param_lengths, self.model_data, self.fit_param_names(), self.probs, self.output_var) for grp in self.model_data_ecgrps.groups)
+            deltas_list = Parallel(n_jobs=cpu_count())(delayed(calc_deltas)(grp, self.model_data_ecgrps.groups[grp], param_lengths, self.model_data, self.fit_param_names(), self.probs, self.output_var, take_average) for grp in self.model_data_ecgrps.groups)
 
         for entry in deltas_list:
             inds = self.model_data_ecgrps.groups[entry[0]]

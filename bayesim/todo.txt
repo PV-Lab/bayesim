@@ -8,6 +8,12 @@ TO DO LIST FOR BAYESIM
   * add "prerequisites" or something section to docs
   * eventually, links in notebook examples to relevant bits of documentation...
 
+* check "invalid value encountered in reduce" error
+
+* parallelize model runs in function mode
+
+* check passthrough subdivide options (excluding neighbors)
+
 * more 'verbose' options
 
 * add more options to CL interface (e.g. invoking comparison plot/visualize_grid, other tweaks to behavior)
@@ -19,7 +25,7 @@ TO DO LIST FOR BAYESIM
 * check 2.7 vs. 3.6 compatibility
 
 
-~ entropy-based thresholding instead of th_pm and th_pv
+~ entropy-based thresholding instead of th_pm and th_pv, also option to just specify min number of observation points per posterior that goes into the average
 
 ~ why is tol_digits ever getting set on logarithmic parameters (e.g. Bp in diode)
 
@@ -44,8 +50,6 @@ TO DO LIST FOR BAYESIM
 ~ save model function somehow to at least theoretically close loop within CL interface
 
 ~ discard modeled EC points from file that aren't in observations rather than just importing and ignoring (in check_ecs function)
-
-~ change project_2D to use grid also (also maybe pass patch parameters rather than actual patch objects?) NOTE: tried this and it seemed to get slower, at least up to the scale I tried (~1000 grid points) - maybe use imshow?
 
 ~ plotting points from an inference run?
 

@@ -150,7 +150,7 @@ def get_closest_val(val, val_list):
     else:
        return before
 
-def calc_deltas(grp, inds, param_lengths, model_data, fit_param_names, probs, output_var):
+def calc_deltas(grp, inds, param_lengths, model_data, fit_param_names, probs, output_var, take_average):
     # construct matrix of output_var({fit_params})
     subset = deepcopy(model_data.loc[inds])
     # sort and reset index of subset to match probs so we can use the find_neighbor_boxes function if needed
@@ -194,11 +194,28 @@ def calc_deltas(grp, inds, param_lengths, model_data, fit_param_names, probs, ou
         with np.errstate(invalid='ignore'):
             winners[i]=np.fmax(deltas_here[tuple([Ellipsis]+[slice(None,mat.shape[i],None)]+[slice(None)]*(len(mat.shape)-i-1))],deltas_here[tuple([Ellipsis]+[slice(1,mat.shape[i]+1,None)]+[slice(None)]*(len(mat.shape)-i-1))])
 
-    grad = np.amax(winners,axis=0)
+    grad = np.amax(winners, axis=0)
+    if take_average:
+        avg = np.nanmean(grad) # compute average
+        grad = avg * np.ones(grad.shape) # replace every entry with average
 
     # save these values to the appropriate indices in the vector
     if is_grid:
-        return (grp, grad.flatten())
+        to_return = (grp, grad.flatten())
     else:
         # pick out only the boxes that exist
-        return (grp, grad[tuple([i for i in list([ind_lists[p] for p in fit_param_names])])])
+        to_return = (grp, grad[tuple([i for i in list([ind_lists[p] for p in fit_param_names])])])
+
+    # check for NaNs
+    to_check = to_return[1]
+    if np.any(np.isnan(to_check)):
+        if np.all(np.isnan(to_check)):
+            # uh-oh
+            raise ValueError("All the uncertainties here (" + str(grp) + ") are NaN! Help!")
+        else:
+            # replace NaN values with average of non-NaN values for this group
+            avg_unc = np.nanmean(to_check)
+            fixed = np.where(np.isnan(to_check), to_check, avg_unc)
+            to_return[1] = fixed
+
+    return to_return

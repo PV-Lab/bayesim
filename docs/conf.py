@@ -140,7 +140,7 @@ latex_elements = {
 
     # Additional stuff for the LaTeX preamble.
     #
-    # 'preamble': '',
+    'preamble': '\definecolor{firebrick}{rgb}{0.7, 0.13, 0.13} \definecolor{darkorange}{rgb}{1.0, 0.55, 0.0} \definecolor{darkmagenta}{rgb}{0.55, 0.0, 0.55}',
 
     # Latex figure (float) alignment
     #
