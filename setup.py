@@ -47,7 +47,7 @@ print()
 print(links)
 
 setup(name='bayesim',
-      version='0.9.14',
+      version='0.9.15',
       description='Fast model fitting via Bayesian inference',
       author='Rachel Kurchin, Giuseppe Romano',
       author_email='rkurchin@mit.edu, romanog@mit.edu',

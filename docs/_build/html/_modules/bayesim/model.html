@@ -11,7 +11,8 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"extensions": ["color.js"]})</script>
     <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="../../_static/bootstrap-2.3.2/js/bootstrap.min.js"></script>
@@ -491,7 +492,7 @@
         <span class="n">calc_model_unc</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;calc_model_unc&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Attaching simulated data...</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Attaching simulated data...&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;file&#39;</span><span class="p">:</span>
             <span class="c1"># import and sort data on parameter values</span>
@@ -516,8 +517,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">probs</span> <span class="o">=</span> <span class="n">Pmf</span><span class="p">()</span>
 
             <span class="c1">## check that all EC&#39;s are present at all model points</span>
-            <span class="c1"># first get list of EC points from observed data (round off and sort values before comparison)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">check_ecs</span><span class="p">(</span><span class="n">gb</span><span class="o">=</span><span class="n">param_points_grps</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_ecs</span><span class="p">(</span><span class="n">gb</span><span class="o">=</span><span class="n">param_points_grps</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
 
             <span class="c1"># Generate self.probs if necessary</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">is_empty</span><span class="p">:</span>
@@ -563,30 +563,41 @@
 
             <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">vecs</span><span class="p">)</span>
 
-        <span class="c1"># reset index to avoid duplication</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="c1">#print(&#39;before rounding&#39;)</span>
-        <span class="c1">#print(self.model_data.head())</span>
-
         <span class="c1"># round EC&#39;s and generate groups</span>
         <span class="n">rd_dct</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">name</span><span class="p">:</span><span class="n">c</span><span class="o">.</span><span class="n">tol_digits</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">ecs</span><span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">rd_dct</span><span class="p">)</span>
 
         <span class="c1"># round fit params - actually just force them to be members of the vals lists</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Rounding model data...&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Rounding model data...&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">fit_params</span><span class="p">:</span>
             <span class="c1">#self.model_data[p.name] = [p.get_closest_val(val) for val in self.model_data[p.name]]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">cpu_count</span><span class="p">())(</span><span class="n">delayed</span><span class="p">(</span><span class="n">get_closest_val</span><span class="p">)(</span><span class="n">val</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">vals</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>
 
-        <span class="c1"># generate groups</span>
+
+        <span class="c1"># drop any modeled data at EC&#39;s not measured</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Removing modeled EC&#39;s that weren&#39;t measured...&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ec_names</span><span class="p">())</span>
+        <span class="n">model_ecs</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_records</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ec_names</span><span class="p">())</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ec_names</span><span class="p">())</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">merged_ecs</span> <span class="o">=</span> <span class="n">model_ecs</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ec_pts</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ec_names</span><span class="p">(),</span> <span class="n">how</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span> <span class="n">indicator</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">extra_pts</span> <span class="o">=</span> <span class="n">merged_ecs</span><span class="p">[</span><span class="n">merged_ecs</span><span class="o">.</span><span class="n">_merge</span><span class="o">==</span><span class="s1">&#39;left_only&#39;</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;there are &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">extra_pts</span><span class="p">))</span><span class="o">+</span><span class="s1">&#39; extra points...here are a few:&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">extra_pts</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
+        <span class="n">extra_data</span> <span class="o">=</span> <span class="n">merged_ecs</span><span class="p">[</span><span class="n">merged_ecs</span><span class="o">.</span><span class="n">_merge</span><span class="o">==</span><span class="s1">&#39;right_only&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">extra_data</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;There seem to be data EC&#39;s that weren&#39;t modeled...&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">extra_data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="n">extra_pts</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># reset index to avoid duplication</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># (re-)generate groups</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Grouping model data...&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ec_names</span><span class="p">())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_data_grps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_param_names</span><span class="p">())</span>
-
-        <span class="c1">#print(&#39;before index calc&#39;)</span>
-        <span class="c1">#print(self.model_data.head())</span>
 
         <span class="c1"># update flag and indices</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">needs_new_model_data</span> <span class="o">=</span> <span class="kc">False</span>
@@ -682,11 +693,11 @@
             <span class="c1"># plot modeled data and errors</span>
             <span class="k">for</span> <span class="n">pt</span> <span class="ow">in</span> <span class="n">param_pts</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
                 <span class="n">color</span> <span class="o">=</span> <span class="n">colors</span><span class="p">[</span><span class="n">c_ind</span><span class="p">]</span>
-                <span class="n">model_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model_data_grps</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="nb">tuple</span><span class="p">([</span><span class="n">pt</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_param_names</span><span class="p">()])]]</span>
+                <span class="n">model_data</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model_data_grps</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="nb">tuple</span><span class="p">([</span><span class="n">pt</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_param_names</span><span class="p">()])]])</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">one_ec</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">other_ecs</span><span class="p">:</span>
                         <span class="n">model_data</span> <span class="o">=</span>  <span class="n">model_data</span><span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">model_data</span><span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">-</span><span class="n">ecs_here</span><span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">name</span><span class="p">])</span><span class="o">&lt;=</span><span class="mf">10.</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">1.</span><span class="o">*</span><span class="n">c</span><span class="o">.</span><span class="n">tol_digits</span><span class="p">)]</span>
-                <span class="n">model_data</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">ec_x_name</span><span class="p">])</span>
+                <span class="n">model_data</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">ec_x_name</span><span class="p">],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
                 <span class="n">errors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="n">model_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">output_var</span><span class="p">],</span> <span class="n">obs_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">output_var</span><span class="p">])</span>
                 <span class="k">if</span> <span class="n">c_ind</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span> <span class="c1">#take errors from highest probability</span>
                     <span class="n">all_errs</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="nb">abs</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">errors</span><span class="p">])</span>
@@ -809,6 +820,7 @@
                 <span class="k">else</span><span class="p">:</span>
                     <span class="c1"># get observed and modeled data</span>
                     <span class="n">obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">num_pts_used</span><span class="p">]</span>
+                    <span class="c1">#print(obs)</span>
                     <span class="n">obs_indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">num_pts_used</span><span class="p">)</span>
                     <span class="n">ec</span> <span class="o">=</span> <span class="n">obs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ec_names</span><span class="p">()]</span>
                     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ec_names</span><span class="p">())</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
@@ -818,6 +830,7 @@
                     <span class="c1">#print(ecpt)</span>
                     <span class="c1">#print(self.model_data_ecgrps.groups.keys())</span>
                     <span class="n">model_here</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="n">ecpt</span><span class="p">]])</span>
+                    <span class="c1">#print(len(model_here))</span>
 
                     <span class="c1"># compute likelihood and do a Bayesian update</span>
                     <span class="n">lkl</span><span class="p">,</span> <span class="n">delta_count</span><span class="p">,</span> <span class="n">nan_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">likelihood</span><span class="p">(</span><span class="n">meas</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span> <span class="n">model_at_ec</span><span class="o">=</span><span class="n">model_here</span><span class="p">,</span><span class="n">output_col</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">output_var</span><span class="p">)</span>
@@ -915,12 +928,19 @@
 <span class="sd">        Args:</span>
 <span class="sd">            verbose (`bool`): flag for verbosity, defaults to False</span>
 <span class="sd">            model_unc_factor (`float`): multiplier on deltas to give uncertainty, defaults to 0.5 - smaller probably means faster convergence, but also higher chance to miss &quot;hot spots&quot;</span>
+<span class="sd">            take_average (`bool`): flag for whether to use average model uncertainty at each measurement condition or the parameter-resolved version. Defaults to True if any parameters are logarithmically spaced, and False otherwise.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">factor</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;model_unc_factor&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
         <span class="n">verbose</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Calculating model uncertainty...&#39;</span><span class="p">)</span>
+
+        <span class="c1"># check if any parameters are log-spaced</span>
+        <span class="n">has_log</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">spacing</span><span class="o">==</span><span class="s1">&#39;log&#39;</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">fit_params</span><span class="p">]):</span>
+            <span class="n">has_log</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">take_average</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;take_average&#39;</span><span class="p">,</span> <span class="n">has_log</span><span class="p">)</span>
 
         <span class="n">param_lengths</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">length</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">fit_params</span><span class="p">]</span>
 
@@ -932,10 +952,10 @@
             <span class="c1"># need to do it in serial</span>
             <span class="n">deltas_list</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">grp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>
-                <span class="n">deltas_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc_deltas</span><span class="p">(</span><span class="n">grp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="n">grp</span><span class="p">],</span> <span class="n">param_lengths</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_param_names</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_var</span><span class="p">))</span>
+                <span class="n">deltas_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calc_deltas</span><span class="p">(</span><span class="n">grp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="n">grp</span><span class="p">],</span> <span class="n">param_lengths</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_param_names</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_var</span><span class="p">,</span> <span class="n">take_average</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># parallalize!</span>
-            <span class="n">deltas_list</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">cpu_count</span><span class="p">())(</span><span class="n">delayed</span><span class="p">(</span><span class="n">calc_deltas</span><span class="p">)(</span><span class="n">grp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="n">grp</span><span class="p">],</span> <span class="n">param_lengths</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_param_names</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_var</span><span class="p">)</span> <span class="k">for</span> <span class="n">grp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span>
+            <span class="n">deltas_list</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">cpu_count</span><span class="p">())(</span><span class="n">delayed</span><span class="p">(</span><span class="n">calc_deltas</span><span class="p">)(</span><span class="n">grp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="n">grp</span><span class="p">],</span> <span class="n">param_lengths</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_param_names</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_var</span><span class="p">,</span> <span class="n">take_average</span><span class="p">)</span> <span class="k">for</span> <span class="n">grp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">deltas_list</span><span class="p">:</span>
             <span class="n">inds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_data_ecgrps</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="n">entry</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
@@ -1110,7 +1130,7 @@
     </p>
     <p>
         &copy; Copyright 2018, Rachel C Kurchin and Giuseppe Romano.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.9.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
     </p>
   </div>
 </footer>

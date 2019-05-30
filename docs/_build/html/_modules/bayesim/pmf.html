@@ -211,12 +211,14 @@
         <span class="n">d</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="vm">__dict__</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">d</span></div>
 
-<div class="viewcode-block" id="Pmf.normalize"><a class="viewcode-back" href="../../bayesim.html#bayesim.pmf.Pmf.normalize">[docs]</a>    <span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Pmf.normalize"><a class="viewcode-back" href="../../bayesim.html#bayesim.pmf.Pmf.normalize">[docs]</a>    <span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Normalize overall PMF.&quot;&quot;&quot;</span>
         <span class="n">norm_const</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">verbose</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
         <span class="c1">#print(norm_const,type(norm_const))</span>
         <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">norm_const</span><span class="p">)</span><span class="o">&lt;</span><span class="mf">1e-12</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Somehow the normalization constant was zero! To play it safe, I won&#39;t do anything.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Somehow the normalization constant was zero! To play it safe, I won&#39;t do anything.&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">/</span><span class="n">norm_const</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]]</span></div>
 
@@ -330,7 +332,7 @@
         <span class="n">inds_to_drop</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">all_out_check</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">neighbor_points</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="n">inds_to_drop</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Pmf.subdivide"><a class="viewcode-back" href="../../bayesim.html#bayesim.pmf.Pmf.subdivide">[docs]</a>    <span class="k">def</span> <span class="nf">subdivide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold_prob</span><span class="p">,</span> <span class="n">include_neighbors</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="Pmf.subdivide"><a class="viewcode-back" href="../../bayesim.html#bayesim.pmf.Pmf.subdivide">[docs]</a>    <span class="k">def</span> <span class="nf">subdivide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold_prob</span><span class="p">,</span> <span class="n">include_neighbors</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Subdivide all boxes with P &gt; threshold_prob and assign &quot;locally uniform&quot; probabilities within each box. If include_neighbors is true, also subdivide all boxes neighboring those boxes.</span>
 
@@ -339,9 +341,12 @@
 <span class="sd">        Args:</span>
 <span class="sd">            threshold_prob (`float`): probability above which a box should be retained</span>
 <span class="sd">            include_neighbors (`bool`): whether to also subdivide all immediate neighbors to boxes meeting the threshold</span>
+<span class="sd">            verbose (`bool`): Verbosity, default false</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">num_divs</span> <span class="o">=</span> <span class="p">{</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">:</span><span class="mi">2</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">}</span> <span class="c1">#dummy for now</span>
 
+        <span class="n">verbose</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        
         <span class="c1"># pick out the boxes that will be subdivided</span>
         <span class="n">to_subdivide</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="n">threshold_prob</span><span class="p">]</span>
         <span class="c1">#print(len(to_subdivide))</span>
@@ -374,7 +379,8 @@
             <span class="k">if</span> <span class="n">this_width</span> <span class="o">&lt;=</span> <span class="n">p</span><span class="o">.</span><span class="n">min_width</span><span class="p">:</span>
                 <span class="c1"># don&#39;t divide along this direction</span>
                 <span class="n">num_divs</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Minimum width/factor of </span><span class="si">%s</span><span class="s1"> already satisfied for parameter </span><span class="si">%s</span><span class="s1">, not subdividing in that direction!&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">get_val_str</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">min_width</span><span class="p">),</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Minimum width/factor of </span><span class="si">%s</span><span class="s1"> already satisfied for parameter </span><span class="si">%s</span><span class="s1">, not subdividing in that direction!&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">get_val_str</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">min_width</span><span class="p">),</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
 
         <span class="c1"># create new boxes (and delete old ones)</span>
         <span class="n">new_boxes</span> <span class="o">=</span> <span class="p">[]</span>
@@ -414,7 +420,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="c1"># should be normalized already, but just in case:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
 
         <span class="c1"># increment subdivide count</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_sub</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_sub</span> <span class="o">+</span> <span class="mi">1</span>
@@ -423,7 +429,7 @@
 
         <span class="k">return</span> <span class="n">new_boxes</span></div>
 
-<div class="viewcode-block" id="Pmf.multiply"><a class="viewcode-back" href="../../bayesim.html#bayesim.pmf.Pmf.multiply">[docs]</a>    <span class="k">def</span> <span class="nf">multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other_pmf</span><span class="p">):</span>
+<div class="viewcode-block" id="Pmf.multiply"><a class="viewcode-back" href="../../bayesim.html#bayesim.pmf.Pmf.multiply">[docs]</a>    <span class="k">def</span> <span class="nf">multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other_pmf</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute and store renormalized product of this Pmf with other_pmf.</span>
 
@@ -431,6 +437,8 @@
 <span class="sd">            other_pmf (:class:`.Pmf`): PMF to multiply by</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="n">verbose</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        
         <span class="c1"># check for silliness</span>
         <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other_pmf</span><span class="p">,</span> <span class="n">Pmf</span><span class="p">),</span> <span class="s2">&quot;You didn&#39;t feed in a Pmf object!&quot;</span>
         <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">other_pmf</span><span class="o">.</span><span class="n">points</span><span class="p">),</span> <span class="s2">&quot;Pmf&#39;s are over different numbers of points. Can&#39;t exactly do a pointwise multiplication on that, can I?&quot;</span>
@@ -449,10 +457,11 @@
 
         <span class="c1"># check if there&#39;s any probability there...</span>
         <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">new_probs</span><span class="p">))</span><span class="o">&lt;</span><span class="mf">1e-12</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;You&#39;re gonna have a bad time...not multiplying&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;You&#39;re gonna have a bad time...not multiplying&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_probs</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Pmf.likelihood"><a class="viewcode-back" href="../../bayesim.html#bayesim.pmf.Pmf.likelihood">[docs]</a>    <span class="k">def</span> <span class="nf">likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -467,6 +476,7 @@
 <span class="sd">            meas: one output value e.g. J</span>
 <span class="sd">            unc: uncertainty in measured value (stdev of a Gaussian)</span>
 <span class="sd">            model_func: should accept one dict of params and one of conditions and output measurement (might deprecate)</span>
+<span class="sd">            verbose (`bool`): be verbose or not</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># read in and process inputs</span>
@@ -477,6 +487,7 @@
         <span class="n">output_col</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="s1">&#39;output_col&#39;</span><span class="p">]</span>
         <span class="n">meas_val</span> <span class="o">=</span> <span class="n">meas</span><span class="p">[</span><span class="n">output_col</span><span class="p">]</span>
         <span class="n">meas_err</span> <span class="o">=</span> <span class="n">meas</span><span class="p">[</span><span class="s1">&#39;uncertainty&#39;</span><span class="p">]</span>
+        <span class="n">verbose</span> <span class="o">=</span> <span class="n">argv</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
         <span class="c1"># set up likelihood DF</span>
         <span class="n">lkl</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
@@ -484,40 +495,52 @@
 
         <span class="n">delta_count</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">nan_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">skip_count</span> <span class="o">=</span> <span class="mi">0</span>
+        
+        <span class="c1"># check that lengths match</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lkl</span><span class="o">.</span><span class="n">points</span><span class="p">)</span><span class="o">==</span><span class="nb">len</span><span class="p">(</span><span class="n">model_data</span><span class="p">):</span>
+            <span class="c1"># here&#39;s the actual loop that computes the likelihoods</span>
+            <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">lkl</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+                <span class="c1">#print(ec, point[1])</span>
+                <span class="c1">#model_val = model_func(ec, dict(point[1]))</span>
+                <span class="n">model_pt</span> <span class="o">=</span> <span class="n">model_data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+                <span class="n">model_val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">model_pt</span><span class="p">[</span><span class="n">output_col</span><span class="p">])</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">model_val</span><span class="p">):</span>
+                    <span class="n">model_err</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">model_pt</span><span class="p">[</span><span class="s1">&#39;uncertainty&#39;</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">model_err</span><span class="p">):</span>
+                        <span class="n">err</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">meas_err</span> <span class="c1">#janky but whatev</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">err</span> <span class="o">=</span> <span class="n">model_err</span> <span class="o">+</span> <span class="n">meas_err</span>
 
-        <span class="c1"># here&#39;s the actual loop that computes the likelihoods</span>
-        <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">lkl</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
-            <span class="c1">#print(ec, point[1])</span>
-            <span class="c1">#model_val = model_func(ec, dict(point[1]))</span>
-            <span class="n">model_pt</span> <span class="o">=</span> <span class="n">model_data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
-            <span class="n">model_val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">model_pt</span><span class="p">[</span><span class="n">output_col</span><span class="p">])</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">model_val</span><span class="p">):</span>
-                <span class="n">model_err</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">model_pt</span><span class="p">[</span><span class="s1">&#39;uncertainty&#39;</span><span class="p">])</span>
-                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">model_err</span><span class="p">):</span>
-                    <span class="n">err</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">meas_err</span> <span class="c1">#janky but whatev</span>
+                    <span class="c1"># tally how many times deltas were bigger</span>
+                    <span class="k">if</span> <span class="n">model_err</span> <span class="o">&gt;</span> <span class="n">meas_err</span><span class="p">:</span>
+                        <span class="n">delta_count</span> <span class="o">=</span> <span class="n">delta_count</span> <span class="o">+</span> <span class="mi">1</span>
+
+                    <span class="n">new_probs</span><span class="p">[</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">norm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">meas_val</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">model_val</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="nb">abs</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">err</span> <span class="o">=</span> <span class="n">model_err</span> <span class="o">+</span> <span class="n">meas_err</span>
+                    <span class="n">new_probs</span><span class="p">[</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">lkl</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
+                    <span class="n">nan_count</span> <span class="o">=</span> <span class="n">nan_count</span> <span class="o">+</span> <span class="mi">1</span>
+            
+            <span class="c1"># copy these values in</span>
+            <span class="n">lkl</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_probs</span>
 
-                <span class="c1"># tally how many times deltas were bigger</span>
-                <span class="k">if</span> <span class="n">model_err</span> <span class="o">&gt;</span> <span class="n">meas_err</span><span class="p">:</span>
-                    <span class="n">delta_count</span> <span class="o">=</span> <span class="n">delta_count</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="c1"># make sure that the likelihood isn&#39;t zero everywhere...</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">new_probs</span><span class="p">))</span><span class="o">&lt;</span><span class="mf">1e-12</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;likelihood has no probability! :(&#39;</span><span class="p">)</span>
+                <span class="n">skip_count</span> <span class="o">=</span> <span class="n">skip_count</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]))):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)])</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Uh-oh, some probability is NaN!&#39;</span><span class="p">)</span>
 
-                <span class="n">new_probs</span><span class="p">[</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">norm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">meas_val</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">model_val</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="nb">abs</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">new_probs</span><span class="p">[</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">lkl</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
-                <span class="n">nan_count</span> <span class="o">=</span> <span class="n">nan_count</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Missing model data for &#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">meas</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Skipping likelihood calculation here.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
-        <span class="c1"># copy these values in</span>
-        <span class="n">lkl</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_probs</span>
-
-        <span class="c1"># make sure that the likelihood isn&#39;t zero everywhere...</span>
-        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">new_probs</span><span class="p">))</span><span class="o">&lt;</span><span class="mf">1e-12</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;likelihood has no probability! :(&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s1">&#39;prob&#39;</span><span class="p">]))):</span>
-            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)])</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Uh-oh, some probability is NaN!&#39;</span><span class="p">)</span>
-        <span class="n">lkl</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">lkl</span><span class="p">,</span> <span class="n">delta_count</span><span class="p">,</span> <span class="n">nan_count</span></div>
+        <span class="n">lkl</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>        
+        <span class="k">return</span> <span class="n">lkl</span><span class="p">,</span> <span class="n">delta_count</span><span class="p">,</span> <span class="n">nan_count</span><span class="p">,</span> <span class="n">skip_count</span></div>
 
 <div class="viewcode-block" id="Pmf.most_probable"><a class="viewcode-back" href="../../bayesim.html#bayesim.pmf.Pmf.most_probable">[docs]</a>    <span class="k">def</span> <span class="nf">most_probable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return the n largest probabilities in a new DataFrame.</span>

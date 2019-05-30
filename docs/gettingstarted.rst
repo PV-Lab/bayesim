@@ -16,7 +16,9 @@ To install bayesim simply type
 
 .. code-block:: shell
 
-  pip install bayesim
+  pip install bayesim -r https://raw.githubusercontent.com/PV-Lab/bayesim/master/requirements.txt
+
+(the extra flag is to make sure you get the version of ``deepdish`` that works)
 
 Usage
 -----

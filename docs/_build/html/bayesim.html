@@ -79,7 +79,7 @@
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">bayesim package</a><ul>
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
-<li><a class="reference internal" href="#bayesim-model-module">bayesim.model module</a></li>
+<li><a class="reference internal" href="#module-bayesim.model">bayesim.model module</a></li>
 <li><a class="reference internal" href="#module-bayesim.params">bayesim.params module</a></li>
 <li><a class="reference internal" href="#module-bayesim.pmf">bayesim.pmf module</a></li>
 <li><a class="reference internal" href="#module-bayesim.utils">bayesim.utils module</a></li>
@@ -131,8 +131,315 @@
 <div class="section" id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="bayesim-model-module">
-<h2>bayesim.model module<a class="headerlink" href="#bayesim-model-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-bayesim.model">
+<span id="bayesim-model-module"></span><h2>bayesim.model module<a class="headerlink" href="#module-bayesim.model" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="bayesim.model.Model">
+<em class="property">class </em><code class="descclassname">bayesim.model.</code><code class="descname">Model</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/model.html#Model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>The main workhorse class of bayesim. Stores the modeled and observed data as well as a Pmf object which maintains the current probability distribution and grid subdivisions.</p>
+<p>Attributes:
+[update this]</p>
+<dl class="method">
+<dt id="bayesim.model.Model.attach_ecs">
+<code class="descname">attach_ecs</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/model.html#Model.attach_ecs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.attach_ecs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Define parameters for experimental conditions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>ec_list</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code></a> of <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>) – names of experimental conditions</li>
+<li><strong>ec_tols</strong> (<cite>dict</cite>) – dict of form {ec_name_1:tolerance_1, ec_name_2:tolerance_2, …}, will supersede ec_list</li>
+<li><strong>ec_units</strong> (<cite>dict</cite>) – dict of form {ec_name_1:units_1, ec_name_2:units_2, …}, optional</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.model.Model.attach_fit_params">
+<code class="descname">attach_fit_params</code><span class="sig-paren">(</span><em>params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/model.html#Model.attach_fit_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.attach_fit_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attach list of parameters to fit.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>param_list</strong> – list of Fit_param objects</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.model.Model.attach_model">
+<code class="descname">attach_model</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/model.html#Model.attach_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.attach_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attach the model for the data, either by feeding in a file of precomputed data or a function that does the computing.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>mode</strong> (<cite>str</cite>) – ‘file’ or ‘function’</li>
+<li><strong>model_data_func</strong> (<em>callable</em>) – if mode=’function’, provide function here</li>
+<li><strong>model_data_path</strong> (<cite>str</cite>) – if mode==’file’, provide path to file</li>
+<li><strong>output_column</strong> (<cite>str</cite>) – optional, header of column containing output data (required if different from self.output_var)</li>
+<li><strong>calc_model_unc</strong> (<cite>bool</cite>) – whether to calculate model uncertainties as well, defaults to False</li>
+<li><strong>verbose</strong> (<cite>bool</cite>) – flag for verbosity, defaults to False</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.model.Model.attach_observations">
+<code class="descname">attach_observations</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/model.html#Model.attach_observations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.attach_observations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attach measured dataset.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>obs_data_path</strong> (<cite>str</cite>) – path to HDF5 file containing observed data</li>
+<li><strong>keep_all</strong> (<cite>bool</cite>) – whether to keep all the data in the file (longer simulation times) or to clip out data points that are close to each other (defaults to False)</li>
+<li><strong>ec_x_var</strong> (<cite>str</cite>) – required if keep_all is False, the experimental condition over which to measure differences (e.g. V for JV(Ti) curves in PV). It will also be used in plotting later.</li>
+<li><strong>max_ec_x_step</strong> (<cite>float</cite>) – used if keep_all is False, largest step to take in the ec_x_var before keeping a point even if curve if “flat” (defaults to 0.05 * range of ec_x_var)</li>
+<li><strong>thresh_dif_frac</strong> (<cite>float</cite>) – used if keep_all is False, threshold (as a percentage of the range of values, defaults to 0.01)</li>
+<li><strong>fixed_unc</strong> (<cite>float</cite>) – required if running in function mode or if file doesn’t have an ‘uncertainty’ column, value to use as uncertainty in measurement</li>
+<li><strong>output_column</strong> (<cite>str</cite>) – optional, header of column containing output data (required if different from self.output_var)</li>
+<li><strong>verbose</strong> (<cite>bool</cite>) – flag for verbosity, defaults to False</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.model.Model.attach_params">
+<code class="descname">attach_params</code><span class="sig-paren">(</span><em>params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/model.html#Model.attach_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.attach_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attach a param_list object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.model.Model.calc_indices">
+<code class="descname">calc_indices</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/model.html#Model.calc_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.calc_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute starting and ending indices in self.model_data for each point in self.probs.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.model.Model.calc_model_unc">
+<code class="descname">calc_model_unc</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/model.html#Model.calc_model_unc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.calc_model_unc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates largest difference in modeled output along any parameter direction for each experimental condition, to be used for uncertainty in calculating likelihoods. Currently only works if data is on a grid.</p>
+<p>(also assumes it’s sorted by param names and then EC’s)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>verbose</strong> (<cite>bool</cite>) – flag for verbosity, defaults to False</li>
+<li><strong>model_unc_factor</strong> (<cite>float</cite>) – multiplier on deltas to give uncertainty, defaults to 0.5 - smaller probably means faster convergence, but also higher chance to miss “hot spots”</li>
+<li><strong>take_average</strong> (<cite>bool</cite>) – flag for whether to use average model uncertainty at each measurement condition or the parameter-resolved version. Defaults to True if any parameters are logarithmically spaced, and False otherwise.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.model.Model.check_data_columns">
+<code class="descname">check_data_columns</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/model.html#Model.check_data_columns"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.check_data_columns" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make sure the columns in imported data make sense.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>model_data</strong> (<cite>DataFrame</cite>) – dataset to check</li>
+<li><strong>output_column</strong> (<cite>str</cite>) – optional, header of column containing output data (required if different from self.output_var)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.model.Model.check_ecs">
+<code class="descname">check_ecs</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/model.html#Model.check_ecs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.check_ecs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that all experimental conditions are present at each parameter point in modeled data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>gb</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">groupby</span></code>) – Pandas groupby object of model data grouped by parameter points</li>
+<li><strong>verbose</strong> (<cite>bool</cite>) – flag for verbosity, defaults to False</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.model.Model.comparison_plot">
+<code class="descname">comparison_plot</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/model.html#Model.comparison_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.comparison_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot observed data vs. highest-probability modeled data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>ec_vals</strong> (<cite>dict</cite>) – optional, dict of EC values at which to plot. If not provided, they will be chosen randomly. This can also be a list of dicts for multiple points.</li>
+<li><strong>num_ecs</strong> (<cite>int</cite>) – number of EC values to plot, defaults to 1 (ignored if ecs is provided)</li>
+<li><strong>num_param_pts</strong> (<cite>int</cite>) – number of the most probable parameter space points to plot (defaults to 1)</li>
+<li><strong>ec_x_var</strong> (<cite>str</cite>) – one of self.ec_names, will overwrite if this was provided before in attach_observations, required if it wasn’t. If ec was provided, this will supercede that</li>
+<li><strong>return_avg_err</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – whether or not to return average (absolute) error for highest probability model over all EC’s plotted (defaults to False)</li>
+<li><strong>fpath</strong> (<cite>str</cite>) – optional, path to save image to if desired</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.model.Model.ec_names">
+<code class="descname">ec_names</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/model.html#Model.ec_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.ec_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return list of experimental condition names.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.model.Model.fit_param_names">
+<code class="descname">fit_param_names</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/model.html#Model.fit_param_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.fit_param_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return list of fitting parameter names.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.model.Model.list_model_pts_to_run">
+<code class="descname">list_model_pts_to_run</code><span class="sig-paren">(</span><em>fpath</em>, <em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/model.html#Model.list_model_pts_to_run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.list_model_pts_to_run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate full list of model points that need to be run (not just parameter points but also all experimental conditions). Saves to HDF5 at fpath.</p>
+<p>Note that this could be very slow if used on the initial grid (i.e. for potentially millions of points) - it’s better for after a subdivide call.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>fpath</strong> (<cite>str</cite>) – path to save the list to (HDF5)</li>
+<li><strong>verbose</strong> (<cite>bool</cite>) – flag for verbosity, defaults to False</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.model.Model.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/model.html#Model.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Do Bayes!
+Will stop iterating through observations if/when &gt;= th_pm of probability mass is concentrated in &lt;= th_pv of boxes and decide it’s time to subdivide. (completely arbitrary thresholding for now)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>save_step</strong> (<cite>int</cite>) – interval (number of data points) at which to save intermediate PMF’s (defaults to 10, 0 to save only final, &lt;0 to save none)</li>
+<li><strong>th_pm</strong> (<cite>float</cite>) – threshold quantity of probability mass to be concentrated in th_pv fraction of parameter space to trigger the run to stop (defaults to 0.9)</li>
+<li><strong>th_pv</strong> (<cite>float</cite>) – threshold fraction of parameter space volume for th_pm fraction of probability to be concentrated into to trigger the run to stop (defaults to 0.05)</li>
+<li><strong>min_num_pts</strong> (<cite>int</cite>) – minimum number of observation points to use - if threshold is reached before this number of points has been used, it will start over and the final PMF will be the average of the number of runs needed to use sufficient points (defaults to 0.7 * the number of experimental measurements)</li>
+<li><strong>prob_relax</strong> (<cite>float</cite>) – number from 0 to 1.0, fraction of PMF from previous step to mix into prior for this step (defaults to 0) - higher values will likely converge faster but possibly have larger errors, especially if min_num_pts is small</li>
+<li><strong>verbose</strong> (<cite>bool</cite>) – flag for verbosity, defaults to False</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.model.Model.save_state">
+<code class="descname">save_state</code><span class="sig-paren">(</span><em>filename='bayesim_state.h5'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/model.html#Model.save_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.save_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the entire state of this model object to an HDF5 file so that work can be resumed later.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.model.Model.set_param_info">
+<code class="descname">set_param_info</code><span class="sig-paren">(</span><em>param_name</em>, <em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/model.html#Model.set_param_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.set_param_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set additional info for parameter param_name (any type).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>param_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – name of parameter to modify</li>
+<li><strong>units</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – units of parameter</li>
+<li><strong>min_width</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – minimum width of parameter (only for fitting params)</li>
+<li><strong>display_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – name to use on plots (can include TeX)</li>
+<li><strong>tolerance</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – tolerance for this parameter</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.model.Model.subdivide">
+<code class="descname">subdivide</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/model.html#Model.subdivide"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.subdivide" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subdivide the probability distribution and save the list of new sims to run to a file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>threshold_prob</strong> (<cite>float</cite>) – minimum probability of box to (keep and) subdivide (default 0.001)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.model.Model.top_probs">
+<code class="descname">top_probs</code><span class="sig-paren">(</span><em>num</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/model.html#Model.top_probs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.top_probs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a DataFrame with the ‘num’ most probable points and some of the less interesting columns hidden.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.model.Model.visualize_grid">
+<code class="descname">visualize_grid</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/model.html#Model.visualize_grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.visualize_grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualize the current state of the grid.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>as pmf.visualize</strong><strong>(</strong><strong>)</strong> (<em>same</em>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bayesim.model.Model.visualize_probs">
+<code class="descname">visualize_probs</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/model.html#Model.visualize_probs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.model.Model.visualize_probs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualize the PMF with a corner plot.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>as pmf.visualize</strong><strong>(</strong><strong>)</strong> (<em>same</em>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 <div class="section" id="module-bayesim.params">
 <span id="bayesim-params-module"></span><h2>bayesim.params module<a class="headerlink" href="#module-bayesim.params" title="Permalink to this headline">¶</a></h2>
@@ -389,6 +696,7 @@
 <li><strong>meas</strong> – one output value e.g. J</li>
 <li><strong>unc</strong> – uncertainty in measured value (stdev of a Gaussian)</li>
 <li><strong>model_func</strong> – should accept one dict of params and one of conditions and output measurement (might deprecate)</li>
+<li><strong>verbose</strong> (<cite>bool</cite>) – be verbose or not</li>
 </ul>
 </td>
 </tr>
@@ -429,7 +737,7 @@ space</p>
 
 <dl class="method">
 <dt id="bayesim.pmf.Pmf.multiply">
-<code class="descname">multiply</code><span class="sig-paren">(</span><em>other_pmf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/pmf.html#Pmf.multiply"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.pmf.Pmf.multiply" title="Permalink to this definition">¶</a></dt>
+<code class="descname">multiply</code><span class="sig-paren">(</span><em>other_pmf</em>, <em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/pmf.html#Pmf.multiply"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.pmf.Pmf.multiply" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute and store renormalized product of this Pmf with other_pmf.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -443,7 +751,7 @@ space</p>
 
 <dl class="method">
 <dt id="bayesim.pmf.Pmf.normalize">
-<code class="descname">normalize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/pmf.html#Pmf.normalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.pmf.Pmf.normalize" title="Permalink to this definition">¶</a></dt>
+<code class="descname">normalize</code><span class="sig-paren">(</span><em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/pmf.html#Pmf.normalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.pmf.Pmf.normalize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Normalize overall PMF.</p>
 </dd></dl>
 
@@ -529,7 +837,7 @@ dense_grid (matrix): optionally, pass precomputed dense grid to save time</td>
 
 <dl class="method">
 <dt id="bayesim.pmf.Pmf.subdivide">
-<code class="descname">subdivide</code><span class="sig-paren">(</span><em>threshold_prob</em>, <em>include_neighbors=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/pmf.html#Pmf.subdivide"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.pmf.Pmf.subdivide" title="Permalink to this definition">¶</a></dt>
+<code class="descname">subdivide</code><span class="sig-paren">(</span><em>threshold_prob</em>, <em>include_neighbors=True</em>, <em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bayesim/pmf.html#Pmf.subdivide"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bayesim.pmf.Pmf.subdivide" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subdivide all boxes with P &gt; threshold_prob and assign “locally uniform” probabilities within each box. If include_neighbors is true, also subdivide all boxes neighboring those boxes.</p>
 <p>Boxes with P &lt; threshold_prob are deleted.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -539,6 +847,7 @@ dense_grid (matrix): optionally, pass precomputed dense grid to save time</td>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>threshold_prob</strong> (<cite>float</cite>) – probability above which a box should be retained</li>
 <li><strong>include_neighbors</strong> (<cite>bool</cite>) – whether to also subdivide all immediate neighbors to boxes meeting the threshold</li>
+<li><strong>verbose</strong> (<cite>bool</cite>) – Verbosity, default false</li>
 </ul>
 </td>
 </tr>
