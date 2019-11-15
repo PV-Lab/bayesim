@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import os, sys
 
 setup(name='bayesim',
-      version='0.9.16',
+      version='0.9.21',
       description='Fast model fitting via Bayesian inference',
       author='Rachel Kurchin, Giuseppe Romano',
       author_email='rkurchin@mit.edu, romanog@mit.edu',
