@@ -476,7 +476,7 @@ class Model(object):
             else:
                 md_temp = self.model_data[p.name]
                 for i in range(len(md_temp)):
-                    md_temp[i] = get_closest_val(val, p.vals)
+                    md_temp.iloc[i] = get_closest_val(md_temp.iloc[i], p.vals)
                 self.model_data[p.name] = md_temp
 
         #print('At line 467...')
