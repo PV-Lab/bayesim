@@ -597,7 +597,7 @@ class Model(object):
                 for c in other_ecs:
                     obs_data =  obs_data[abs(obs_data[c.name]-ecs_here[c.name])<=10.**(-1.*c.tol_digits)]
                     plot_title = plot_title + '%s=%s, '%(c.name,c.get_val_str(ecs_here[c.name]))
-            obs_data = obs_data.sort_values(by=[self.params.ec_x_name]).reset_index(drop=True, inplace=True)
+            obs_data.sort_values(by=[self.params.ec_x_name]).reset_index(drop=True, inplace=True)
 
             # plot obs data
             axs[i,0].plot(obs_data[self.params.ec_x_name], obs_data[self.output_var], color=colors[0])
