@@ -597,7 +597,7 @@ class Model(object):
                 for c in other_ecs:
                     obs_data =  obs_data[abs(obs_data[c.name]-ecs_here[c.name])<=10.**(-1.*c.tol_digits)]
                     plot_title = plot_title + '%s=%s, '%(c.name,c.get_val_str(ecs_here[c.name]))
-            obs_data.sort_values(by=[self.params.ec_x_name]).reset_index(drop=True, inplace=True)
+            obs_data = obs_data.sort_values(by=[self.params.ec_x_name]).reset_index(drop=True)
 
             # plot obs data
             axs[i,0].plot(obs_data[self.params.ec_x_name], obs_data[self.output_var], color=colors[0])
@@ -612,7 +612,7 @@ class Model(object):
             # plot modeled data and errors
             for pt in param_pts.iterrows():
                 color = colors[c_ind]
-                model_data = deepcopy(m.model_data.loc[self.model_data_grps.groups[tuple([pt[1][n] for n in self.fit_param_names()])]])
+                model_data = deepcopy(self.model_data.loc[self.model_data_grps.groups[tuple([pt[1][n] for n in self.fit_param_names()])]])
                 if not one_ec:
                     # get modeled data just at these conditions
                     for c in other_ecs:
