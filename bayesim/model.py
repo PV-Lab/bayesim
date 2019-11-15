@@ -374,12 +374,16 @@ class Model(object):
             output_column (`str`): optional, header of column containing output data (required if different from self.output_var)
             calc_model_unc (`bool`): whether to calculate model uncertainties as well, defaults to False
             verbose (`bool`): flag for verbosity, defaults to False
+            in_parallel (`bool`): defaults to True, set False to force run in serial
         """
         mode = argv['mode']
         output_col = argv.get('output_column',self.output_var)
         verbose = argv.get('verbose', False)
         calc_model_unc = argv.get('calc_model_unc', False)
-
+        in_parallel = argv.get('in_parallel', True)
+        if platform.system()=='Windows': #joblib doesn't work on Windows
+            in_parallel = False
+        
         if verbose:
             print('Attaching simulated data...')
 
@@ -467,7 +471,13 @@ class Model(object):
             print("Rounding model data...")
         for p in self.params.fit_params:
             #self.model_data[p.name] = [p.get_closest_val(val) for val in self.model_data[p.name]]
-            self.model_data[p.name] = Parallel(n_jobs=cpu_count())(delayed(get_closest_val)(val, p.vals) for val in self.model_data[p.name])
+            if in_parallel:
+                self.model_data[p.name] = Parallel(n_jobs=cpu_count())(delayed(get_closest_val)(val, p.vals) for val in self.model_data[p.name])
+            else:
+                md_temp = self.model_data[p.name]
+                for i in range(len(md_temp)):
+                    md_temp[i] = get_closest_val(val, p.vals)
+                self.model_data[p.name] = md_temp
 
         #print('At line 467...')
         #print(self.model_data.head())
@@ -587,19 +597,26 @@ class Model(object):
                 for c in other_ecs:
                     obs_data =  obs_data[abs(obs_data[c.name]-ecs_here[c.name])<=10.**(-1.*c.tol_digits)]
                     plot_title = plot_title + '%s=%s, '%(c.name,c.get_val_str(ecs_here[c.name]))
-            obs_data = obs_data.sort_values(by=[self.params.ec_x_name])
+            obs_data = obs_data.sort_values(by=[self.params.ec_x_name]).reset_index(drop=True, inplace=True)
+
             # plot obs data
             axs[i,0].plot(obs_data[self.params.ec_x_name], obs_data[self.output_var], color=colors[0])
 
             legend_list = ['observed']
             c_ind = 1
+            
+            # get modeled data at these conditions, alternate way
+            #md_ec_inds = [i for i in model_data.index if all([model_data.loc[i][list(d.keys())[0]]==list(d.values())[0] for d in ec_vals])]
+            #model_data_thisec = deepcopy(self.model_data.loc[md_ec_inds])
+
             # plot modeled data and errors
             for pt in param_pts.iterrows():
                 color = colors[c_ind]
-                model_data = deepcopy(self.model_data.loc[self.model_data_grps.groups[tuple([pt[1][n] for n in self.fit_param_names()])]])
+                model_data = deepcopy(m.model_data.loc[self.model_data_grps.groups[tuple([pt[1][n] for n in self.fit_param_names()])]])
                 if not one_ec:
+                    # get modeled data just at these conditions
                     for c in other_ecs:
-                        model_data =  model_data[abs(model_data[c.name]-ecs_here[c.name])<=10.**(-1.*c.tol_digits)]
+                        model_data =  model_data[abs(model_data[c.name]-ecs_here[c.name])<=10.**(-1.*c.tol_digits)]                           
                 model_data.sort_values(by=[self.params.ec_x_name], inplace=True)
                 model_data.reset_index(drop=True, inplace=True)
                 # get the modeled values only at the observed points
@@ -610,8 +627,12 @@ class Model(object):
                 if c_ind==1: #take errors from highest probability
                     all_errs.extend([abs(e) for e in errors])
 
-                axs[i,0].plot(model_data[self.params.ec_x_name], model_data[self.output_var], color=color)
-                axs[i,1].plot(model_data[self.params.ec_x_name], errors, color=color)
+                #axs[i,0].plot(model_data[self.params.ec_x_name], model_data[self.output_var], color=color)
+                #axs[i,1].plot(model_data[self.params.ec_x_name], errors, color=color)
+
+                axs[i,0].plot(x_vals, model_data[self.output_var], color=color)
+                axs[i,1].plot(x_vals, errors, color=color)
+                
                 leg_label = 'modeled: '
                 for p in self.params.fit_params:
                     leg_label = leg_label + '%s=%s, '%(p.name, p.get_val_str(pt[1][p.name]))
@@ -846,6 +867,7 @@ class Model(object):
             take_average (`bool`): flag for whether to use average model uncertainty at each measurement condition or the parameter-resolved version. Defaults to True if any parameters are logarithmically spaced, and False otherwise.
             min_unc_frac (`float`): minimum uncertainty as a fraction of the output variable value, defaults to 0.01
             min_unc_val (`float`): minimum uncertainty as an absolute number, defaults to 0.0
+            in_parallel (`bool`): defaults to True, set False to force run in serial
 
         Note:
             If both `min_unc_frac` and `min_unc_val` are specified, the uncertainty will be set to the larger of the two in each case
@@ -858,7 +880,10 @@ class Model(object):
             print('Calculating model uncertainty...')
         min_unc_frac = argv.get('min_unc_frac', 0.01)
         min_unc_val = argv.get('min_unc_val', 0.0)
-
+        in_parallel = argv.get('in_parallel', True)
+        if platform.system()=='Windows': #joblib doesn't work on Windows
+            in_parallel = False
+        
         # check if any parameters are log-spaced
         has_log = False
         if any([p.spacing=='log' for p in self.params.fit_params]):
@@ -871,7 +896,7 @@ class Model(object):
 
         deltas = np.zeros(len(self.model_data))
 
-        if platform.system()=='Windows':
+        if not in_parallel:
             # need to do it in serial
             deltas_list = []
             for grp in self.model_data_ecgrps.groups:
