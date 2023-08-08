@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Kurchin"
+  given-names: "Rachel"
+  orcid: "https://orcid.org/0000-0002-2147-4809"
+- family-names: "Romano"
+  given-names: "Giuseppe"
+title: "Bayesim"
+version: 0.9.21
+date-released: 2019-11-15
+url: "https://pv-lab.github.io/bayesim/_build/html/index.html"
+repository-code: "https://github.com/PV-Lab/bayesim"
+license: GPLv2
+preferred-citation:
+  type: article
+  authors:
+- family-names: "Kurchin"
+  given-names: "Rachel"
+  orcid: "https://orcid.org/0000-0002-2147-4809"
+- family-names: "Romano"
+  given-names: "Giuseppe"
+- family-names: "Buonassisi"
+  given-names: "Tonio"
+  doi: "10.1016/j.cpc.2019.01.022"
+  journal: "Computer Physics Communications"
+  start: 161 # First page number
+  end: 165 # Last page number
+  title: "Bayesim: A tool for adaptive grid model fitting with Bayesian inference"
+  volume: 239
+  year: 2019
