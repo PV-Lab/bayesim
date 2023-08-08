@@ -1,0 +1,14 @@
+name: bayesim
+channels:
+  - defaults
+dependencies:
+  - ipykernel
+  - ipython
+  - joblib
+  - pandas
+  - numpy
+  - matplotlib
+  - scipy
+  - jupyter
+  - python=3.6
+prefix: /Volumes/Data/conda/miniconda3/envs/bayesim
