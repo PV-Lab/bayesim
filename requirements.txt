@@ -1,5 +1,0 @@
-pandas
-scipy
-matplotlib
-joblib
-tables<=3.5.1

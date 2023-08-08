@@ -4,7 +4,6 @@ from bayesim.pmf import Pmf
 import bayesim.params as pm
 from bayesim.utils import calc_deltas, get_closest_val
 import pandas as pd
-import bayesim.hdf5io as dd
 from copy import deepcopy
 import numpy as np
 import matplotlib.pyplot as plt
@@ -47,7 +46,7 @@ class Model(object):
         if load_state:
             if verbose:
                 print('Loading bayesim state from %s...\n'%state_file)
-            state = dd.load(state_file)
+            state = pd.read_hdf(state_file)
 
             # variables
             self.ec_pts = state['ec_pts']
@@ -194,7 +193,8 @@ class Model(object):
         if verbose:
             print('Attaching measured data...\n')
 
-        self.obs_data = dd.load(argv['obs_data_path'])
+        self.obs_data = pd.read_hdf(argv['obs_data_path'])
+
         # get EC names if necessary
         cols = list(self.obs_data.columns)
         if output_col not in cols:
@@ -389,7 +389,7 @@ class Model(object):
 
         if mode == 'file':
             # import and sort data on parameter values
-            self.model_data = dd.load(argv['model_data_path'])
+            self.model_data = pd.read_hdf(argv['model_data_path'])
 
             # Check that columns match EC's and parameter names
             # (and determine parameter names if need be)
@@ -771,9 +771,9 @@ class Model(object):
                     nan_count_list.append(nan_count)
                     skip_total = skip_total + skip_count
 
-                    # save intermediate PMF if necessary
+                    # save intermediate PMF if necessary – the key is never used so it doesn't matter what it is
                     if save_step >0 and (num_pts_used-prev_used_pts) % save_step == 0:
-                        dd.save(pmf_folder+'sub%d_run%d_PMF_%d.h5'%(self.probs.num_sub,num_runs,num_pts_used-prev_used_pts),self.probs.points)
+                        self.probs.points.to_hdf(pmf_folder+'sub%d_run%d_PMF_%d.h5'%(self.probs.num_sub,num_runs,num_pts_used-prev_used_pts), "dummykey")
 
                     # check if threshold probability concentration has been reached
                     if np.sum(self.probs.most_probable(int(th_pv*len(self.probs.points)))['prob'])>th_pm:
@@ -783,9 +783,9 @@ class Model(object):
                 if done:
                     probs_lists.append(np.array(self.probs.points['prob']))
                     if save_step >= 0:
-                        dd.save(pmf_folder+'sub%d_run%d_PMF_final.h5'%(self.probs.num_sub,num_runs),self.probs.points)
+                        self.probs.points.to_hdf(pmf_folder+'sub%d_run%d_PMF_final.h5'%(self.probs.num_sub,num_runs), "dummykey")
                     at_threshold=True
-                    dd.save(obs_list_folder+'sub%d_run%d_obs_list.h5'%(self.probs.num_sub,num_runs),self.obs_data.iloc[obs_indices])
+                    self.obs_data.iloc[obs_indices].to_hdf(obs_list_folder+'sub%d_run%d_obs_list.h5'%(self.probs.num_sub,num_runs), "dummykey")
 
     
         probs = np.mean(probs_lists,axis=0)
@@ -798,7 +798,7 @@ class Model(object):
         print('\n%d points were skipped.\n' %skip_total)
 
         if save_step >=0:
-            dd.save(pmf_folder+'sub%d_PMF_final.h5'%(self.probs.num_sub),self.probs.points)
+            self.probs.points.to_hdf(pmf_folder+'sub%d_PMF_final.h5'%(self.probs.num_sub), "dummykey")
         self.is_run = True
 
     def subdivide(self, **argv):
@@ -823,7 +823,6 @@ class Model(object):
         # update flags
         self.needs_new_model_data = True
         self.is_run = False
-        #dd.save(filename,new_boxes)
         self.list_model_pts_to_run(fpath=filename)
         print('New model points to simulate are saved in the file %s.'%filename)
 
@@ -853,7 +852,7 @@ class Model(object):
             for ecpt in self.ec_pts.iterrows():
                 pts.append(list(ppt[1])+list(ecpt[1]))
         sim_pts = pd.DataFrame(data=pts,columns=columns)
-        dd.save(fpath,sim_pts)
+        sim_pts.to_hdf(fpath, "dummykey")
 
     def calc_model_unc(self, **argv):
         """
@@ -953,7 +952,7 @@ class Model(object):
         state['is_run'] = self.is_run
 
         # save the file
-        dd.save(filename,state)
+        state.to_hdf(filename, "dummykey")
 
     def visualize_grid(self,**argv):
         """

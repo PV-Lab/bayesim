@@ -1,7 +1,5 @@
 from copy import deepcopy
 import pandas as pd
-#import deepdish as dd
-import bayesim.hdf5io as dd
 import numpy as np
 import zipfile
 
