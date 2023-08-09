@@ -184,6 +184,7 @@ class Model(object):
         keep_all = argv.get('keep_all', False)
         thresh_dif_frac = argv.get('thresh_dif_frac', 0.01)
         verbose = argv.get('verbose', False)
+        hdf_key = argv.get("key", "dummykey")
 
         if 'ec_x_var' in argv.keys():
             self.params.set_ec_x(argv['ec_x_var'])
@@ -193,7 +194,7 @@ class Model(object):
         if verbose:
             print('Attaching measured data...\n')
 
-        self.obs_data = pd.read_hdf(argv['obs_data_path'])
+        self.obs_data = pd.read_hdf(argv['obs_data_path'], hdf_key)
 
         # get EC names if necessary
         cols = list(self.obs_data.columns)
@@ -381,6 +382,7 @@ class Model(object):
         verbose = argv.get('verbose', False)
         calc_model_unc = argv.get('calc_model_unc', False)
         in_parallel = argv.get('in_parallel', True)
+        hdf_key = argv.get("key", "dummykey")
         if platform.system()=='Windows': #joblib doesn't work on Windows
             in_parallel = False
         
@@ -389,7 +391,7 @@ class Model(object):
 
         if mode == 'file':
             # import and sort data on parameter values
-            self.model_data = pd.read_hdf(argv['model_data_path'])
+            self.model_data = pd.read_hdf(argv['model_data_path'], hdf_key)
 
             # Check that columns match EC's and parameter names
             # (and determine parameter names if need be)
@@ -952,6 +954,7 @@ class Model(object):
         state['is_run'] = self.is_run
 
         # save the file
+        # TODO: this is broken right now, need to do correctly with h5py
         state.to_hdf(filename, "dummykey")
 
     def visualize_grid(self,**argv):
