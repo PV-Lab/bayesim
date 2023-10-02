@@ -242,14 +242,22 @@ class Model(object):
             if verbose:
                 print('Choosing which measured data to keep...')
             other_ecs = [ec for ec in self.ec_names() if not ec==self.params.ec_x_name]
-            obs_data_grps = self.obs_data.groupby(by=other_ecs)
-            for grp in obs_data_grps.groups.keys():
-                subset = deepcopy(self.obs_data.loc[obs_data_grps.groups[grp]]).sort_values(self.params.ec_x_name)
+            if len(other_ecs)==0:
+                # jankily handle this case...
+                indexer = [list(self.obs_data.index)]
+                keys = [0]
+            else:
+                obs_data_grps = self.obs_data.groupby(by=other_ecs)
+                indexer = obs_data_grps.groups
+                keys = obs_data_grps.groups.keys()
+                
+            for key in keys:
+                subset = deepcopy(self.obs_data.loc[indexer[key]]).sort_values(self.params.ec_x_name)
                 if 'max_ec_x_step' in argv.keys():
                     max_step = argv['max_ec_x_step']
                 else:
                     max_step = 0.1 * max(subset[self.params.ec_x_name]-min(subset[self.params.ec_x_name]))
-                    print('Using %.2f as the maximum step size in %s when choosing observation points to keep at %s=%s.\n'%(max_step, self.params.ec_x_name, other_ecs, grp))
+                    print('Using %.2f as the maximum step size in %s when choosing observation points to keep at %s=%s.\n'%(max_step, self.params.ec_x_name, other_ecs, key))
                 thresh = thresh_dif_frac * (max(subset[self.output_var])-min(subset[self.output_var]))
                 i = 0
                 while i < len(subset)-1:
@@ -757,7 +765,7 @@ class Model(object):
                     if len(self.ec_names())>1:
                         ecpt = tuple([ec[n] for n in self.ec_names()])
                     else:
-                        ecpt = float(ec)
+                        ecpt = float(ec.iloc[0])
                     #print(ecpt)
                     #print(self.model_data_ecgrps.groups.keys())
                     model_here = deepcopy(self.model_data.loc[self.model_data_ecgrps.groups[ecpt]])

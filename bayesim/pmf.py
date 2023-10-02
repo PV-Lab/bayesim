@@ -522,7 +522,7 @@ class Pmf(object):
         # pull all bounds, then flatten, remove duplicates, and sort
         bins = sorted(list(set(list(self.points[param.name+'_min'])+list(self.points[param.name+'_max']))))
 
-        if dense_grid==[]:
+        if len(dense_grid)==0:
             # generate dense grid and populate with probabilities
             dense_grid = self.populate_dense_grid(df=self.points, col_to_pull='prob', make_ind_lists=False)
             mat = dense_grid['mat']
@@ -550,7 +550,7 @@ class Pmf(object):
         Returns:
             (:obj:`list` of :obj:`matplotlib.patches.Rectangle`): patches for plotting the 2D joint probability distribution
         """
-        if dense_grid==[]:
+        if len(dense_grid)==0:
             # generate dense grid and populate with probabilities
             dense_grid = self.populate_dense_grid(df=self.points, col_to_pull='prob', make_ind_lists=False)
             mat = dense_grid['mat']
